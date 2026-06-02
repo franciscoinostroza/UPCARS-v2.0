@@ -1,0 +1,12 @@
+name: Sync Notion → Supabase
+
+on:
+  schedule:
+    - cron: '*/5 * * * *'
+
+jobs:
+  sync:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Sync
+        run: curl -s -f "https://upcars-v2-ka37nuu0f-franciscoinostrozaa-7344s-projects.vercel.app/api/cron/sync"
