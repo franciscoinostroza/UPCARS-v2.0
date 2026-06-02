@@ -27,7 +27,7 @@ export async function getVehicle(pageId: string): Promise<Vehicle | null> {
 export async function updateVehicleStatus(pageId: string, newStatus: string): Promise<void> {
   await notionPatch(`/pages/${pageId}`, {
     properties: {
-      'Estado actual': { status: { name: newStatus } },
+      'Status': { status: { name: newStatus } },
     },
   })
 }
@@ -38,7 +38,7 @@ export async function assignResponsable(
 ): Promise<void> {
   await notionPatch(`/pages/${pageId}`, {
     properties: {
-      'Responsable actual': employeeId
+      'Responsable': employeeId
         ? { relation: [{ id: employeeId }] }
         : { relation: [] },
     },
@@ -60,19 +60,19 @@ export async function createVehicle(data: {
 }): Promise<string> {
   const dbId = getDatabaseId('vehicles')
   const properties: Record<string, unknown> = {
-    'Nombre': { title: [{ text: { content: data.name } }] },
-    'Estado actual': { status: { name: 'Comprado' } },
+    'Name': { title: [{ text: { content: data.name } }] },
+    'Status': { status: { name: 'Comprado' } },
   }
-  if (data.matricula) properties['Matrícula'] = { rich_text: [{ text: { content: data.matricula } }] }
-  if (data.brand) properties['Marca'] = { rich_text: [{ text: { content: data.brand } }] }
-  if (data.model) properties['Modelo'] = { rich_text: [{ text: { content: data.model } }] }
-  if (data.year) properties['Año'] = { number: data.year }
-  if (data.lineaNegocio) properties['Línea de negocio'] = { select: { name: data.lineaNegocio } }
-  if (data.tipo) properties['Tipo de vehículo'] = { select: { name: data.tipo } }
-  if (data.fechaCompra) properties['Fecha de compra'] = { date: { start: data.fechaCompra } }
-  if (data.fechaListo) properties['Fecha listo para venta'] = { date: { start: data.fechaListo } }
-  if (data.precioCompra !== undefined) properties['Precio de compra (€)'] = { number: data.precioCompra }
-  if (data.precioVenta !== undefined) properties['Precio de venta (€)'] = { number: data.precioVenta }
+  if (data.matricula) properties['Matricula'] = { rich_text: [{ text: { content: data.matricula } }] }
+  if (data.brand) properties['Brand'] = { rich_text: [{ text: { content: data.brand } }] }
+  if (data.model) properties['Model'] = { rich_text: [{ text: { content: data.model } }] }
+  if (data.year) properties['Year'] = { number: data.year }
+  if (data.lineaNegocio) properties['Linea de negocio'] = { select: { name: data.lineaNegocio } }
+  if (data.tipo) properties['Tipo'] = { select: { name: data.tipo } }
+  if (data.fechaCompra) properties['Fecha compra'] = { date: { start: data.fechaCompra } }
+  if (data.fechaListo) properties['Fecha listo'] = { date: { start: data.fechaListo } }
+  if (data.precioCompra !== undefined) properties['Precio compra'] = { number: data.precioCompra }
+  if (data.precioVenta !== undefined) properties['Precio venta'] = { number: data.precioVenta }
 
   const result: any = await notionPost('/pages', {
     parent: { database_id: dbId },
