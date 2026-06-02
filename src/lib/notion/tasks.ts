@@ -1,4 +1,5 @@
 import { notionPost, getDatabaseId } from './client'
+import { getDbSchema, findPropertyByType, findPropertiesByType } from './schema'
 
 export async function createTask(
   name: string,
@@ -8,24 +9,44 @@ export async function createTask(
   area: string
 ) {
   const dbId = getDatabaseId('tasks')
+  const schema = await getDbSchema('tasks')
+
+  const titleKey = findPropertyByType(schema, 'title') || 'Nombre de la tarea'
+  const relationProps = findPropertiesByType(schema, 'relation')
+  const selectProps = findPropertiesByType(schema, 'select')
+  const statusKey = findPropertyByType(schema, 'status') || 'Estado'
+
+  function findSelect(candidates: string[], fallbackIdx: number): string {
+    for (const c of candidates) {
+      const found = selectProps.find((s) => s.name === c)
+      if (found) return found.name
+    }
+    return selectProps[fallbackIdx]?.name || candidates[0]
+  }
+
+  const priorityKey = findSelect(['Prioridad'], 0)
+  const deptKey = findSelect(['Departamento', 'Department'], 1)
+  const typeKey = findSelect(['Tipo', 'Type'], 2)
+  const vehicleRelKey = relationProps[0]?.name || 'Vehículo relacionado'
+  const responsibleRelKey = relationProps[1]?.name || 'Responsable(s)'
 
   const properties: Record<string, unknown> = {
-    'Nombre de la tarea': { title: [{ text: { content: name } }] },
-    'Prioridad': { select: { name: priority } },
-    'Estado': { status: { name: 'Sin empezar' } },
-    'Departamento': { select: { name: area } },
-    'Tipo': { select: { name: 'Departamental' } },
+    [titleKey]: { title: [{ text: { content: name } }] },
+    [priorityKey]: { select: { name: priority } },
+    [statusKey]: { status: { name: 'Sin empezar' } },
+    [deptKey]: { select: { name: area } },
+    [typeKey]: { select: { name: 'Departamental' } },
   }
 
   if (vehicleId) {
-    properties['Vehículo relacionado'] = { relation: [{ id: vehicleId }] }
+    properties[vehicleRelKey] = { relation: [{ id: vehicleId }] }
   }
 
   if (responsibleIds.length > 0) {
-    properties['Responsable(s)'] = { relation: responsibleIds.map((id) => ({ id })) }
+    properties[responsibleRelKey] = { relation: responsibleIds.map((id) => ({ id })) }
   }
 
-  await notionPost(`/pages`, {
+  await notionPost('/pages', {
     parent: { database_id: dbId },
     properties,
   })
