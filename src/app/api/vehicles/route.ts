@@ -46,7 +46,7 @@ export async function GET(request: NextRequest) {
 export async function POST(request: NextRequest) {
   try {
     const body = await request.json()
-    const { name, matricula, brand, model, year, lineaNegocio, tipo } = body
+    const { name, matricula, brand, model, year, lineaNegocio, tipo, fechaCompra, fechaListo, precioCompra, precioVenta } = body
 
     if (!name) {
       return NextResponse.json(
@@ -55,7 +55,7 @@ export async function POST(request: NextRequest) {
       )
     }
 
-    const id = await createVehicle({ name, matricula, brand, model, year, lineaNegocio, tipo })
+    const id = await createVehicle({ name, matricula, brand, model, year, lineaNegocio, tipo, fechaCompra, fechaListo, precioCompra, precioVenta })
 
     return NextResponse.json({ success: true, data: { id } }, { status: 201 })
   } catch (error: any) {

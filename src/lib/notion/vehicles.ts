@@ -53,6 +53,10 @@ export async function createVehicle(data: {
   year?: number
   lineaNegocio?: string
   tipo?: string
+  fechaCompra?: string
+  fechaListo?: string
+  precioCompra?: number
+  precioVenta?: number
 }): Promise<string> {
   const dbId = getDatabaseId('vehicles')
   const properties: Record<string, unknown> = {
@@ -65,6 +69,10 @@ export async function createVehicle(data: {
   if (data.year) properties['Año'] = { number: data.year }
   if (data.lineaNegocio) properties['Línea de negocio'] = { select: { name: data.lineaNegocio } }
   if (data.tipo) properties['Tipo de vehículo'] = { select: { name: data.tipo } }
+  if (data.fechaCompra) properties['Fecha de compra'] = { date: { start: data.fechaCompra } }
+  if (data.fechaListo) properties['Fecha listo para venta'] = { date: { start: data.fechaListo } }
+  if (data.precioCompra !== undefined) properties['Precio de compra (€)'] = { number: data.precioCompra }
+  if (data.precioVenta !== undefined) properties['Precio de venta (€)'] = { number: data.precioVenta }
 
   const result: any = await notionPost('/pages', {
     parent: { database_id: dbId },

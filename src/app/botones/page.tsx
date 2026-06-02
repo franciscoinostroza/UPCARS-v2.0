@@ -227,6 +227,12 @@ function NuevoVehiculoForm({ onSuccess }: { onSuccess: () => void }) {
   const [brand, setBrand] = useState('')
   const [model, setModel] = useState('')
   const [year, setYear] = useState('')
+  const [lineaNegocio, setLineaNegocio] = useState('')
+  const [tipo, setTipo] = useState('')
+  const [fechaCompra, setFechaCompra] = useState('')
+  const [fechaListo, setFechaListo] = useState('')
+  const [precioCompra, setPrecioCompra] = useState('')
+  const [precioVenta, setPrecioVenta] = useState('')
   const [saving, setSaving] = useState(false)
 
   async function handleSubmit(e: React.FormEvent) {
@@ -234,16 +240,22 @@ function NuevoVehiculoForm({ onSuccess }: { onSuccess: () => void }) {
     if (!name.trim()) return
     setSaving(true)
     try {
+      const body: Record<string, unknown> = { name: name.trim() }
+      if (matricula.trim()) body.matricula = matricula.trim()
+      if (brand.trim()) body.brand = brand.trim()
+      if (model.trim()) body.model = model.trim()
+      if (year) body.year = parseInt(year)
+      if (lineaNegocio.trim()) body.lineaNegocio = lineaNegocio.trim()
+      if (tipo.trim()) body.tipo = tipo.trim()
+      if (fechaCompra) body.fechaCompra = fechaCompra
+      if (fechaListo) body.fechaListo = fechaListo
+      if (precioCompra) body.precioCompra = parseFloat(precioCompra)
+      if (precioVenta) body.precioVenta = parseFloat(precioVenta)
+
       const res = await fetch('/api/vehicles', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          name: name.trim(),
-          matricula: matricula.trim() || undefined,
-          brand: brand.trim() || undefined,
-          model: model.trim() || undefined,
-          year: year ? parseInt(year) : undefined,
-        }),
+        body: JSON.stringify(body),
       })
       if (res.ok) onSuccess()
     } finally {
@@ -252,12 +264,18 @@ function NuevoVehiculoForm({ onSuccess }: { onSuccess: () => void }) {
   }
 
   return (
-    <form onSubmit={handleSubmit} className="space-y-3">
+    <form onSubmit={handleSubmit} className="space-y-3 max-h-[60vh] overflow-y-auto pr-1">
       <Input label="Nombre *" value={name} onChange={setName} required />
       <Input label="Matrícula" value={matricula} onChange={setMatricula} />
       <Input label="Marca" value={brand} onChange={setBrand} />
       <Input label="Modelo" value={model} onChange={setModel} />
       <Input label="Año" value={year} onChange={setYear} type="number" />
+      <Input label="Línea de negocio" value={lineaNegocio} onChange={setLineaNegocio} />
+      <Input label="Tipo de vehículo" value={tipo} onChange={setTipo} />
+      <Input label="Fecha de compra" value={fechaCompra} onChange={setFechaCompra} type="date" />
+      <Input label="Fecha listo para venta" value={fechaListo} onChange={setFechaListo} type="date" />
+      <Input label="Precio de compra (€)" value={precioCompra} onChange={setPrecioCompra} type="number" />
+      <Input label="Precio de venta (€)" value={precioVenta} onChange={setPrecioVenta} type="number" />
       <button
         type="submit"
         disabled={saving || !name.trim()}
