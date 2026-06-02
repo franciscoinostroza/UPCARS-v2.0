@@ -5,115 +5,153 @@ import Link from 'next/link'
 
 interface HealthData {
   status: string
+  uptime: number
   notion: string
   supabase: string
-  uptime: number
-  vehiclesCount?: number
-  alertsCount?: number
-  timestamp: string
+  vehiclesCount: number
+  alertsCount: number
+  syncStatus?: string
+  lastSync?: string
+  dbSchema?: string[]
 }
-
-const fmt = (s: number) => `${Math.floor(s / 3600)}h ${Math.floor((s % 3600) / 60)}m ${Math.floor(s % 60)}s`
-
-const services = [
-  { key: 'notion', label: 'Notion API', icon: '📋' },
-  { key: 'supabase', label: 'Supabase', icon: '🗄️' },
-]
 
 export default function HealthPage() {
   const [data, setData] = useState<HealthData | null>(null)
   const [loading, setLoading] = useState(true)
 
   useEffect(() => {
-    fetch('/api/health')
-      .then((r) => r.json())
-      .then((d) => { setData(d); setLoading(false) })
-      .catch(() => setLoading(false))
+    async function fetchHealth() {
+      try {
+        const res = await fetch('/api/health')
+        if (!res.ok) throw new Error('Health check failed')
+        const json = await res.json()
+        setData(json)
+      } catch {
+        setData({
+          status: 'error',
+          uptime: 0,
+          notion: 'disconnected',
+          supabase: 'disconnected',
+          vehiclesCount: 0,
+          alertsCount: 0,
+        })
+      } finally {
+        setLoading(false)
+      }
+    }
+    fetchHealth()
   }, [])
 
   if (loading) {
     return (
       <div className="min-h-screen flex items-center justify-center" style={{ background: 'var(--bg)' }}>
-        <div className="w-6 h-6 rounded-full border-2 border-[var(--accent-blue)] border-t-transparent animate-spin" />
+        <div className="flex flex-col items-center gap-2">
+          <div className="w-5 h-5 rounded-full border-2 border-[var(--accent-blue)] border-t-transparent animate-spin" />
+          <p className="text-sm" style={{ color: 'var(--text-muted)' }}>Verificando...</p>
+        </div>
       </div>
     )
   }
 
-  const ok = data?.status === 'ok'
-
   return (
     <div className="min-h-screen" style={{ background: 'var(--bg)' }}>
-      <div className="max-w-sm mx-auto p-4 sm:p-6 space-y-4">
-
-        <div className="text-center animate-fade-up">
-          <h1 className="text-xl font-bold" style={{ color: 'var(--text)' }}>Health Check</h1>
-          <p className="text-xs mt-0.5" style={{ color: 'var(--text-secondary)' }}>
-            Estado del sistema UPCARS
-          </p>
+      <div className="max-w-lg mx-auto p-3 sm:p-6">
+        {/* Header */}
+        <div className="flex items-center justify-between mb-4 sm:mb-6 animate-fade-up">
+          <h1 className="text-lg sm:text-xl font-bold" style={{ color: 'var(--text)' }}>Health Check</h1>
+          <Link href="/dashboard" className="text-sm" style={{ color: 'var(--accent-blue)' }}>
+            ← Dashboard
+          </Link>
         </div>
 
-        <div className="card rounded-xl p-5 text-center animate-fade-up" style={{ animationDelay: '100ms' }}>
-          <div className="w-12 h-12 rounded-full flex items-center justify-center mx-auto mb-2 text-2xl"
-            style={{ background: ok ? 'rgba(76, 175, 80, 0.1)' : 'rgba(235, 87, 87, 0.1)' }}
-          >
-            {ok ? '✅' : '❌'}
+        {/* Status badge */}
+        <div className="card p-3 sm:p-5 mb-3 sm:mb-4 animate-fade-up" style={{ animationDelay: '100ms' }}>
+          <div className="flex items-center gap-2 mb-2 sm:mb-3">
+            <div className={`w-2 h-2 rounded-full ${data?.status === 'ok' ? 'bg-[var(--accent-green)]' : 'bg-[var(--accent-red)]'}`} />
+            <span className="text-sm sm:text-base font-semibold" style={{ color: 'var(--text)' }}>
+              {data?.status === 'ok' ? 'All Systems Operational' : 'Service Disruption'}
+            </span>
           </div>
-          <p className="text-base font-bold" style={{ color: ok ? 'var(--accent-green)' : 'var(--accent-red)' }}>
-            {ok ? 'Sistema operacional' : 'Error en el sistema'}
-          </p>
+          <div className="space-y-1.5 text-xs sm:text-sm" style={{ color: 'var(--text-muted)' }}>
+            <div className="flex items-center justify-between min-h-[32px]">
+              <span>Uptime</span>
+              <span className="font-mono font-medium" style={{ color: 'var(--text)' }}>
+                {data?.uptime !== undefined ? `${data.uptime.toFixed(1)}h` : '—'}
+              </span>
+            </div>
+            <div className="flex items-center justify-between min-h-[32px]">
+              <span>Vehicles synced</span>
+              <span className="font-mono font-medium" style={{ color: 'var(--text)' }}>{data?.vehiclesCount ?? '—'}</span>
+            </div>
+            <div className="flex items-center justify-between min-h-[32px]">
+              <span>Active alerts</span>
+              <span className="font-mono font-medium" style={{ color: data?.alertsCount && data.alertsCount > 0 ? 'var(--accent-red)' : 'var(--text)' }}>
+                {data?.alertsCount ?? '—'}
+              </span>
+            </div>
+          </div>
         </div>
 
-        <div className="space-y-1.5 animate-fade-up" style={{ animationDelay: '200ms' }}>
-          {services.map((s) => {
-            const connected = data?.[s.key as keyof HealthData] === 'connected'
-            return (
-              <div key={s.key} className="card rounded-xl px-4 py-3 flex items-center justify-between">
-                <div className="flex items-center gap-3">
-                  <span>{s.icon}</span>
-                  <div>
-                    <p className="text-sm font-medium" style={{ color: 'var(--text)' }}>{s.label}</p>
-                    <p className="text-xs" style={{ color: connected ? 'var(--accent-green)' : 'var(--accent-red)' }}>
-                      {connected ? 'Conectado' : 'Desconectado'}
-                    </p>
-                  </div>
-                </div>
-                <span style={{ color: connected ? 'var(--accent-green)' : 'var(--accent-red)' }}>
-                  {connected ? '✓' : '✗'}
-                </span>
+        {/* Services */}
+        <div className="space-y-2 sm:space-y-3 animate-fade-up" style={{ animationDelay: '150ms' }}>
+          {[
+            {
+              name: 'Notion API',
+              status: data?.notion as string,
+              icon: '📄',
+            },
+            {
+              name: 'Supabase DB',
+              status: data?.supabase as string,
+              icon: '🗄️',
+            },
+            {
+              name: 'Sync Status',
+              status: data?.syncStatus as string,
+              icon: '🔄',
+              extra: data?.lastSync,
+            },
+          ].map((svc, i) => (
+            <div key={svc.name} className="card p-3 sm:p-4 flex items-center gap-2.5 sm:gap-3 min-h-[52px]" style={{ animationDelay: `${200 + i * 50}ms` }}>
+              <span className="text-base sm:text-lg">{svc.icon}</span>
+              <div className="min-w-0 flex-1">
+                <p className="text-xs sm:text-sm font-medium" style={{ color: 'var(--text)' }}>{svc.name}</p>
+                {svc.status && (
+                  <p className="text-[11px] sm:text-xs mt-0.5" style={{ color: 'var(--text-muted)' }}>
+                    {svc.status}
+                    {svc.extra ? ` · ${svc.extra}` : ''}
+                  </p>
+                )}
               </div>
-            )
-          })}
+              <div className={`w-2 h-2 rounded-full shrink-0 ${
+                svc.status === 'connected' || svc.status === 'synced'
+                  ? 'bg-[var(--accent-green)]'
+                  : svc.status === 'partial'
+                    ? 'bg-[var(--accent-yellow)]'
+                    : 'bg-[var(--accent-red)]'
+              }`} />
+            </div>
+          ))}
         </div>
 
-        {data && (
-          <div className="card rounded-xl p-4 animate-fade-up space-y-2" style={{ animationDelay: '300ms' }}>
-            <h2 className="text-[11px] font-semibold uppercase tracking-wider" style={{ color: 'var(--text-secondary)' }}>
-              Detalles
+        {/* DB Schema */}
+        {data?.dbSchema && data.dbSchema.length > 0 && (
+          <div className="card p-3 sm:p-4 mt-3 sm:mt-4 animate-fade-up" style={{ animationDelay: '300ms' }}>
+            <h2 className="text-[11px] font-semibold uppercase tracking-wider mb-2 sm:mb-3" style={{ color: 'var(--text-secondary)' }}>
+              Database Tables
             </h2>
-            <div className="space-y-1.5 text-sm">
-              {[
-                ['⏱️ Uptime', fmt(data.uptime)],
-                ['🚗 Vehículos', String(data.vehiclesCount ?? '—')],
-                ['⚠️ Alertas', String(data.alertsCount ?? '—')],
-              ].map(([label, value]) => (
-                <div key={label as string} className="flex justify-between">
-                  <span style={{ color: 'var(--text-secondary)' }}>{label as string}</span>
-                  <span className="font-medium stat-value" style={{ color: 'var(--text)' }}>{value}</span>
-                </div>
+            <div className="flex flex-wrap gap-1 sm:gap-1.5">
+              {data.dbSchema.map((table) => (
+                <span key={table} className="pill text-[11px] sm:text-xs" style={{ background: 'var(--bg)', color: 'var(--text-secondary)' }}>
+                  {table}
+                </span>
               ))}
             </div>
           </div>
         )}
 
-        <div className="text-center animate-fade-up" style={{ animationDelay: '400ms' }}>
-          <Link href="/" className="card card-hover inline-flex items-center gap-1.5 rounded-xl px-4 py-2 text-sm"
-            style={{ color: 'var(--text)' }}
-          >
-            ← Volver
-          </Link>
-        </div>
-
-        <p className="text-center text-xs" style={{ color: 'var(--text-muted)' }}>
+        <p className="text-center text-[11px] mt-6 pb-4" style={{ color: 'var(--text-muted)' }}>
+          <Link href="/" className="mr-2" style={{ color: 'var(--accent-blue)' }}>← Home</Link>
           UPCARS v2
         </p>
       </div>

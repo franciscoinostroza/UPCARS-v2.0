@@ -14,82 +14,98 @@ interface HealthInfo {
 
 export default function Home() {
   const [health, setHealth] = useState<HealthInfo | null>(null)
+  const [loading, setLoading] = useState(true)
 
   useEffect(() => {
-    fetch('/api/health')
-      .then((r) => r.json())
-      .then(setHealth)
-      .catch(() => {})
+    async function fetchHealth() {
+      try {
+        const res = await fetch('/api/health')
+        if (!res.ok) return
+        const data = await res.json()
+        if (data.status === 'ok' || data.service === 'ok') {
+          setHealth({ ...data, status: 'ok' })
+        } else {
+          setHealth(data)
+        }
+      } catch {
+        setHealth({ status: 'error', service: 'error', notion: 'error', supabase: 'error', uptime: 0 })
+      } finally {
+        setLoading(false)
+      }
+    }
+    fetchHealth()
   }, [])
 
-  const fmt = (s: number) => `${Math.floor(s / 3600)}h ${Math.floor((s % 3600) / 60)}m`
-
   return (
-    <div className="min-h-screen flex items-center justify-center p-4 sm:p-8" style={{ background: 'var(--bg)' }}>
-      <main className="w-full max-w-sm space-y-4">
-
+    <div className="min-h-screen flex items-center justify-center p-3 sm:p-4" style={{ background: 'var(--bg)' }}>
+      <div className="max-w-sm w-full space-y-3 sm:space-y-4">
+        {/* Logo + status */}
         <div className="text-center animate-fade-up">
-          <div className="text-4xl mb-2">🚗</div>
-          <h1 className="text-2xl font-bold" style={{ color: 'var(--text)' }}>UPCARS</h1>
-          <p className="text-xs mt-1" style={{ color: 'var(--text-secondary)' }}>
-            Ecosistema operativo del concesionario
+          <div className="flex items-center justify-center gap-2 mb-1">
+            <span className="text-xl">🚗</span>
+            <h1 className="text-lg sm:text-xl font-bold" style={{ color: 'var(--text)' }}>UPCARS</h1>
+          </div>
+          <p className="text-[11px] sm:text-xs" style={{ color: 'var(--text-secondary)' }}>
+            Serverless Automation Engine
           </p>
         </div>
 
-        <div className="grid grid-cols-2 gap-2 animate-fade-up" style={{ animationDelay: '100ms' }}>
-          <Link href="/dashboard" className="card card-hover rounded-xl p-4 text-center block">
-            <span className="text-xl block mb-1">📊</span>
-            <p className="text-sm font-medium" style={{ color: 'var(--text)' }}>Dashboard</p>
-            <p className="text-xs" style={{ color: 'var(--text-muted)' }}>Panel operativo</p>
-          </Link>
-          <Link href="/health" className="card card-hover rounded-xl p-4 text-center block">
-            <span className="text-xl block mb-1">🔍</span>
-            <p className="text-sm font-medium" style={{ color: 'var(--text)' }}>Health Check</p>
-            <p className="text-xs" style={{ color: 'var(--text-muted)' }}>Estado del sistema</p>
-          </Link>
-        </div>
-
-        {health && (
-          <div className="card rounded-xl p-4 animate-fade-up space-y-2.5" style={{ animationDelay: '200ms' }}>
-            <div className="flex items-center justify-between">
-              <span className="text-[11px] font-semibold uppercase tracking-wider" style={{ color: 'var(--text-secondary)' }}>
-                Estado
-              </span>
-              <span className="pill" style={{
-                color: health.status === 'ok' ? 'var(--accent-green)' : 'var(--accent-red)',
-              }}>
-                {health.status === 'ok' ? 'Operacional' : 'Degradado'}
+        {/* Status */}
+        {loading ? (
+          <div className="card p-4 sm:p-5 text-center animate-fade-up" style={{ animationDelay: '100ms' }}>
+            <div className="w-5 h-5 rounded-full border-2 border-[var(--accent-blue)] border-t-transparent animate-spin mx-auto" />
+          </div>
+        ) : (
+          <div className="card p-4 sm:p-5 animate-fade-up" style={{ animationDelay: '100ms' }}>
+            <div className="flex items-center gap-2.5 mb-3 sm:mb-4">
+              <div className={`w-2 h-2 rounded-full ${health?.status === 'ok' ? 'bg-[var(--accent-green)]' : 'bg-[var(--accent-red)]'}`} />
+              <span className="text-sm sm:text-base font-semibold" style={{ color: 'var(--text)' }}>
+                {health?.status === 'ok' ? 'Sistema operativo' : 'Error de conexión'}
               </span>
             </div>
-            <div className="grid grid-cols-2 gap-1.5 text-xs">
-              <div className="card flex items-center gap-2 px-2.5 py-2">
-                <span>🚗</span>
-                <span style={{ color: 'var(--text-secondary)' }}>{health.vehiclesCount ?? '—'} veh.</span>
-              </div>
-              <div className="card flex items-center gap-2 px-2.5 py-2">
-                <span>⏱️</span>
-                <span style={{ color: 'var(--text-secondary)' }}>{fmt(health.uptime)}</span>
-              </div>
-              <div className="card flex items-center gap-2 px-2.5 py-2">
-                <span>📋</span>
-                <span style={{
-                  color: health.notion === 'connected' ? 'var(--accent-green)' : 'var(--accent-red)',
-                }}>Notion {health.notion === 'connected' ? '✓' : '✗'}</span>
-              </div>
-              <div className="card flex items-center gap-2 px-2.5 py-2">
-                <span>🗄️</span>
-                <span style={{
-                  color: health.supabase === 'connected' ? 'var(--accent-green)' : 'var(--accent-red)',
-                }}>Supabase {health.supabase === 'connected' ? '✓' : '✗'}</span>
-              </div>
+            <div className="grid grid-cols-2 gap-1.5 sm:gap-2 text-xs sm:text-sm" style={{ color: 'var(--text-muted)' }}>
+              {[
+                ['Notion', health?.notion],
+                ['Supabase', health?.supabase],
+              ].map(([label, val]) => (
+                <div key={label as string} className="flex items-center gap-1.5 sm:gap-2 min-h-[36px] sm:min-h-[40px] px-2 sm:px-3 rounded" style={{ background: 'var(--bg-card)' }}>
+                  <div className={`w-1.5 h-1.5 rounded-full shrink-0 ${val === 'connected' ? 'bg-[var(--accent-green)]' : 'bg-[var(--accent-red)]'}`} />
+                  <span>{label as string}</span>
+                  <span className="ml-auto font-medium">{val === 'connected' ? '✓' : '✗'}</span>
+                </div>
+              ))}
             </div>
+            {health?.vehiclesCount !== undefined && (
+              <p className="mt-3 text-[11px] sm:text-xs text-center" style={{ color: 'var(--text-muted)' }}>
+                {health.vehiclesCount} vehículos sincronizados
+              </p>
+            )}
           </div>
         )}
 
-        <p className="text-center text-xs" style={{ color: 'var(--text-muted)' }}>
-          UPCARS v2
+        {/* Actions */}
+        <div className="grid grid-cols-2 gap-2 animate-fade-up" style={{ animationDelay: '200ms' }}>
+          <Link
+            href="/dashboard"
+            className="card text-center font-medium px-3 py-2.5 sm:py-2 text-xs sm:text-sm min-h-[44px] flex items-center justify-center"
+            style={{ color: 'var(--text)' }}
+          >
+            Dashboard →
+          </Link>
+          <Link
+            href="/health"
+            className="card text-center font-medium px-3 py-2.5 sm:py-2 text-xs sm:text-sm min-h-[44px] flex items-center justify-center"
+            style={{ color: 'var(--text)' }}
+          >
+            Health Check →
+          </Link>
+        </div>
+
+        {/* Footer */}
+        <p className="text-center text-[11px]" style={{ color: 'var(--text-muted)' }}>
+          version 2.0
         </p>
-      </main>
+      </div>
     </div>
   )
 }
