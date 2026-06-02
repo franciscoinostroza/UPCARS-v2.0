@@ -1,12 +1,21 @@
-import { NextResponse } from 'next/server'
-import { getVehicles } from '@/lib/notion/vehicles'
+import { NextRequest, NextResponse } from 'next/server'
+import { getVehicles, createVehicle } from '@/lib/notion/vehicles'
 
 export const dynamic = 'force-dynamic'
 
-export async function GET() {
+export async function GET(request: NextRequest) {
   try {
     const vehicles = await getVehicles()
     const activeStates = ['Comprado', 'Logistica', 'Taller', 'Chapa', 'Preparacion', 'Listo']
+
+    const { searchParams } = new URL(request.url)
+    const list = searchParams.get('list')
+
+    if (list === 'true') {
+      const active = vehicles.filter((v) => activeStates.includes(v.state))
+      return NextResponse.json({ success: true, data: active })
+    }
+
     const activeVehicles = vehicles.filter((v) => activeStates.includes(v.state))
 
     const pipeline = activeStates.map((state) => ({
@@ -31,5 +40,29 @@ export async function GET() {
     return NextResponse.json({ success: true, data: { pipeline, total: activeVehicles.length } })
   } catch {
     return NextResponse.json({ success: false, error: 'Failed to fetch vehicles' }, { status: 500 })
+  }
+}
+
+export async function POST(request: NextRequest) {
+  try {
+    const body = await request.json()
+    const { name, matricula, brand, model, year, lineaNegocio, tipo } = body
+
+    if (!name) {
+      return NextResponse.json(
+        { success: false, error: 'name is required' },
+        { status: 400 }
+      )
+    }
+
+    const id = await createVehicle({ name, matricula, brand, model, year, lineaNegocio, tipo })
+
+    return NextResponse.json({ success: true, data: { id } }, { status: 201 })
+  } catch (error: any) {
+    console.error('Vehicle POST error:', error)
+    return NextResponse.json(
+      { success: false, error: error?.message || 'Failed to create vehicle' },
+      { status: 500 }
+    )
   }
 }

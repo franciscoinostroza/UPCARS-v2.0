@@ -31,3 +31,44 @@ export async function updateVehicleStatus(pageId: string, newStatus: string): Pr
     },
   })
 }
+
+export async function assignResponsable(
+  pageId: string,
+  employeeId: string | null
+): Promise<void> {
+  await notionPatch(`/pages/${pageId}`, {
+    properties: {
+      'Responsable actual': employeeId
+        ? { relation: [{ id: employeeId }] }
+        : { relation: [] },
+    },
+  })
+}
+
+export async function createVehicle(data: {
+  name: string
+  matricula?: string
+  brand?: string
+  model?: string
+  year?: number
+  lineaNegocio?: string
+  tipo?: string
+}): Promise<string> {
+  const dbId = getDatabaseId('vehicles')
+  const properties: Record<string, unknown> = {
+    'Nombre': { title: [{ text: { content: data.name } }] },
+    'Estado actual': { status: { name: 'Comprado' } },
+  }
+  if (data.matricula) properties['Matrícula'] = { rich_text: [{ text: { content: data.matricula } }] }
+  if (data.brand) properties['Marca'] = { rich_text: [{ text: { content: data.brand } }] }
+  if (data.model) properties['Modelo'] = { rich_text: [{ text: { content: data.model } }] }
+  if (data.year) properties['Año'] = { number: data.year }
+  if (data.lineaNegocio) properties['Línea de negocio'] = { select: { name: data.lineaNegocio } }
+  if (data.tipo) properties['Tipo de vehículo'] = { select: { name: data.tipo } }
+
+  const result: any = await notionPost('/pages', {
+    parent: { database_id: dbId },
+    properties,
+  })
+  return result.id
+}

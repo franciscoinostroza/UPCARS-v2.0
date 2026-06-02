@@ -10,8 +10,7 @@ export async function PATCH(
   try {
     const { id } = await params
 
-    const { error } = await getSupabase()
-      .from('alert_records')
+    const { error } = await (getSupabase().from('alert_records') as any)
       .update({ resolved: true, resolved_at: new Date().toISOString() })
       .eq('id', id)
 

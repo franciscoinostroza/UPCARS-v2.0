@@ -1,0 +1,480 @@
+'use client'
+
+import { useState, useEffect, useCallback } from 'react'
+import { ThemeProvider, useTheme } from '../dashboard/theme-context'
+import { DarkModeToggle } from '../dashboard/dark-mode'
+
+interface VehicleItem {
+  id: string
+  name: string
+  matricula: string
+  brand: string
+  state: string
+}
+
+interface EmployeeItem {
+  id: string
+  name: string
+  role: string
+  department: string
+}
+
+const VALID_NEXT: Record<string, string[]> = {
+  Comprado: ['Logistica'],
+  Logistica: ['Taller', 'Chapa'],
+  Taller: ['Chapa', 'Preparacion'],
+  Chapa: ['Taller', 'Preparacion'],
+  Preparacion: ['Listo'],
+  Listo: [],
+}
+
+const STATE_LABELS: Record<string, string> = {
+  Comprado: 'Comprado', Logistica: 'Logística', Taller: 'Taller',
+  Chapa: 'Chapa y Pintura', Preparacion: 'Preparación', Listo: 'Listo para venta',
+}
+
+type ModalType = 'nuevo' | 'mover' | 'asignar' | 'orden' | null
+
+function BotonesInner() {
+  const { dark } = useTheme()
+  const [modal, setModal] = useState<ModalType>(null)
+  const [vehicles, setVehicles] = useState<VehicleItem[]>([])
+  const [employees, setEmployees] = useState<EmployeeItem[]>([])
+  const [loading, setLoading] = useState(true)
+  const [toast, setToast] = useState<string | null>(null)
+
+  const showToast = (msg: string) => {
+    setToast(msg)
+    setTimeout(() => setToast(null), 2500)
+  }
+
+  const fetchData = useCallback(async () => {
+    try {
+      const [vRes, eRes] = await Promise.all([
+        fetch('/api/vehicles?list=true'),
+        fetch('/api/employees'),
+      ])
+      const vData = await vRes.json()
+      const eData = await eRes.json()
+      if (vData.success) setVehicles(vData.data)
+      if (eData.success) setEmployees(eData.data)
+    } catch {
+      // silent
+    } finally {
+      setLoading(false)
+    }
+  }, [])
+
+  useEffect(() => { fetchData() }, [fetchData])
+
+  return (
+    <div style={{ background: 'var(--bg)', minHeight: '100vh' }}>
+      <div className="max-w-lg mx-auto p-4 sm:p-6">
+
+        <div className="flex items-center justify-between mb-5 animate-fade-up">
+          <div>
+            <h1 className="text-base sm:text-lg font-bold" style={{ color: 'var(--text)' }}>Acciones Rápidas</h1>
+            <p className="text-[11px] mt-0.5" style={{ color: 'var(--text-secondary)' }}>Panel operativo de botones</p>
+          </div>
+          <DarkModeToggle />
+        </div>
+
+        {loading ? (
+          <div className="flex justify-center py-12">
+            <div className="w-5 h-5 rounded-full border-2 border-[var(--accent-blue)] border-t-transparent animate-spin" />
+          </div>
+        ) : (
+          <>
+            {/* Main buttons */}
+            <div className="grid grid-cols-2 gap-2 sm:gap-3 animate-fade-up" style={{ animationDelay: '100ms' }}>
+              {[
+                { key: 'nuevo' as ModalType, icon: '➕', label: 'Nuevo vehículo', desc: 'Crear en Notion' },
+                { key: 'mover' as ModalType, icon: '🚀', label: 'Mover vehículo', desc: 'Cambiar estado' },
+                { key: 'asignar' as ModalType, icon: '👤', label: 'Asignar responsable', desc: 'Vehículo → empleado' },
+                { key: 'orden' as ModalType, icon: '📋', label: 'Nueva orden taller', desc: 'Taller / Chapa / Prep / Log' },
+              ].map((btn) => (
+                <button
+                  key={btn.key}
+                  onClick={() => setModal(btn.key)}
+                  className="card p-3 sm:p-4 text-left min-h-[80px] sm:min-h-[90px] transition-all duration-150 hover:scale-[1.02] cursor-pointer"
+                  style={{ background: 'var(--bg-card)', color: 'var(--text)' }}
+                >
+                  <span className="text-lg sm:text-xl">{btn.icon}</span>
+                  <p className="text-xs sm:text-sm font-semibold mt-1">{btn.label}</p>
+                  <p className="text-[10px] sm:text-[11px]" style={{ color: 'var(--text-muted)' }}>{btn.desc}</p>
+                </button>
+              ))}
+            </div>
+
+            {/* Secondary actions */}
+            <div className="flex gap-2 mt-3 animate-fade-up" style={{ animationDelay: '150ms' }}>
+              <button
+                onClick={async () => {
+                  try {
+                    await fetch('/api/cron/sync')
+                    showToast('Sync forzado ✓')
+                  } catch { showToast('Error en sync') }
+                }}
+                className="card flex-1 text-center text-xs sm:text-sm font-medium px-3 py-2.5 min-h-[44px]"
+                style={{ color: 'var(--text)' }}
+              >
+                🔄 Forzar sync
+              </button>
+              <button
+                onClick={async () => {
+                  try {
+                    const res = await fetch('/api/kpis')
+                    const data = await res.json()
+                    const ids = data.data?.activeAlerts?.map((a: any) => a.id) || []
+                    await Promise.all(ids.map((id: string) =>
+                      fetch(`/api/alerts/${id}`, { method: 'PATCH' })
+                    ))
+                    showToast(`${ids.length} alertas resueltas ✓`)
+                  } catch { showToast('Error al resolver') }
+                }}
+                className="card flex-1 text-center text-xs sm:text-sm font-medium px-3 py-2.5 min-h-[44px]"
+                style={{ color: 'var(--text)' }}
+              >
+                ✅ Resolver alertas
+              </button>
+            </div>
+          </>
+        )}
+
+        <p className="text-center text-[11px] mt-6" style={{ color: 'var(--text-muted)' }}>
+          UPCARS · Panel de botones
+        </p>
+      </div>
+
+      {/* Toast */}
+      {toast && (
+        <div className="fixed bottom-4 left-1/2 -translate-x-1/2 z-50 animate-fade-up">
+          <div className="card px-4 py-2 text-sm font-medium" style={{ color: 'var(--text)', background: 'var(--bg-card)' }}>
+            {toast}
+          </div>
+        </div>
+      )}
+
+      {/* Modal: Nuevo vehículo */}
+      {modal === 'nuevo' && (
+        <Modal onClose={() => setModal(null)} title="➕ Nuevo vehículo">
+          <NuevoVehiculoForm onSuccess={() => { setModal(null); showToast('Vehículo creado ✓'); fetchData() }} />
+        </Modal>
+      )}
+
+      {/* Modal: Mover vehículo */}
+      {modal === 'mover' && (
+        <Modal onClose={() => setModal(null)} title="🚀 Mover vehículo">
+          <MoverVehiculoForm vehicles={vehicles} onSuccess={() => { setModal(null); showToast('Vehículo movido ✓'); fetchData() }} />
+        </Modal>
+      )}
+
+      {/* Modal: Asignar responsable */}
+      {modal === 'asignar' && (
+        <Modal onClose={() => setModal(null)} title="👤 Asignar responsable">
+          <AsignarForm vehicles={vehicles} employees={employees} onSuccess={() => { setModal(null); showToast('Responsable asignado ✓'); fetchData() }} />
+        </Modal>
+      )}
+
+      {/* Modal: Nueva orden taller */}
+      {modal === 'orden' && (
+        <Modal onClose={() => setModal(null)} title="📋 Nueva orden taller">
+          <OrdenForm vehicles={vehicles} onSuccess={() => { setModal(null); showToast('Orden creada ✓'); fetchData() }} />
+        </Modal>
+      )}
+    </div>
+  )
+}
+
+export default function BotonesPage() {
+  return (
+    <ThemeProvider>
+      <BotonesInner />
+    </ThemeProvider>
+  )
+}
+
+/* ─── Modal wrapper ─── */
+
+function Modal({ children, title, onClose }: { children: React.ReactNode; title: string; onClose: () => void }) {
+  return (
+    <div
+      className="fixed inset-0 z-40 flex items-center justify-center p-4"
+      style={{ background: 'rgba(0,0,0,0.6)' }}
+      onClick={(e) => { if (e.target === e.currentTarget) onClose() }}
+    >
+      <div
+        className="card w-full max-w-sm animate-fade-up overflow-hidden"
+        style={{ background: 'var(--bg-card)' }}
+      >
+        <div className="flex items-center justify-between px-4 py-3 border-b" style={{ borderColor: 'var(--border)' }}>
+          <h2 className="text-sm font-semibold" style={{ color: 'var(--text)' }}>{title}</h2>
+          <button onClick={onClose} className="text-sm px-2 py-1 rounded" style={{ color: 'var(--text-muted)' }}>
+            ✕
+          </button>
+        </div>
+        <div className="p-4">{children}</div>
+      </div>
+    </div>
+  )
+}
+
+/* ─── Form: Nuevo vehículo ─── */
+
+function NuevoVehiculoForm({ onSuccess }: { onSuccess: () => void }) {
+  const [name, setName] = useState('')
+  const [matricula, setMatricula] = useState('')
+  const [brand, setBrand] = useState('')
+  const [model, setModel] = useState('')
+  const [year, setYear] = useState('')
+  const [saving, setSaving] = useState(false)
+
+  async function handleSubmit(e: React.FormEvent) {
+    e.preventDefault()
+    if (!name.trim()) return
+    setSaving(true)
+    try {
+      const res = await fetch('/api/vehicles', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          name: name.trim(),
+          matricula: matricula.trim() || undefined,
+          brand: brand.trim() || undefined,
+          model: model.trim() || undefined,
+          year: year ? parseInt(year) : undefined,
+        }),
+      })
+      if (res.ok) onSuccess()
+    } finally {
+      setSaving(false)
+    }
+  }
+
+  return (
+    <form onSubmit={handleSubmit} className="space-y-3">
+      <Input label="Nombre *" value={name} onChange={setName} required />
+      <Input label="Matrícula" value={matricula} onChange={setMatricula} />
+      <Input label="Marca" value={brand} onChange={setBrand} />
+      <Input label="Modelo" value={model} onChange={setModel} />
+      <Input label="Año" value={year} onChange={setYear} type="number" />
+      <button
+        type="submit"
+        disabled={saving || !name.trim()}
+        className="w-full text-sm font-semibold py-2.5 rounded min-h-[44px] transition-opacity disabled:opacity-40"
+        style={{ background: 'var(--accent-blue)', color: '#fff' }}
+      >
+        {saving ? 'Creando...' : 'Crear vehículo'}
+      </button>
+    </form>
+  )
+}
+
+/* ─── Form: Mover vehículo ─── */
+
+function MoverVehiculoForm({ vehicles, onSuccess }: { vehicles: VehicleItem[]; onSuccess: () => void }) {
+  const [vehicleId, setVehicleId] = useState('')
+  const [toState, setToState] = useState('')
+  const [saving, setSaving] = useState(false)
+
+  const vehicle = vehicles.find((v) => v.id === vehicleId)
+  const availableStates = vehicle ? VALID_NEXT[vehicle.state] || [] : []
+
+  async function handleSubmit(e: React.FormEvent) {
+    e.preventDefault()
+    if (!vehicleId || !toState) return
+    setSaving(true)
+    try {
+      const res = await fetch(`/api/vehicles/${vehicleId}`, {
+        method: 'PATCH',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ state: toState }),
+      })
+      if (res.ok) onSuccess()
+    } finally {
+      setSaving(false)
+    }
+  }
+
+  return (
+    <form onSubmit={handleSubmit} className="space-y-3">
+      <Select
+        label="Vehículo" value={vehicleId} onChange={(v) => { setVehicleId(v); setToState('') }}
+        options={vehicles.map((v) => ({ value: v.id, label: `${v.name} (${v.matricula || v.brand || '—'}) — ${STATE_LABELS[v.state] || v.state}` }))}
+      />
+      {vehicle && (
+        <div className="text-xs px-2 py-1.5 rounded" style={{ background: 'var(--bg-pill)', color: 'var(--text-secondary)' }}>
+          Estado actual: <strong style={{ color: 'var(--text)' }}>{STATE_LABELS[vehicle.state] || vehicle.state}</strong>
+        </div>
+      )}
+      {availableStates.length > 0 ? (
+        <Select
+          label="Mover a" value={toState} onChange={setToState}
+          options={availableStates.map((s) => ({ value: s, label: STATE_LABELS[s] || s }))}
+        />
+      ) : (
+        vehicle && <p className="text-xs" style={{ color: 'var(--text-muted)' }}>Este vehículo no puede avanzar a más estados.</p>
+      )}
+      <button
+        type="submit"
+        disabled={saving || !vehicleId || !toState}
+        className="w-full text-sm font-semibold py-2.5 rounded min-h-[44px] transition-opacity disabled:opacity-40"
+        style={{ background: 'var(--accent-blue)', color: '#fff' }}
+      >
+        {saving ? 'Moviendo...' : 'Mover vehículo'}
+      </button>
+    </form>
+  )
+}
+
+/* ─── Form: Asignar responsable ─── */
+
+function AsignarForm({ vehicles, employees, onSuccess }: { vehicles: VehicleItem[]; employees: EmployeeItem[]; onSuccess: () => void }) {
+  const [vehicleId, setVehicleId] = useState('')
+  const [employeeId, setEmployeeId] = useState('')
+  const [saving, setSaving] = useState(false)
+
+  async function handleSubmit(e: React.FormEvent) {
+    e.preventDefault()
+    if (!vehicleId || !employeeId) return
+    setSaving(true)
+    try {
+      const res = await fetch(`/api/vehicles/${vehicleId}/assign`, {
+        method: 'PATCH',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ employeeId }),
+      })
+      if (res.ok) onSuccess()
+    } finally {
+      setSaving(false)
+    }
+  }
+
+  return (
+    <form onSubmit={handleSubmit} className="space-y-3">
+      <Select
+        label="Vehículo" value={vehicleId} onChange={setVehicleId}
+        options={vehicles.map((v) => ({ value: v.id, label: `${v.name} (${v.matricula || v.brand || '—'})` }))}
+      />
+      <Select
+        label="Responsable" value={employeeId} onChange={setEmployeeId}
+        options={employees.map((e) => ({ value: e.id, label: `${e.name} — ${e.role}` }))}
+      />
+      <button
+        type="submit"
+        disabled={saving || !vehicleId || !employeeId}
+        className="w-full text-sm font-semibold py-2.5 rounded min-h-[44px] transition-opacity disabled:opacity-40"
+        style={{ background: 'var(--accent-blue)', color: '#fff' }}
+      >
+        {saving ? 'Asignando...' : 'Asignar responsable'}
+      </button>
+    </form>
+  )
+}
+
+/* ─── Form: Nueva orden taller ─── */
+
+function OrdenForm({ vehicles, onSuccess }: { vehicles: VehicleItem[]; onSuccess: () => void }) {
+  const [vehicleId, setVehicleId] = useState('')
+  const [type, setType] = useState('')
+  const [notes, setNotes] = useState('')
+  const [saving, setSaving] = useState(false)
+
+  async function handleSubmit(e: React.FormEvent) {
+    e.preventDefault()
+    if (!vehicleId || !type) return
+    setSaving(true)
+    try {
+      const res = await fetch('/api/workshop-orders', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ type, vehicleId, notes: notes.trim() || undefined }),
+      })
+      if (res.ok) onSuccess()
+    } finally {
+      setSaving(false)
+    }
+  }
+
+  return (
+    <form onSubmit={handleSubmit} className="space-y-3">
+      <Select
+        label="Vehículo" value={vehicleId} onChange={setVehicleId}
+        options={vehicles.map((v) => ({ value: v.id, label: `${v.name} (${v.matricula || v.brand || '—'})` }))}
+      />
+      <Select
+        label="Tipo de orden" value={type} onChange={setType}
+        options={[
+          { value: 'Taller', label: '🔧 Taller' },
+          { value: 'Chapa', label: '🎨 Chapa y Pintura' },
+          { value: 'Preparacion', label: '✨ Preparación' },
+          { value: 'Logistica', label: '🚛 Logística' },
+        ]}
+      />
+      <Input label="Notas (opcional)" value={notes} onChange={setNotes} textarea />
+      <button
+        type="submit"
+        disabled={saving || !vehicleId || !type}
+        className="w-full text-sm font-semibold py-2.5 rounded min-h-[44px] transition-opacity disabled:opacity-40"
+        style={{ background: 'var(--accent-blue)', color: '#fff' }}
+      >
+        {saving ? 'Creando...' : 'Crear orden'}
+      </button>
+    </form>
+  )
+}
+
+/* ─── UI helpers ─── */
+
+function Input({ label, value, onChange, required, type, textarea }: {
+  label: string; value: string; onChange: (v: string) => void; required?: boolean; type?: string; textarea?: boolean
+}) {
+  if (textarea) {
+    return (
+      <div>
+        <label className="block text-xs font-medium mb-1" style={{ color: 'var(--text-secondary)' }}>{label}</label>
+        <textarea
+          value={value}
+          onChange={(e) => onChange(e.target.value)}
+          rows={3}
+          className="w-full text-sm px-3 py-2 rounded outline-none resize-none"
+          style={{ background: 'var(--bg)', color: 'var(--text)', border: '1px solid var(--border)' }}
+        />
+      </div>
+    )
+  }
+  return (
+    <div>
+      <label className="block text-xs font-medium mb-1" style={{ color: 'var(--text-secondary)' }}>{label}</label>
+      <input
+        type={type || 'text'}
+        value={value}
+        onChange={(e) => onChange(e.target.value)}
+        required={required}
+        className="w-full text-sm px-3 py-2 rounded outline-none"
+        style={{ background: 'var(--bg)', color: 'var(--text)', border: '1px solid var(--border)' }}
+      />
+    </div>
+  )
+}
+
+function Select({ label, value, onChange, options }: {
+  label: string; value: string; onChange: (v: string) => void; options: { value: string; label: string }[]
+}) {
+  return (
+    <div>
+      <label className="block text-xs font-medium mb-1" style={{ color: 'var(--text-secondary)' }}>{label}</label>
+      <select
+        value={value}
+        onChange={(e) => onChange(e.target.value)}
+        className="w-full text-sm px-3 py-2 rounded outline-none appearance-none"
+        style={{ background: 'var(--bg)', color: 'var(--text)', border: '1px solid var(--border)' }}
+      >
+        <option value="">Seleccionar...</option>
+        {options.map((o) => (
+          <option key={o.value} value={o.value}>{o.label}</option>
+        ))}
+      </select>
+    </div>
+  )
+}
