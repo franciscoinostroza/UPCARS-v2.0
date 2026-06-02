@@ -55,11 +55,17 @@ export async function POST(request: NextRequest) {
       )
     }
 
+    console.log('Creating vehicle with data:', JSON.stringify(body))
     const id = await createVehicle({ name, matricula, brand, model, year, lineaNegocio, tipo, fechaCompra, fechaListo, precioCompra, precioVenta })
 
     return NextResponse.json({ success: true, data: { id } }, { status: 201 })
   } catch (error: any) {
-    console.error('Vehicle POST error:', error)
+    console.error('Vehicle POST error details:', {
+      message: error?.message,
+      stack: error?.stack?.split('\n').slice(0, 3).join('\n'),
+      body: error?.body,
+      status: error?.status,
+    })
     return NextResponse.json(
       { success: false, error: error?.message || 'Failed to create vehicle' },
       { status: 500 }

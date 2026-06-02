@@ -41,11 +41,11 @@ function BotonesInner() {
   const [vehicles, setVehicles] = useState<VehicleItem[]>([])
   const [employees, setEmployees] = useState<EmployeeItem[]>([])
   const [loading, setLoading] = useState(true)
-  const [toast, setToast] = useState<string | null>(null)
+  const [toast, setToast] = useState<{ msg: string; error?: boolean } | null>(null)
 
-  const showToast = (msg: string) => {
-    setToast(msg)
-    setTimeout(() => setToast(null), 2500)
+  const showToast = (msg: string, error?: boolean) => {
+    setToast({ msg, error })
+    setTimeout(() => setToast(null), 3000)
   }
 
   const fetchData = useCallback(async () => {
@@ -85,7 +85,6 @@ function BotonesInner() {
           </div>
         ) : (
           <>
-            {/* Main buttons */}
             <div className="grid grid-cols-2 gap-2 sm:gap-3 animate-fade-up" style={{ animationDelay: '100ms' }}>
               {[
                 { key: 'nuevo' as ModalType, icon: '➕', label: 'Nuevo vehículo', desc: 'Crear en Notion' },
@@ -106,14 +105,13 @@ function BotonesInner() {
               ))}
             </div>
 
-            {/* Secondary actions */}
             <div className="flex gap-2 mt-3 animate-fade-up" style={{ animationDelay: '150ms' }}>
               <button
                 onClick={async () => {
                   try {
                     await fetch('/api/cron/sync')
                     showToast('Sync forzado ✓')
-                  } catch { showToast('Error en sync') }
+                  } catch { showToast('Error en sync', true) }
                 }}
                 className="card flex-1 text-center text-xs sm:text-sm font-medium px-3 py-2.5 min-h-[44px]"
                 style={{ color: 'var(--text)' }}
@@ -130,7 +128,7 @@ function BotonesInner() {
                       fetch(`/api/alerts/${id}`, { method: 'PATCH' })
                     ))
                     showToast(`${ids.length} alertas resueltas ✓`)
-                  } catch { showToast('Error al resolver') }
+                  } catch { showToast('Error al resolver', true) }
                 }}
                 className="card flex-1 text-center text-xs sm:text-sm font-medium px-3 py-2.5 min-h-[44px]"
                 style={{ color: 'var(--text)' }}
@@ -146,40 +144,54 @@ function BotonesInner() {
         </p>
       </div>
 
-      {/* Toast */}
       {toast && (
         <div className="fixed bottom-4 left-1/2 -translate-x-1/2 z-50 animate-fade-up">
-          <div className="card px-4 py-2 text-sm font-medium" style={{ color: 'var(--text)', background: 'var(--bg-card)' }}>
-            {toast}
+          <div
+            className="card px-4 py-2 text-sm font-medium"
+            style={{
+              color: 'var(--text)',
+              background: toast.error ? 'rgba(235, 87, 87, 0.15)' : 'var(--bg-card)',
+              border: toast.error ? '1px solid var(--accent-red)' : undefined,
+            }}
+          >
+            {toast.msg}
           </div>
         </div>
       )}
 
-      {/* Modal: Nuevo vehículo */}
       {modal === 'nuevo' && (
         <Modal onClose={() => setModal(null)} title="➕ Nuevo vehículo">
-          <NuevoVehiculoForm onSuccess={() => { setModal(null); showToast('Vehículo creado ✓'); fetchData() }} />
+          <NuevoVehiculoForm
+            onSuccess={() => { setModal(null); showToast('Vehículo creado ✓'); fetchData() }}
+            onError={(msg) => showToast(msg, true)}
+          />
         </Modal>
       )}
-
-      {/* Modal: Mover vehículo */}
       {modal === 'mover' && (
         <Modal onClose={() => setModal(null)} title="🚀 Mover vehículo">
-          <MoverVehiculoForm vehicles={vehicles} onSuccess={() => { setModal(null); showToast('Vehículo movido ✓'); fetchData() }} />
+          <MoverVehiculoForm
+            vehicles={vehicles}
+            onSuccess={() => { setModal(null); showToast('Vehículo movido ✓'); fetchData() }}
+            onError={(msg) => showToast(msg, true)}
+          />
         </Modal>
       )}
-
-      {/* Modal: Asignar responsable */}
       {modal === 'asignar' && (
         <Modal onClose={() => setModal(null)} title="👤 Asignar responsable">
-          <AsignarForm vehicles={vehicles} employees={employees} onSuccess={() => { setModal(null); showToast('Responsable asignado ✓'); fetchData() }} />
+          <AsignarForm
+            vehicles={vehicles} employees={employees}
+            onSuccess={() => { setModal(null); showToast('Responsable asignado ✓'); fetchData() }}
+            onError={(msg) => showToast(msg, true)}
+          />
         </Modal>
       )}
-
-      {/* Modal: Nueva orden taller */}
       {modal === 'orden' && (
         <Modal onClose={() => setModal(null)} title="📋 Nueva orden taller">
-          <OrdenForm vehicles={vehicles} onSuccess={() => { setModal(null); showToast('Orden creada ✓'); fetchData() }} />
+          <OrdenForm
+            vehicles={vehicles}
+            onSuccess={() => { setModal(null); showToast('Orden creada ✓'); fetchData() }}
+            onError={(msg) => showToast(msg, true)}
+          />
         </Modal>
       )}
     </div>
@@ -194,7 +206,7 @@ export default function BotonesPage() {
   )
 }
 
-/* ─── Modal wrapper ─── */
+/* ─── Modal ─── */
 
 function Modal({ children, title, onClose }: { children: React.ReactNode; title: string; onClose: () => void }) {
   return (
@@ -204,16 +216,16 @@ function Modal({ children, title, onClose }: { children: React.ReactNode; title:
       onClick={(e) => { if (e.target === e.currentTarget) onClose() }}
     >
       <div
-        className="card w-full max-w-sm animate-fade-up overflow-hidden"
-        style={{ background: 'var(--bg-card)' }}
+        className="card w-full max-w-sm animate-fade-up flex flex-col"
+        style={{ background: 'var(--bg-card)', maxHeight: '85vh' }}
       >
-        <div className="flex items-center justify-between px-4 py-3 border-b" style={{ borderColor: 'var(--border)' }}>
+        <div className="flex items-center justify-between px-4 py-3 border-b shrink-0" style={{ borderColor: 'var(--border)' }}>
           <h2 className="text-sm font-semibold" style={{ color: 'var(--text)' }}>{title}</h2>
           <button onClick={onClose} className="text-sm px-2 py-1 rounded" style={{ color: 'var(--text-muted)' }}>
             ✕
           </button>
         </div>
-        <div className="p-4">{children}</div>
+        <div className="p-4 overflow-y-auto">{children}</div>
       </div>
     </div>
   )
@@ -221,7 +233,7 @@ function Modal({ children, title, onClose }: { children: React.ReactNode; title:
 
 /* ─── Form: Nuevo vehículo ─── */
 
-function NuevoVehiculoForm({ onSuccess }: { onSuccess: () => void }) {
+function NuevoVehiculoForm({ onSuccess, onError }: { onSuccess: () => void; onError: (msg: string) => void }) {
   const [name, setName] = useState('')
   const [matricula, setMatricula] = useState('')
   const [brand, setBrand] = useState('')
@@ -244,38 +256,42 @@ function NuevoVehiculoForm({ onSuccess }: { onSuccess: () => void }) {
       if (matricula.trim()) body.matricula = matricula.trim()
       if (brand.trim()) body.brand = brand.trim()
       if (model.trim()) body.model = model.trim()
-      if (year) body.year = parseInt(year)
+      if (year.trim()) body.year = parseInt(year)
       if (lineaNegocio.trim()) body.lineaNegocio = lineaNegocio.trim()
       if (tipo.trim()) body.tipo = tipo.trim()
       if (fechaCompra) body.fechaCompra = fechaCompra
       if (fechaListo) body.fechaListo = fechaListo
-      if (precioCompra) body.precioCompra = parseFloat(precioCompra)
-      if (precioVenta) body.precioVenta = parseFloat(precioVenta)
+      if (precioCompra.trim()) body.precioCompra = parseFloat(precioCompra)
+      if (precioVenta.trim()) body.precioVenta = parseFloat(precioVenta)
 
       const res = await fetch('/api/vehicles', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify(body),
       })
+      const data = await res.json()
       if (res.ok) onSuccess()
+      else onError(data.error || 'Error al crear vehículo')
+    } catch (err: any) {
+      onError(err?.message || 'Error de red')
     } finally {
       setSaving(false)
     }
   }
 
   return (
-    <form onSubmit={handleSubmit} className="space-y-3 max-h-[60vh] overflow-y-auto pr-1">
+    <form onSubmit={handleSubmit} className="space-y-3">
       <Input label="Nombre *" value={name} onChange={setName} required />
       <Input label="Matrícula" value={matricula} onChange={setMatricula} />
       <Input label="Marca" value={brand} onChange={setBrand} />
       <Input label="Modelo" value={model} onChange={setModel} />
-      <Input label="Año" value={year} onChange={setYear} type="number" />
+      <Input label="Año" value={year} onChange={setYear} inputMode="numeric" />
       <Input label="Línea de negocio" value={lineaNegocio} onChange={setLineaNegocio} />
       <Input label="Tipo de vehículo" value={tipo} onChange={setTipo} />
       <Input label="Fecha de compra" value={fechaCompra} onChange={setFechaCompra} type="date" />
       <Input label="Fecha listo para venta" value={fechaListo} onChange={setFechaListo} type="date" />
-      <Input label="Precio de compra (€)" value={precioCompra} onChange={setPrecioCompra} type="number" />
-      <Input label="Precio de venta (€)" value={precioVenta} onChange={setPrecioVenta} type="number" />
+      <Input label="Precio de compra (€)" value={precioCompra} onChange={setPrecioCompra} inputMode="decimal" />
+      <Input label="Precio de venta (€)" value={precioVenta} onChange={setPrecioVenta} inputMode="decimal" />
       <button
         type="submit"
         disabled={saving || !name.trim()}
@@ -290,7 +306,7 @@ function NuevoVehiculoForm({ onSuccess }: { onSuccess: () => void }) {
 
 /* ─── Form: Mover vehículo ─── */
 
-function MoverVehiculoForm({ vehicles, onSuccess }: { vehicles: VehicleItem[]; onSuccess: () => void }) {
+function MoverVehiculoForm({ vehicles, onSuccess, onError }: { vehicles: VehicleItem[]; onSuccess: () => void; onError: (msg: string) => void }) {
   const [vehicleId, setVehicleId] = useState('')
   const [toState, setToState] = useState('')
   const [saving, setSaving] = useState(false)
@@ -308,7 +324,11 @@ function MoverVehiculoForm({ vehicles, onSuccess }: { vehicles: VehicleItem[]; o
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ state: toState }),
       })
+      const data = await res.json()
       if (res.ok) onSuccess()
+      else onError(data.error || 'Error al mover')
+    } catch (err: any) {
+      onError(err?.message || 'Error de red')
     } finally {
       setSaving(false)
     }
@@ -347,7 +367,7 @@ function MoverVehiculoForm({ vehicles, onSuccess }: { vehicles: VehicleItem[]; o
 
 /* ─── Form: Asignar responsable ─── */
 
-function AsignarForm({ vehicles, employees, onSuccess }: { vehicles: VehicleItem[]; employees: EmployeeItem[]; onSuccess: () => void }) {
+function AsignarForm({ vehicles, employees, onSuccess, onError }: { vehicles: VehicleItem[]; employees: EmployeeItem[]; onSuccess: () => void; onError: (msg: string) => void }) {
   const [vehicleId, setVehicleId] = useState('')
   const [employeeId, setEmployeeId] = useState('')
   const [saving, setSaving] = useState(false)
@@ -362,7 +382,11 @@ function AsignarForm({ vehicles, employees, onSuccess }: { vehicles: VehicleItem
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ employeeId }),
       })
+      const data = await res.json()
       if (res.ok) onSuccess()
+      else onError(data.error || 'Error al asignar')
+    } catch (err: any) {
+      onError(err?.message || 'Error de red')
     } finally {
       setSaving(false)
     }
@@ -392,7 +416,7 @@ function AsignarForm({ vehicles, employees, onSuccess }: { vehicles: VehicleItem
 
 /* ─── Form: Nueva orden taller ─── */
 
-function OrdenForm({ vehicles, onSuccess }: { vehicles: VehicleItem[]; onSuccess: () => void }) {
+function OrdenForm({ vehicles, onSuccess, onError }: { vehicles: VehicleItem[]; onSuccess: () => void; onError: (msg: string) => void }) {
   const [vehicleId, setVehicleId] = useState('')
   const [type, setType] = useState('')
   const [notes, setNotes] = useState('')
@@ -408,7 +432,11 @@ function OrdenForm({ vehicles, onSuccess }: { vehicles: VehicleItem[]; onSuccess
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ type, vehicleId, notes: notes.trim() || undefined }),
       })
+      const data = await res.json()
       if (res.ok) onSuccess()
+      else onError(data.error || 'Error al crear orden')
+    } catch (err: any) {
+      onError(err?.message || 'Error de red')
     } finally {
       setSaving(false)
     }
@@ -444,8 +472,8 @@ function OrdenForm({ vehicles, onSuccess }: { vehicles: VehicleItem[]; onSuccess
 
 /* ─── UI helpers ─── */
 
-function Input({ label, value, onChange, required, type, textarea }: {
-  label: string; value: string; onChange: (v: string) => void; required?: boolean; type?: string; textarea?: boolean
+function Input({ label, value, onChange, required, type, inputMode, textarea }: {
+  label: string; value: string; onChange: (v: string) => void; required?: boolean; type?: string; inputMode?: string; textarea?: boolean
 }) {
   if (textarea) {
     return (
@@ -466,6 +494,7 @@ function Input({ label, value, onChange, required, type, textarea }: {
       <label className="block text-xs font-medium mb-1" style={{ color: 'var(--text-secondary)' }}>{label}</label>
       <input
         type={type || 'text'}
+        inputMode={(inputMode || 'text') as any}
         value={value}
         onChange={(e) => onChange(e.target.value)}
         required={required}
