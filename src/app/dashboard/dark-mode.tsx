@@ -1,6 +1,5 @@
 'use client'
 
-import { useEffect, useState } from 'react'
 import { useTheme } from './theme-context'
 
 export function DarkModeToggle() {
@@ -9,14 +8,11 @@ export function DarkModeToggle() {
   return (
     <button
       onClick={toggle}
-      className="relative w-10 h-10 rounded-xl glass flex items-center justify-center transition-all hover:scale-110 active:scale-95"
+      className="card card-hover w-9 h-9 flex items-center justify-center transition-all active:scale-95"
       aria-label="Toggle dark mode"
+      style={{ color: 'var(--text-secondary)' }}
     >
-      <span className="text-lg transition-all duration-300" style={{
-        transform: dark ? 'rotate(0deg)' : 'rotate(360deg)',
-      }}>
-        {dark ? '🌙' : '☀️'}
-      </span>
+      <span className="text-sm">{dark ? '☀️' : '🌙'}</span>
     </button>
   )
 }

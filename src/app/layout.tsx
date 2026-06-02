@@ -18,16 +18,16 @@ export default function RootLayout({
           dangerouslySetInnerHTML={{
             __html: `
               try {
-                const t = localStorage.getItem('theme');
-                if (t === 'dark' || (!t && matchMedia('(prefers-color-scheme: dark)').matches)) {
-                  document.documentElement.classList.add('dark');
-                }
+                var t = localStorage.getItem('theme');
+                var isDark = t === 'dark' || (!t && matchMedia('(prefers-color-scheme: dark)').matches);
+                if (window.self !== window.top) isDark = true;
+                if (isDark) document.documentElement.classList.add('dark');
               } catch(e) {}
             `,
           }}
         />
       </head>
-      <body>{children}</body>
+      <body style={{ margin: 0 }}>{children}</body>
     </html>
   )
 }

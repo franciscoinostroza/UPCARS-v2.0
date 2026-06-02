@@ -13,8 +13,11 @@ export function ThemeProvider({ children }: { children: ReactNode }) {
 
   useEffect(() => {
     setMounted(true)
+    const isIframe = window.self !== window.top
     const stored = localStorage.getItem('theme')
-    if (stored === 'dark' || (!stored && window.matchMedia('(prefers-color-scheme: dark)').matches)) {
+    const shouldBeDark = stored === 'dark' || (!stored && (isIframe || window.matchMedia('(prefers-color-scheme: dark)').matches))
+
+    if (shouldBeDark) {
       setDark(true)
       document.documentElement.classList.add('dark')
     }

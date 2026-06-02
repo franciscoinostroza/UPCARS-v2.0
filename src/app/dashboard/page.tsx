@@ -32,14 +32,6 @@ const ALERT_ICONS: Record<string, string> = {
   task_overdue: '📋',
 }
 
-const ALERT_COLORS: Record<string, string> = {
-  sla_violation: 'border-l-red-400',
-  vehicle_no_responsible: 'border-l-yellow-400',
-  chapa_prolonged: 'border-l-purple-400',
-  stuck_in_comprado: 'border-l-orange-400',
-  task_overdue: 'border-l-blue-400',
-}
-
 function DashboardInner() {
   const { dark } = useTheme()
   const [kpis, setKpis] = useState<KPIStats | null>(null)
@@ -76,10 +68,10 @@ function DashboardInner() {
 
   if (loading) {
     return (
-      <div className="min-h-screen flex items-center justify-center">
-        <div className="flex flex-col items-center gap-4">
-          <div className="w-8 h-8 rounded-full border-2 border-[var(--accent-blue)] border-t-transparent animate-spin" />
-          <p className="text-sm text-[var(--text-muted)]">Cargando...</p>
+      <div className="min-h-screen flex items-center justify-center" style={{ background: 'var(--bg)' }}>
+        <div className="flex flex-col items-center gap-3">
+          <div className="w-6 h-6 rounded-full border-2 border-[var(--accent-blue)] border-t-transparent animate-spin" />
+          <p className="text-sm" style={{ color: 'var(--text-muted)' }}>Cargando...</p>
         </div>
       </div>
     )
@@ -91,161 +83,116 @@ function DashboardInner() {
   const totalEvents = kpis?.totalEvents || 0
 
   return (
-    <div className="min-h-screen transition-colors duration-300" style={{ background: 'var(--bg)' }}>
+    <div style={{ background: 'var(--bg)', minHeight: '100vh' }}>
       <div className="max-w-7xl mx-auto p-4 sm:p-6 lg:p-8">
 
         {/* Header */}
-        <header className="flex items-center justify-between mb-8 animate-fade-up">
+        <div className="flex items-center justify-between mb-6 animate-fade-up">
           <div>
-            <h1 className="text-2xl font-bold" style={{ color: 'var(--text)' }}>
-              UPCARS
-            </h1>
-            <p className="text-sm mt-0.5" style={{ color: 'var(--text-secondary)' }}>
+            <h1 className="text-xl font-bold" style={{ color: 'var(--text)' }}>UPCARS</h1>
+            <p className="text-xs mt-0.5" style={{ color: 'var(--text-secondary)' }}>
               Panel operativo del concesionario
             </p>
           </div>
-          <div className="flex items-center gap-3">
-            <DarkModeToggle />
-          </div>
-        </header>
+          <DarkModeToggle />
+        </div>
 
         {/* Stats chips */}
-        <div className="flex flex-wrap gap-3 mb-8 animate-fade-up" style={{ animationDelay: '100ms' }}>
-          <div className="glass rounded-xl px-4 py-2.5 flex items-center gap-2.5">
-            <span className="text-lg">📊</span>
-            <div>
-              <p className="text-xs font-medium" style={{ color: 'var(--text-secondary)' }}>Eventos</p>
-              <p className="text-lg font-bold stat-value" style={{ color: 'var(--text)' }}>{totalEvents}</p>
-            </div>
-          </div>
-          <div className="glass rounded-xl px-4 py-2.5 flex items-center gap-2.5">
-            <span className="text-lg">🚗</span>
-            <div>
-              <p className="text-xs font-medium" style={{ color: 'var(--text-secondary)' }}>En flujo</p>
-              <p className="text-lg font-bold stat-value" style={{ color: 'var(--text)' }}>{pipelineTotal}</p>
-            </div>
-          </div>
-          <div className="glass rounded-xl px-4 py-2.5 flex items-center gap-2.5">
-            <span className="text-lg">⚠️</span>
-            <div>
-              <p className="text-xs font-medium" style={{ color: 'var(--text-secondary)' }}>Alertas</p>
-              <p className="text-lg font-bold stat-value" style={{ color: alerts.length > 0 ? 'var(--accent-red)' : 'var(--text)' }}>
-                {alerts.length}
-              </p>
-            </div>
-          </div>
-          {complianceEntries.length > 0 && (
-            <div className="glass rounded-xl px-4 py-2.5 flex items-center gap-2.5">
-              <span className="text-lg">🎯</span>
+        <div className="flex flex-wrap gap-2 mb-6 animate-fade-up" style={{ animationDelay: '100ms' }}>
+          {[
+            { icon: '📊', label: 'Eventos', value: totalEvents },
+            { icon: '🚗', label: 'En flujo', value: pipelineTotal },
+            { icon: '⚠️', label: 'Alertas', value: alerts.length, accent: alerts.length > 0 },
+          ].map((s) => (
+            <div key={s.label} className="card flex items-center gap-2.5 px-3 py-2">
+              <span className="text-sm">{s.icon}</span>
               <div>
-                <p className="text-xs font-medium" style={{ color: 'var(--text-secondary)' }}>SLA global</p>
-                <p className="text-lg font-bold stat-value" style={{ color: 'var(--text)' }}>
-                  {Math.round(
-                    complianceEntries.reduce((s, [, v]) => s + v, 0) / complianceEntries.length
-                  )}%
-                </p>
+                <p className="text-[11px]" style={{ color: 'var(--text-secondary)' }}>{s.label}</p>
+                <p className="text-base font-bold stat-value" style={{
+                  color: s.accent ? 'var(--accent-red)' : 'var(--text)',
+                }}>{s.value}</p>
               </div>
             </div>
-          )}
+          ))}
         </div>
 
         {/* Pipeline */}
-        <section className="mb-8 animate-fade-up" style={{ animationDelay: '200ms' }}>
-          <h2 className="text-sm font-semibold uppercase tracking-wider mb-4" style={{ color: 'var(--text-secondary)' }}>
+        <section className="mb-6 animate-fade-up" style={{ animationDelay: '150ms' }}>
+          <h2 className="text-[11px] font-semibold uppercase tracking-wider mb-3" style={{ color: 'var(--text-secondary)' }}>
             Pipeline de vehículos
           </h2>
           <Pipeline columns={pipeline} />
         </section>
 
         {/* SLA + Alerts */}
-        <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-8">
-          {/* SLA */}
-          <div className="glass-strong rounded-2xl p-5 animate-fade-up" style={{ animationDelay: '300ms' }}>
-            <h2 className="text-sm font-semibold uppercase tracking-wider mb-5" style={{ color: 'var(--text-secondary)' }}>
+        <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
+          <div className="card p-5 animate-fade-up" style={{ animationDelay: '200ms' }}>
+            <h2 className="text-[11px] font-semibold uppercase tracking-wider mb-4" style={{ color: 'var(--text-secondary)' }}>
               Cumplimiento de SLA
             </h2>
-            <div className="space-y-4">
+            <div className="space-y-3">
               {['Taller', 'Chapa', 'Preparacion', 'Logistica'].map((area) => {
                 const avg = slas[area]?.avg
                 const pct = kpis?.compliance[area]
                 return (
-                  <div key={area} className="animate-slide-in">
-                    <div className="flex items-center justify-between mb-1.5">
-                      <span className="text-sm font-medium" style={{ color: 'var(--text)' }}>
-                        {AREA_LABELS[area] || area}
-                      </span>
+                  <div key={area}>
+                    <div className="flex items-center justify-between mb-1">
+                      <span className="text-sm" style={{ color: 'var(--text)' }}>{AREA_LABELS[area] || area}</span>
                       <span className="text-xs" style={{ color: 'var(--text-muted)' }}>
                         {avg ? `${avg.toFixed(1)}h · ` : ''}
                         {pct !== undefined ? (
                           <span className="font-semibold" style={{
                             color: pct >= 80 ? 'var(--accent-green)' : pct >= 50 ? 'var(--accent-yellow)' : 'var(--accent-red)'
-                          }}>
-                            {pct}%
-                          </span>
-                        ) : (
-                          <span style={{ color: 'var(--text-muted)' }}>—</span>
-                        )}
+                          }}>{pct}%</span>
+                        ) : <span style={{ color: 'var(--text-muted)' }}>—</span>}
                       </span>
                     </div>
                     <div className="sla-bar">
-                      <div
-                        className="sla-bar-fill"
-                        style={{
-                          width: `${pct || 0}%`,
-                          backgroundColor: pct !== undefined
-                            ? pct >= 80 ? 'var(--accent-green)' : pct >= 50 ? 'var(--accent-yellow)' : 'var(--accent-red)'
-                            : 'transparent',
-                        }}
-                      />
+                      <div className="sla-bar-fill" style={{
+                        width: `${pct || 0}%`,
+                        backgroundColor: pct !== undefined
+                          ? pct >= 80 ? 'var(--accent-green)' : pct >= 50 ? 'var(--accent-yellow)' : 'var(--accent-red)'
+                          : 'transparent',
+                      }} />
                     </div>
                   </div>
                 )
               })}
               {complianceEntries.length === 0 && (
-                <p className="text-xs italic" style={{ color: 'var(--text-muted)' }}>
-                  Sin datos de SLA aún. Los datos aparecerán cuando los vehículos pasen por las áreas.
-                </p>
+                <p className="text-xs" style={{ color: 'var(--text-muted)' }}>Sin datos de SLA aún.</p>
               )}
             </div>
           </div>
 
-          {/* Alerts */}
-          <div className="glass-strong rounded-2xl p-5 animate-fade-up" style={{ animationDelay: '400ms' }}>
-            <div className="flex items-center justify-between mb-5">
-              <h2 className="text-sm font-semibold uppercase tracking-wider" style={{ color: 'var(--text-secondary)' }}>
+          <div className="card p-5 animate-fade-up" style={{ animationDelay: '250ms' }}>
+            <div className="flex items-center justify-between mb-4">
+              <h2 className="text-[11px] font-semibold uppercase tracking-wider" style={{ color: 'var(--text-secondary)' }}>
                 Alertas activas
               </h2>
               {alerts.length > 0 && (
-                <span className="text-xs font-bold px-2 py-0.5 rounded-full"
-                  style={{ background: 'rgba(239, 68, 68, 0.1)', color: 'var(--accent-red)' }}
-                >
+                <span className="pill" style={{ background: 'rgba(235, 87, 87, 0.1)', color: 'var(--accent-red)' }}>
                   {alerts.length}
                 </span>
               )}
             </div>
             {alerts.length === 0 ? (
-              <div className="flex flex-col items-center justify-center py-8 text-center">
-                <span className="text-3xl mb-2">✅</span>
-                <p className="text-sm font-medium" style={{ color: 'var(--text)' }}>Todo en orden</p>
+              <div className="flex flex-col items-center justify-center py-6 text-center">
+                <span className="text-2xl mb-2">✅</span>
+                <p className="text-sm" style={{ color: 'var(--text)' }}>Todo en orden</p>
                 <p className="text-xs mt-1" style={{ color: 'var(--text-muted)' }}>No hay alertas activas</p>
               </div>
             ) : (
-              <div className="space-y-2 max-h-64 overflow-y-auto pr-1">
+              <div className="space-y-1.5 max-h-64 overflow-y-auto pr-1">
                 {alerts.map((alert) => (
-                  <div
-                    key={alert.id}
-                    className={`vehicle-card ${ALERT_COLORS[alert.type] || 'border-l-gray-400'} border-l-2 animate-slide-in`}
-                  >
-                    <div className="flex items-start gap-2">
-                      <span>{ALERT_ICONS[alert.type] || '⚠️'}</span>
-                      <div className="min-w-0">
-                        <p className="text-sm font-medium truncate" style={{ color: 'var(--text)' }}>
-                          {alert.vehicle_name}
-                        </p>
-                        <p className="text-xs mt-0.5" style={{ color: 'var(--text-muted)' }}>
-                          {alert.message}
-                        </p>
-                      </div>
+                  <div key={alert.id} className="vehicle-card flex items-start gap-2.5">
+                    <span>{ALERT_ICONS[alert.type] || '⚠️'}</span>
+                    <div className="min-w-0">
+                      <p className="text-sm font-medium truncate" style={{ color: 'var(--text)' }}>
+                        {alert.vehicle_name}
+                      </p>
+                      <p className="text-xs mt-0.5" style={{ color: 'var(--text-muted)' }}>
+                        {alert.message}
+                      </p>
                     </div>
                   </div>
                 ))}
@@ -254,17 +201,9 @@ function DashboardInner() {
           </div>
         </div>
 
-        {/* Footer */}
-        <footer className="text-center text-xs pb-8 animate-fade-up" style={{ animationDelay: '500ms', color: 'var(--text-muted)' }}>
-          UPCARS Automation Engine v2 · Los datos se actualizan cada 30s ·{' '}
-          <button
-            onClick={() => window.location.reload()}
-            className="underline hover:no-underline"
-            style={{ color: 'var(--accent-blue)' }}
-          >
-            Recargar
-          </button>
-        </footer>
+        <p className="text-center text-xs mt-8" style={{ color: 'var(--text-muted)' }}>
+          UPCARS · Los datos se actualizan cada 30s
+        </p>
       </div>
     </div>
   )
