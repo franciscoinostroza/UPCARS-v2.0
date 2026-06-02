@@ -1,4 +1,4 @@
-import { supabase } from '@/lib/supabase/client'
+// No supabase needed in event-engine
 
 export interface SyncResult {
   changesDetected: number

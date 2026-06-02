@@ -1,4 +1,4 @@
-import { supabase } from '@/lib/supabase/client'
+import { getSupabase } from '@/lib/supabase/client'
 import { VehicleState, SLA_THRESHOLDS } from '@/lib/types'
 
 const AREA_MAP: Record<string, string> = {
@@ -7,6 +7,8 @@ const AREA_MAP: Record<string, string> = {
   Chapa: 'Chapa',
   Preparacion: 'Preparacion',
 }
+
+const db = () => getSupabase()
 
 export async function handleSLAChange(
   vehicleId: string,
@@ -28,17 +30,17 @@ export async function handleSLAChange(
     }
   }
 
-  await supabase.from('sla_records').insert({
+  await db().from('sla_records').insert({
     vehicle_id: vehicleId,
     area,
     start_time: timestamp.toISOString(),
     threshold,
     met: null,
-  })
+  } as never)
 }
 
 async function closeSLARecord(vehicleId: string, area: string, endTime: Date): Promise<void> {
-  const { data } = await supabase
+  const { data } = await db()
     .from('sla_records')
     .select('id, start_time, threshold')
     .eq('vehicle_id', vehicleId)
@@ -50,28 +52,24 @@ async function closeSLARecord(vehicleId: string, area: string, endTime: Date): P
 
   if (!data) return
 
-  const start = new Date(data.start_time)
-  const hoursDiff = (endTime.getTime() - start.getTime()) / (1000 * 60 * 60)
-  const met = hoursDiff <= data.threshold
-
-  await supabase
+  await db()
     .from('sla_records')
     .update({
       end_time: endTime.toISOString(),
-      met,
-    })
-    .eq('id', data.id)
+      met: (endTime.getTime() - new Date((data as any).start_time).getTime()) / (1000 * 60 * 60) <= (data as any).threshold,
+    } as never)
+    .eq('id', (data as any).id)
 }
 
 export async function checkSLAs() {
-  const { data: openRecords } = await supabase
+  const { data: openRecords } = await db()
     .from('sla_records')
     .select('*')
     .is('end_time', null)
 
   const violations: any[] = []
 
-  for (const record of openRecords || []) {
+  for (const record of (openRecords as any[]) || []) {
     const start = new Date(record.start_time)
     const now = new Date()
     const hoursElapsed = (now.getTime() - start.getTime()) / (1000 * 60 * 60)
@@ -85,12 +83,14 @@ export async function checkSLAs() {
 }
 
 export async function getKPIStats() {
-  const { data: records } = await supabase
+  const { data: records } = await db()
     .from('sla_records')
     .select('*')
     .not('end_time', 'is', null)
 
-  if (!records || records.length === 0) {
+  const typedRecords: any[] = (records as any) || []
+
+  if (typedRecords.length === 0) {
     return { slas: {}, compliance: {} }
   }
 
@@ -99,7 +99,7 @@ export async function getKPIStats() {
   const compliance: Record<string, number> = {}
 
   for (const area of areas) {
-    const areaRecords = records.filter((r: any) => r.area === area)
+    const areaRecords = typedRecords.filter((r: any) => r.area === area)
     if (areaRecords.length === 0) continue
 
     const totalHours = areaRecords.reduce(

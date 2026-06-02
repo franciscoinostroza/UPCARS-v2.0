@@ -1,4 +1,4 @@
-import { supabase } from '@/lib/supabase/client'
+import { getSupabase } from '@/lib/supabase/client'
 import { checkSLAs } from './sla-engine'
 import { getVehicles } from '@/lib/notion/vehicles'
 
@@ -14,13 +14,13 @@ async function checkSLAAlerts() {
   const violations = await checkSLAs()
 
   for (const violation of violations) {
-    await supabase.from('alert_records').insert({
+    await getSupabase().from('alert_records').insert({
       vehicle_id: violation.vehicle_id,
       vehicle_name: violation.vehicle_id,
       type: 'sla_violation',
       message: `SLA excedido en ${violation.area} para vehículo ${violation.vehicle_id}`,
       resolved: false,
-    })
+    } as never)
   }
 }
 
@@ -80,13 +80,13 @@ async function checkTaskAlerts() {
       const dueDate = new Date(deadline)
       if (dueDate < now) {
         const taskName = task.properties?.['Nombre de la tarea']?.title?.[0]?.plain_text || 'Tarea'
-        await supabase.from('alert_records').insert({
+        await getSupabase().from('alert_records').insert({
           vehicle_id: null,
           vehicle_name: taskName,
           type: 'task_overdue',
           message: `Tarea vencida: ${taskName}`,
           resolved: false,
-        })
+        } as never)
       }
     }
   } catch {
@@ -95,7 +95,7 @@ async function checkTaskAlerts() {
 }
 
 async function createVehicleAlert(vehicleId: string, vehicleName: string, type: string, message: string) {
-  const { data: existing } = await supabase
+  const { data: existing } = await getSupabase()
     .from('alert_records')
     .select('id')
     .eq('vehicle_id', vehicleId)
@@ -105,11 +105,11 @@ async function createVehicleAlert(vehicleId: string, vehicleName: string, type: 
 
   if (existing && existing.length > 0) return
 
-  await supabase.from('alert_records').insert({
+  await getSupabase().from('alert_records').insert({
     vehicle_id: vehicleId,
     vehicle_name: vehicleName,
     type,
     message,
     resolved: false,
-  })
+  } as never)
 }
