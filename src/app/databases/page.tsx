@@ -88,18 +88,33 @@ function DatabasesInner() {
                   <p className="text-[11px]" style={{ color: 'var(--text-muted)' }}>{cat.desc}</p>
                 </div>
                 <div className="grid grid-cols-2 sm:grid-cols-3 gap-2">
-                  {items.map((db) => (
-                    <button
-                      key={db.key}
-                      onClick={() => setSelectedDb(db)}
-                      className="card p-3 min-h-[72px] text-left transition-all duration-150 hover:scale-[1.02] cursor-pointer"
-                      style={{ background: 'var(--bg-card)', color: 'var(--text)' }}
-                    >
-                      <span className="text-lg">{db.icon}</span>
-                      <p className="text-xs sm:text-sm font-semibold mt-1">{db.name}</p>
-                      <p className="text-[10px] sm:text-[11px]" style={{ color: 'var(--text-muted)' }}>{db.desc}</p>
-                    </button>
-                  ))}
+                  {items.map((db) =>
+                    db.embedUrl ? (
+                      <button
+                        key={db.key}
+                        onClick={() => setSelectedDb(db)}
+                        className="card p-3 min-h-[72px] text-left transition-all duration-150 hover:scale-[1.02] cursor-pointer"
+                        style={{ background: 'var(--bg-card)', color: 'var(--text)' }}
+                      >
+                        <span className="text-lg">{db.icon}</span>
+                        <p className="text-xs sm:text-sm font-semibold mt-1">{db.name}</p>
+                        <p className="text-[10px] sm:text-[11px]" style={{ color: 'var(--text-muted)' }}>{db.desc}</p>
+                      </button>
+                    ) : (
+                      <a
+                        key={db.key}
+                        href={db.url}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        className="card p-3 min-h-[72px] block transition-all duration-150 hover:scale-[1.02]"
+                        style={{ background: 'var(--bg-card)', color: 'var(--text)' }}
+                      >
+                        <span className="text-lg">{db.icon}</span>
+                        <p className="text-xs sm:text-sm font-semibold mt-1">{db.name}</p>
+                        <p className="text-[10px] sm:text-[11px]" style={{ color: 'var(--text-muted)' }}>{db.desc}</p>
+                      </a>
+                    )
+                  )}
                 </div>
               </div>
             )
@@ -138,29 +153,12 @@ function DatabasesInner() {
               </button>
             </div>
             <div className="flex-1 min-h-0">
-              {selectedDb.embedUrl ? (
-                <iframe
-                  src={selectedDb.embedUrl}
-                  className="w-full"
-                  style={{ height: '75vh', border: 'none' }}
-                  title={selectedDb.name}
-                />
-              ) : (
-                <div className="flex flex-col items-center justify-center gap-3 py-12">
-                  <p className="text-sm" style={{ color: 'var(--text-muted)' }}>
-                    Vista embebida no disponible
-                  </p>
-                  <a
-                    href={selectedDb.url}
-                    target="_blank"
-                    rel="noopener noreferrer"
-                    className="text-xs px-3 py-1.5 rounded font-medium"
-                    style={{ background: 'var(--bg-pill)', color: 'var(--accent-blue)' }}
-                  >
-                    Abrir en Notion ↗
-                  </a>
-                </div>
-              )}
+              <iframe
+                src={selectedDb.embedUrl}
+                className="w-full"
+                style={{ height: '75vh', border: 'none' }}
+                title={selectedDb.name}
+              />
             </div>
           </div>
         </div>
