@@ -118,6 +118,13 @@ function BotonesInner() {
               >
                 🔄 Forzar sync
               </button>
+              <a
+                href="/databases"
+                className="card flex-1 text-center text-xs sm:text-sm font-medium px-3 py-2.5 min-h-[44px] block"
+                style={{ color: 'var(--text)' }}
+              >
+                🗄️ Bases de datos
+              </a>
               <button
                 onClick={async () => {
                   try {
