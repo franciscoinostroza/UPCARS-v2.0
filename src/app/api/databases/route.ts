@@ -72,9 +72,10 @@ export async function GET() {
     if (!id) continue
 
     const formattedId = formatId(id)
+    const rawId = id.replace(/-/g, '')
     const url = `https://notion.so/${formattedId}`
     const embeddable = process.env.NOTION_EMBED_DOMAIN && ['vehicles'].includes(key)
-    const embedUrl = embeddable ? `https://${process.env.NOTION_EMBED_DOMAIN}.notion.site/${formattedId}` : undefined
+    const embedUrl = embeddable ? `https://${process.env.NOTION_EMBED_DOMAIN}.notion.site/${rawId}` : undefined
 
     dbs.push({
       key,
