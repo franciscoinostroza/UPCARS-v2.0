@@ -82,8 +82,8 @@ function DatabasesInner() {
                     <a
                       key={db.key}
                       href={db.url}
-                      target={db.embedUrl ? undefined : '_blank'}
-                      rel={db.embedUrl ? undefined : 'noopener noreferrer'}
+                      target="_blank"
+                      rel="noopener noreferrer"
                       className="card p-3 min-h-[72px] block transition-all duration-150 hover:scale-[1.02]"
                       style={{ background: 'var(--bg-card)', color: 'var(--text)' }}
                     >
