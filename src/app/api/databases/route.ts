@@ -14,6 +14,7 @@ interface DBEntry {
   icon: string
   desc: string
   url: string
+  embedUrl?: string
   category: 'Operaciones' | 'Movimiento' | 'Gestión'
 }
 
@@ -70,7 +71,10 @@ export async function GET() {
 
     if (!id) continue
 
-    const url = `https://notion.so/${formatId(id)}`
+    const formattedId = formatId(id)
+    const url = `https://notion.so/${formattedId}`
+    const domain = process.env.NOTION_EMBED_DOMAIN
+    const embedUrl = domain ? `https://${domain}.notion.site/${formattedId}` : undefined
 
     dbs.push({
       key,
@@ -78,6 +82,7 @@ export async function GET() {
       icon: meta.icon,
       desc: meta.desc,
       url,
+      embedUrl,
       category: meta.category,
     })
   }
