@@ -8,8 +8,10 @@ import Pipeline from './pipeline'
 interface KPIStats {
   slas: Record<string, { avg: number; count: number }>
   compliance: Record<string, number>
+  bottlenecks?: { area: string; avgHours: number; maxHours: number; count: number }[]
   activeAlerts: { id: string; vehicle_name: string; type: string; message: string; created_at: string }[]
   totalEvents: number
+  employeeKPIs?: { id: string; name: string; role: string; department: string; tasksCompleted: number; tasksTotal: number; efficiency: number }[]
 }
 
 interface PipelineData {
@@ -24,12 +26,15 @@ const AREA_LABELS: Record<string, string> = {
   Logistica: 'Logística',
 }
 
-const ALERT_ICONS: Record<string, string> = {
-  sla_violation: '⏰',
-  vehicle_no_responsible: '👤',
-  chapa_prolonged: '🔄',
-  stuck_in_comprado: '🚫',
-  task_overdue: '📋',
+function getAlertIcon(type: string): string {
+  if (type.startsWith('stuck_in_')) return '🚫'
+  const icons: Record<string, string> = {
+    sla_violation: '⏰',
+    vehicle_no_responsible: '👤',
+    chapa_prolonged: '🔄',
+    task_overdue: '📋',
+  }
+  return icons[type] || '⚠️'
 }
 
 function DashboardInner() {
@@ -102,6 +107,8 @@ function DashboardInner() {
   const slas = kpis?.slas || {}
   const alerts = kpis?.activeAlerts || []
   const totalEvents = kpis?.totalEvents || 0
+  const vehicleKPIs = kpis?.vehicleKPIs || {}
+  const vehicleKPIEntries = Object.entries(vehicleKPIs)
 
   return (
     <div style={{ background: 'var(--bg)', minHeight: '100vh' }}>
@@ -124,6 +131,7 @@ function DashboardInner() {
             { icon: '📊', label: 'Eventos', value: totalEvents },
             { icon: '🚗', label: 'En flujo', value: pipelineTotal },
             { icon: '⚠️', label: 'Alertas', value: alerts.length, accent: alerts.length > 0 },
+            { icon: '✅', label: 'SLA cumplido', value: vehicleKPIEntries.filter(([, v]: any) => v.allMet).length + '/' + vehicleKPIEntries.length, accent: vehicleKPIEntries.length > 0 && vehicleKPIEntries.filter(([, v]: any) => !v.allMet).length > 0 },
           ].map((s) => (
             <div key={s.label} className="card flex items-center gap-1.5 sm:gap-2.5 px-2 sm:px-3 py-1.5 sm:py-2 min-h-[44px]">
               <span className="text-sm sm:text-base">{s.icon}</span>
@@ -145,8 +153,8 @@ function DashboardInner() {
           <Pipeline columns={pipeline} onVehicleMoved={fetchAll} />
         </section>
 
-        {/* SLA + Alerts */}
-        <div className="grid grid-cols-1 lg:grid-cols-2 gap-3 sm:gap-4">
+        {/* SLA + Bottlenecks + Alerts */}
+        <div className="grid grid-cols-1 lg:grid-cols-3 gap-3 sm:gap-4">
           <div className="card p-3 sm:p-5 animate-fade-up" style={{ animationDelay: '200ms' }}>
             <h2 className="text-[11px] font-semibold uppercase tracking-wider mb-3 sm:mb-4" style={{ color: 'var(--text-secondary)' }}>
               Cumplimiento de SLA
@@ -185,6 +193,37 @@ function DashboardInner() {
             </div>
           </div>
 
+          <div className="card p-3 sm:p-5 animate-fade-up" style={{ animationDelay: '225ms' }}>
+            <h2 className="text-[11px] font-semibold uppercase tracking-wider mb-3 sm:mb-4" style={{ color: 'var(--text-secondary)' }}>
+              Cuellos de botella
+            </h2>
+            {kpis?.bottlenecks && kpis.bottlenecks.length > 0 ? (
+              <div className="space-y-2.5 sm:space-y-3">
+                {kpis.bottlenecks.map((b) => (
+                  <div key={b.area}>
+                    <div className="flex items-center justify-between mb-1">
+                      <span className="text-xs sm:text-sm" style={{ color: 'var(--text)' }}>{b.area}</span>
+                      <span className="text-[10px] sm:text-xs" style={{ color: 'var(--text-muted)' }}>
+                        <span className="font-semibold">{b.avgHours.toFixed(1)}h</span> avg · {b.maxHours.toFixed(1)}h max · {b.count} ops
+                      </span>
+                    </div>
+                    <div className="sla-bar">
+                      <div className="sla-bar-fill" style={{
+                        width: `${Math.min((b.avgHours / (b.avgHours + 24)) * 100, 100)}%`,
+                        backgroundColor: b.avgHours > 72 ? 'var(--accent-red)' : b.avgHours > 48 ? 'var(--accent-yellow)' : 'var(--accent-green)',
+                      }} />
+                    </div>
+                  </div>
+                ))}
+              </div>
+            ) : (
+              <div className="flex flex-col items-center justify-center py-4 sm:py-6 text-center">
+                <span className="text-xl sm:text-2xl mb-2">📊</span>
+                <p className="text-xs" style={{ color: 'var(--text-muted)' }}>Sin datos suficientes aún.</p>
+              </div>
+            )}
+          </div>
+
           <div className="card p-3 sm:p-5 animate-fade-up" style={{ animationDelay: '250ms' }}>
             <div className="flex items-center justify-between mb-3 sm:mb-4">
               <h2 className="text-[11px] font-semibold uppercase tracking-wider" style={{ color: 'var(--text-secondary)' }}>
@@ -206,7 +245,7 @@ function DashboardInner() {
               <div className="space-y-1.5 max-h-48 sm:max-h-64 overflow-y-auto pr-1">
                 {alerts.map((alert) => (
                   <div key={alert.id} className="vehicle-card flex items-start gap-2 min-h-[44px]">
-                    <span className="mt-0.5">{ALERT_ICONS[alert.type] || '⚠️'}</span>
+                    <span className="mt-0.5">{getAlertIcon(alert.type)}</span>
                     <div className="min-w-0 flex-1">
                       <p className="text-xs sm:text-sm font-medium truncate" style={{ color: 'var(--text)' }}>
                         {alert.vehicle_name}
@@ -229,6 +268,39 @@ function DashboardInner() {
             )}
           </div>
         </div>
+
+        {/* Employee KPIs */}
+        {kpis?.employeeKPIs && kpis.employeeKPIs.length > 0 && (
+          <section className="mt-4 sm:mt-6 animate-fade-up" style={{ animationDelay: '300ms' }}>
+            <h2 className="text-[11px] font-semibold uppercase tracking-wider mb-2 sm:mb-3" style={{ color: 'var(--text-secondary)' }}>
+              Rendimiento de empleados
+            </h2>
+            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-2 sm:gap-3">
+              {kpis.employeeKPIs.map((emp) => (
+                <div key={emp.id} className="card p-3 sm:p-4">
+                  <div className="flex items-center justify-between mb-2">
+                    <div className="min-w-0">
+                      <p className="text-xs sm:text-sm font-medium truncate" style={{ color: 'var(--text)' }}>{emp.name}</p>
+                      <p className="text-[11px] truncate" style={{ color: 'var(--text-muted)' }}>{emp.role} · {emp.department}</p>
+                    </div>
+                    <span className="text-sm font-bold" style={{
+                      color: emp.efficiency >= 80 ? 'var(--accent-green)' : emp.efficiency >= 50 ? 'var(--accent-yellow)' : 'var(--accent-red)',
+                    }}>{emp.efficiency}%</span>
+                  </div>
+                  <div className="sla-bar">
+                    <div className="sla-bar-fill" style={{
+                      width: `${emp.efficiency}%`,
+                      backgroundColor: emp.efficiency >= 80 ? 'var(--accent-green)' : emp.efficiency >= 50 ? 'var(--accent-yellow)' : 'var(--accent-red)',
+                    }} />
+                  </div>
+                  <p className="text-[11px] mt-1.5" style={{ color: 'var(--text-muted)' }}>
+                    {emp.tasksCompleted}/{emp.tasksTotal} tareas completadas
+                  </p>
+                </div>
+              ))}
+            </div>
+          </section>
+        )}
 
         <p className="text-center text-xs mt-6 sm:mt-8 pb-4" style={{ color: 'var(--text-muted)' }}>
           UPCARS · Los datos se actualizan cada 30s

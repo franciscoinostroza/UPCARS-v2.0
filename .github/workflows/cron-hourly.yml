@@ -9,11 +9,10 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - name: Check SLAs
-        run: curl -s -f "https://upcars-v2.vercel.app/api/cron/sla"
+        run: curl -s -f -H "Authorization: Bearer ${{ secrets.CRON_SECRET }}" "https://upcars-v2.vercel.app/api/cron/sla"
 
   alerts:
-    needs: sla
     runs-on: ubuntu-latest
     steps:
       - name: Check Alerts
-        run: curl -s -f "https://upcars-v2.vercel.app/api/cron/alerts"
+        run: curl -s -f -H "Authorization: Bearer ${{ secrets.CRON_SECRET }}" "https://upcars-v2.vercel.app/api/cron/alerts"

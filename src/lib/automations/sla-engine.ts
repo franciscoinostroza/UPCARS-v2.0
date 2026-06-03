@@ -2,10 +2,10 @@ import { getSupabase } from '@/lib/supabase/client'
 import { VehicleState, SLA_THRESHOLDS } from '@/lib/types'
 
 const AREA_MAP: Record<string, string> = {
-  Logistica: 'Logistica',
-  Taller: 'Taller',
-  Chapa: 'Chapa',
-  Preparacion: 'Preparacion',
+  'En logística': 'Logistica',
+  'En taller': 'Taller',
+  'En chapa': 'Chapa',
+  'En preparación': 'Preparacion',
 }
 
 const db = () => getSupabase()
@@ -116,4 +116,62 @@ export async function getKPIStats() {
   }
 
   return { slas, compliance }
+}
+
+export async function getBottlenecks() {
+  const { data } = await getSupabase()
+    .from('sla_records')
+    .select('*')
+    .not('end_time', 'is', null)
+
+  const records = (data as any[]) || []
+  const byArea: Record<string, number[]> = {}
+
+  for (const r of records) {
+    if (!byArea[r.area]) byArea[r.area] = []
+    const hours = (new Date(r.end_time).getTime() - new Date(r.start_time).getTime()) / 3600000
+    byArea[r.area].push(hours)
+  }
+
+  return Object.entries(byArea)
+    .map(([area, times]) => ({
+      area,
+      avgHours: Math.round((times.reduce((a, b) => a + b, 0) / times.length) * 10) / 10,
+      maxHours: Math.round(Math.max(...times) * 10) / 10,
+      count: times.length,
+    }))
+    .sort((a, b) => b.avgHours - a.avgHours)
+}
+
+export async function getVehicleKPIs() {
+  const { data } = await getSupabase()
+    .from('sla_records')
+    .select('*')
+    .not('end_time', 'is', null)
+
+  const records = (data as any[]) || []
+  const byVehicle: Record<string, { area: string; hours: number; threshold: number; met: boolean }[]> = {}
+
+  for (const r of records) {
+    if (!byVehicle[r.vehicle_id]) byVehicle[r.vehicle_id] = []
+    const hours = Math.round(((new Date(r.end_time).getTime() - new Date(r.start_time).getTime()) / 3600000) * 10) / 10
+    byVehicle[r.vehicle_id].push({
+      area: r.area,
+      hours,
+      threshold: r.threshold,
+      met: r.met,
+    })
+  }
+
+  const result: Record<string, { areas: { area: string; hours: number; threshold: number; met: boolean }[]; totalHours: number; allMet: boolean }> = {}
+
+  for (const [vid, areas] of Object.entries(byVehicle)) {
+    result[vid] = {
+      areas,
+      totalHours: Math.round(areas.reduce((s, a) => s + a.hours, 0) * 10) / 10,
+      allMet: areas.every((a) => a.met),
+    }
+  }
+
+  return result
 }

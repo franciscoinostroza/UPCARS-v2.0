@@ -27,11 +27,12 @@ export async function getVehicle(pageId: string): Promise<Vehicle | null> {
 
 export async function updateVehicleStatus(pageId: string, newStatus: string): Promise<void> {
   const schema = await getDbSchema('vehicles')
-  const statusKey = findPropertyByType(schema, 'status') || 'Status'
+  const selects = findPropertiesByType(schema, 'select')
+  const statusKey = selects.find((s) => s.name === 'Estado Actual')?.name || selects[0]?.name || 'Estado'
 
   await notionPatch(`/pages/${pageId}`, {
     properties: {
-      [statusKey]: { status: { name: newStatus } },
+      [statusKey]: { select: { name: newStatus } },
     },
   })
 }
@@ -57,6 +58,23 @@ export async function assignResponsable(
   })
 }
 
+export async function setVehicleDate(
+  pageId: string,
+  fieldCandidates: string[],
+  dateValue: string
+): Promise<void> {
+  const schema = await getDbSchema('vehicles')
+  const dates = findPropertiesByType(schema, 'date')
+  const dateKey = dates.find((d) => fieldCandidates.some((c) => d.name.includes(c)))?.name || dates[1]?.name
+  if (!dateKey) return
+
+  await notionPatch(`/pages/${pageId}`, {
+    properties: {
+      [dateKey]: { date: { start: dateValue } },
+    },
+  })
+}
+
 export async function createVehicle(data: {
   name: string
   matricula?: string
@@ -65,22 +83,27 @@ export async function createVehicle(data: {
   year?: number
   lineaNegocio?: string
   tipo?: string
+  combustible?: string
+  color?: string
+  kilometrajeEntrada?: number
   fechaCompra?: string
+  fechaEntradaTaller?: string
+  fechaEntradaPreparacion?: string
   fechaListo?: string
   precioCompra?: number
   precioVenta?: number
+  notas?: string
 }): Promise<string> {
   const dbId = getDatabaseId('vehicles')
   const schema = await getDbSchema('vehicles')
 
   const titleKey = findPropertyByType(schema, 'title') || 'Name'
-  const statusKey = findPropertyByType(schema, 'status') || 'Status'
   const richTexts = findPropertiesByType(schema, 'rich_text')
   const selects = findPropertiesByType(schema, 'select')
   const dates = findPropertiesByType(schema, 'date')
   const numbers = findPropertiesByType(schema, 'number')
 
-  const richTextNames = ['Matrícula', 'Matricula', 'Marca', 'Brand', 'Modelo', 'Model']
+  const statusKey = selects.find((s) => s.name === 'Estado Actual')?.name || selects[0]?.name || 'Estado'
 
   function getRichTextKey(candidates: string[], fallbackIdx: number): string | undefined {
     for (const c of candidates) {
@@ -116,47 +139,71 @@ export async function createVehicle(data: {
 
   const properties: Record<string, unknown> = {
     [titleKey]: { title: [{ text: { content: data.name } }] },
-    [statusKey]: { status: { name: 'Comprado' } },
+    [statusKey]: { select: { name: 'Comprado' } },
   }
 
   if (data.matricula) {
-    const k = getRichTextKey(['Matrícula', 'Matricula'], 0)
+    const k = getRichTextKey(['Matricula / VIN', 'Matrícula', 'Matricula'], 0)
     if (k) properties[k] = { rich_text: [{ text: { content: data.matricula } }] }
   }
   if (data.brand) {
-    const k = getRichTextKey(['Marca', 'Brand'], richTextNames.indexOf('Brand') >= 0 ? 1 : 0)
+    const k = getRichTextKey(['Marca', 'Brand'], 0)
     if (k) properties[k] = { rich_text: [{ text: { content: data.brand } }] }
   }
   if (data.model) {
     const k = getRichTextKey(['Modelo', 'Model'], 2)
     if (k) properties[k] = { rich_text: [{ text: { content: data.model } }] }
   }
+  if (data.color) {
+    const k = getRichTextKey(['Color'], 3)
+    if (k) properties[k] = { rich_text: [{ text: { content: data.color } }] }
+  }
+  if (data.notas) {
+    const k = getRichTextKey(['Notas'], 4)
+    if (k) properties[k] = { rich_text: [{ text: { content: data.notas } }] }
+  }
   if (data.year) {
     const k = getNumberKey(['Año', 'Year', 'Ano'], 0)
     if (k) properties[k] = { number: data.year }
   }
+  if (data.kilometrajeEntrada !== undefined) {
+    const k = getNumberKey(['Kilometraje entrada'], 1)
+    if (k) properties[k] = { number: data.kilometrajeEntrada }
+  }
   if (data.lineaNegocio) {
-    const k = getSelectKey(['Línea de negocio', 'Linea de negocio', 'Linea de negocio'], 0)
+    const k = getSelectKey(['Línea de Negocio', 'Línea de negocio', 'Linea de negocio'], 1)
     if (k) properties[k] = { select: { name: data.lineaNegocio } }
   }
   if (data.tipo) {
-    const k = getSelectKey(['Tipo de vehículo', 'Tipo', 'Tipo de vehiculo'], 1)
+    const k = getSelectKey(['Tipo de vehículos', 'Tipo de vehículo', 'Tipo', 'Tipo de vehiculo'], 2)
     if (k) properties[k] = { select: { name: data.tipo } }
+  }
+  if (data.combustible) {
+    const k = getSelectKey(['Combustible'], 0)
+    if (k) properties[k] = { select: { name: data.combustible } }
   }
   if (data.fechaCompra) {
     const k = getDateKey(['Fecha de compra', 'Fecha compra'], 0)
     if (k) properties[k] = { date: { start: data.fechaCompra } }
   }
+  if (data.fechaEntradaTaller) {
+    const k = getDateKey(['Fecha entrada taller'], 1)
+    if (k) properties[k] = { date: { start: data.fechaEntradaTaller } }
+  }
+  if (data.fechaEntradaPreparacion) {
+    const k = getDateKey(['Fecha entrada preparación'], 2)
+    if (k) properties[k] = { date: { start: data.fechaEntradaPreparacion } }
+  }
   if (data.fechaListo) {
-    const k = getDateKey(['Fecha listo para venta', 'Fecha listo'], 1)
+    const k = getDateKey(['Fecha listo para venta', 'Fecha listo'], 3)
     if (k) properties[k] = { date: { start: data.fechaListo } }
   }
   if (data.precioCompra !== undefined) {
-    const k = getNumberKey(['Precio de compra (€)', 'Precio compra', 'Precio de compra'], 1)
+    const k = getNumberKey(['Precio de compra (€)', 'Precio compra', 'Precio de compra'], 2)
     if (k) properties[k] = { number: data.precioCompra }
   }
   if (data.precioVenta !== undefined) {
-    const k = getNumberKey(['Precio de venta (€)', 'Precio venta', 'Precio de venta'], 2)
+    const k = getNumberKey(['Precio venta (€)', 'Precio de venta (€)', 'Precio venta', 'Precio de venta'], 3)
     if (k) properties[k] = { number: data.precioVenta }
   }
 

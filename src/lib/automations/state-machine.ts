@@ -7,7 +7,7 @@ export function isValidTransition(from: VehicleState | null, to: VehicleState): 
 }
 
 export function getNextExpectedState(current: VehicleState): VehicleState | null {
-  const flow: VehicleState[] = ['Comprado', 'Logistica', 'Taller', 'Preparacion', 'Listo', 'Vendido']
+  const flow: VehicleState[] = ['Comprado', 'En logística', 'En taller', 'En chapa', 'En preparación', 'Listo para venta', 'Vendido', 'Cedido']
   const idx = flow.indexOf(current)
   if (idx === -1 || idx === flow.length - 1) return null
   return flow[idx + 1]

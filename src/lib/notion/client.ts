@@ -49,9 +49,16 @@ export function getDatabaseId(name: string): string {
     logistics: process.env.LOGISTICS_DB_ID,
     tasks: process.env.TASKS_DB_ID,
     ventas: process.env.VENTAS_DB_ID,
-    calendario: process.env.CALENDARIO_DB_ID,
+    calendario_operativo: process.env.CALENDARIO_OPERATIVO_DB_ID || process.env.CALENDARIO_DB_ID,
+    calendario: process.env.CALENDARIO_DB_ID || process.env.CALENDARIO_OPERATIVO_DB_ID,
+    calendario_rrhh: process.env.CALENDARIO_RRHH_DB_ID,
     marketing: process.env.MARKETING_DB_ID,
     reviews: process.env.GOOGLE_REVIEWS_DB_ID,
+    providers: process.env.PROVIDERS_DB_ID,
+    financieras: process.env.FINANCIERAS_DB_ID,
+    operaciones_financiadas: process.env.OPERACIONES_FINANCIADAS_DB_ID,
+    finanzas: process.env.FINANZAS_DB_ID,
+    buzon_mejora: process.env.BUZON_MEJORA_DB_ID,
   }
   const id = ids[name]
   if (!id) throw new Error(`Database ID not found for: ${name}`)

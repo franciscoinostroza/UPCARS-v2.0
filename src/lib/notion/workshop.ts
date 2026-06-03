@@ -44,15 +44,15 @@ export async function createWorkshopOrder(
   const selects = findPropertiesByType(schema, 'select')
   const richTexts = findPropertiesByType(schema, 'rich_text')
 
-  const relationKey = relations[0]?.name || 'Vehículo'
-  const statusKey = selects[0]?.name || 'Estado'
-  const responsableKey = relations[1]?.name || 'Responsable'
-  const notesKey = richTexts[0]?.name || 'Observaciones'
+  const relationKey = relations.find((r) => r.name === 'Vehículo')?.name || relations[0]?.name || 'Vehículo'
+  const statusKey = selects.find((s) => s.name === 'Estado')?.name || selects[0]?.name || 'Estado'
+  const responsableKey = relations.find((r) => r.name === 'Mecánico asignado' || r.name === 'Responsable')?.name || relations[1]?.name || 'Responsable'
+  const notesKey = richTexts.find((r) => r.name === 'Observaciones')?.name || richTexts[0]?.name || 'Observaciones'
 
   const properties: Record<string, unknown> = {
     [titleKey]: { title: [{ text: { content: `${prefix} - ${vehicle}` } }] },
     [relationKey]: { relation: [{ id: vehicleId }] },
-    [statusKey]: { select: { name: 'Pendiente' } },
+    [statusKey]: { select: { name: 'En proceso' } },
   }
 
   if (responsibleId) {

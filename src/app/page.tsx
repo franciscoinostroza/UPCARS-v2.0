@@ -22,11 +22,7 @@ export default function Home() {
         const res = await fetch('/api/health')
         if (!res.ok) return
         const data = await res.json()
-        if (data.status === 'ok' || data.service === 'ok') {
-          setHealth({ ...data, status: 'ok' })
-        } else {
-          setHealth(data)
-        }
+        setHealth({ ...data, status: data.status === 'ok' ? 'ok' : 'error' })
       } catch {
         setHealth({ status: 'error', service: 'error', notion: 'error', supabase: 'error', uptime: 0 })
       } finally {

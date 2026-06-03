@@ -14,26 +14,27 @@ export async function createTask(
   const titleKey = findPropertyByType(schema, 'title') || 'Nombre de la tarea'
   const relationProps = findPropertiesByType(schema, 'relation')
   const selectProps = findPropertiesByType(schema, 'select')
-  const statusKey = findPropertyByType(schema, 'status') || 'Estado'
 
   function findSelect(candidates: string[], fallbackIdx: number): string {
     for (const c of candidates) {
       const found = selectProps.find((s) => s.name === c)
       if (found) return found.name
     }
-    return selectProps[fallbackIdx]?.name || candidates[0]
+    const fallback = selectProps[fallbackIdx]
+    return fallback?.name || candidates[0] || selectProps[0]?.name || 'Estado'
   }
 
-  const priorityKey = findSelect(['Prioridad'], 0)
-  const deptKey = findSelect(['Departamento', 'Department'], 1)
-  const typeKey = findSelect(['Tipo', 'Type'], 2)
-  const vehicleRelKey = relationProps[0]?.name || 'Vehículo relacionado'
-  const responsibleRelKey = relationProps[1]?.name || 'Responsable(s)'
+  const statusKey = findSelect(['Estado'], 0)
+  const priorityKey = findSelect(['Prioridad'], 1)
+  const deptKey = findSelect(['Departamento', 'Department'], 2)
+  const typeKey = findSelect(['Tipo', 'Type'], 3)
+  const vehicleRelKey = relationProps?.find((r) => r.name === 'Vehículo relacionado' || r.name.includes('Vehículo'))?.name || relationProps[0]?.name
+  const responsibleRelKey = relationProps?.find((r) => r.name === 'Responsable')?.name || relationProps[1]?.name
 
   const properties: Record<string, unknown> = {
     [titleKey]: { title: [{ text: { content: name } }] },
     [priorityKey]: { select: { name: priority } },
-    [statusKey]: { status: { name: 'Sin empezar' } },
+    [statusKey]: { select: { name: 'Sin empezar' } },
     [deptKey]: { select: { name: area } },
     [typeKey]: { select: { name: 'Departamental' } },
   }

@@ -4,29 +4,29 @@ import { useState } from 'react'
 
 const STATE_LABELS: Record<string, string> = {
   Comprado: 'Comprado',
-  Logistica: 'Logística',
-  Taller: 'Taller',
-  Chapa: 'Chapa y Pintura',
-  Preparacion: 'Preparación',
-  Listo: 'Listo para venta',
+  'En logística': 'Logística',
+  'En taller': 'Taller',
+  'En chapa': 'Chapa y Pintura',
+  'En preparación': 'Preparación',
+  'Listo para venta': 'Listo para venta',
 }
 
 const STATE_ICONS: Record<string, string> = {
   Comprado: '📋',
-  Logistica: '🚛',
-  Taller: '🔧',
-  Chapa: '🎨',
-  Preparacion: '✨',
-  Listo: '✅',
+  'En logística': '🚛',
+  'En taller': '🔧',
+  'En chapa': '🎨',
+  'En preparación': '✨',
+  'Listo para venta': '✅',
 }
 
 const VALID_NEXT: Record<string, string[]> = {
-  Comprado: ['Logistica'],
-  Logistica: ['Taller', 'Chapa'],
-  Taller: ['Chapa', 'Preparacion'],
-  Chapa: ['Taller', 'Preparacion'],
-  Preparacion: ['Listo'],
-  Listo: [],
+  Comprado: ['En logística'],
+  'En logística': ['En taller', 'En chapa'],
+  'En taller': ['En chapa', 'En preparación'],
+  'En chapa': ['En taller', 'En preparación'],
+  'En preparación': ['Listo para venta'],
+  'Listo para venta': [],
 }
 
 interface PipelineVehicle {
@@ -35,6 +35,7 @@ interface PipelineVehicle {
   matricula: string
   brand: string
   daysInState: number
+  combustible?: string
 }
 
 interface PipelineColumn {
@@ -131,6 +132,7 @@ export default function Pipeline({
                     <div className="flex items-center justify-between mt-0.5">
                       <span className="text-[10px] sm:text-xs truncate mr-1" style={{ color: 'var(--text-muted)' }}>
                         {v.brand} · {v.matricula || '—'}
+                        {v.combustible ? ` · ${v.combustible}` : ''}
                       </span>
                       <span className="text-[10px] sm:text-[11px] flex-shrink-0" style={{ color: 'var(--text-muted)' }}>
                         {v.daysInState > 0 ? `${v.daysInState}d` : 'hoy'}

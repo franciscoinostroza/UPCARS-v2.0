@@ -1,10 +1,10 @@
 export type VehicleState =
   | 'Comprado'
-  | 'Logistica'
-  | 'Taller'
-  | 'Chapa'
-  | 'Preparacion'
-  | 'Listo'
+  | 'En logística'
+  | 'En taller'
+  | 'En chapa'
+  | 'En preparación'
+  | 'Listo para venta'
   | 'Vendido'
   | 'Cedido'
 
@@ -23,7 +23,15 @@ export interface Vehicle {
   responsable: string | null
   precioCompra: number | null
   precioVenta: number | null
-  costeTotal: number | null
+  combustible: string
+  color: string
+  kilometrajeEntrada: number | null
+  fechaEntradaTaller: string | null
+  fechaEntradaPreparacion: string | null
+  notas: string
+  tiempoTotalDias: number | null
+  diasActivoSinCerrar: number | null
+  margenBruto: number | null
 }
 
 export interface NotionVehiclePage {
@@ -39,10 +47,12 @@ export interface StateChangeEvent {
   timestamp: Date
 }
 
+export type WorkshopArea = 'Taller' | 'Chapa' | 'Preparacion' | 'Logistica'
+
 export interface WorkshopOrder {
   id: string
   vehicleId: string
-  type: 'Taller' | 'Chapa' | 'Preparacion' | 'Logistica'
+  type: WorkshopArea
   state: string
   responsibleId: string | null
   startDate: string | null
@@ -97,20 +107,35 @@ export interface AlertRecord {
   resolvedAt: Date | null
 }
 
+function envHours(key: string, fallback: number): number {
+  const val = typeof process !== 'undefined' ? process.env[key] : undefined
+  return val ? parseInt(val, 10) || fallback : fallback
+}
+
 export const SLA_THRESHOLDS: Record<string, number> = {
-  Taller: 72,
-  Chapa: 120,
-  Preparacion: 24,
-  Logistica: 24,
+  Taller: envHours('SLA_TALLER', 72),
+  Chapa: envHours('SLA_CHAPA', 120),
+  Preparacion: envHours('SLA_PREPARACION', 24),
+  Logistica: envHours('SLA_LOGISTICA', 24),
+}
+
+export const STUCK_THRESHOLDS: Partial<Record<VehicleState, number>> = {
+  Comprado: 7,
+  'En logística': 3,
+  'En taller': 5,
+  'En chapa': 7,
+  'En preparación': 2,
+  'Listo para venta': 14,
+  Cedido: 30,
 }
 
 export const VALID_TRANSITIONS: Record<VehicleState, VehicleState[]> = {
-  Comprado: ['Logistica'],
-  Logistica: ['Taller', 'Chapa', 'Cedido'],
-  Taller: ['Chapa', 'Preparacion'],
-  Chapa: ['Taller', 'Preparacion'],
-  Preparacion: ['Listo'],
-  Listo: ['Vendido', 'Cedido'],
+  Comprado: ['En logística'],
+  'En logística': ['En taller', 'En chapa', 'Cedido'],
+  'En taller': ['En chapa', 'En preparación'],
+  'En chapa': ['En taller', 'En preparación'],
+  'En preparación': ['Listo para venta'],
+  'Listo para venta': ['Vendido', 'Cedido'],
   Vendido: [],
-  Cedido: ['Logistica', 'Taller'],
+  Cedido: ['En logística', 'En taller'],
 }

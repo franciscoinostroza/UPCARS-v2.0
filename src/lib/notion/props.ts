@@ -23,6 +23,9 @@ function dateVal(p: NotionProp | undefined, fallback: string | null = null): str
 function formulaNum(p: NotionProp | undefined, fallback: number | null = null): number | null {
   return (p?.formula as any)?.number ?? (p?.formula as any)?.value ?? fallback
 }
+function filesVal(p: NotionProp | undefined, fallback = ''): string {
+  return (p?.files as any[])?.[0]?.file?.url ?? (p?.files as any[])?.[0]?.name ?? fallback
+}
 
 interface PropIndex {
   title: string[]
@@ -55,31 +58,40 @@ export function parseVehicleProps(id: string, p: Record<string, NotionProp>) {
   const idx = indexByType(p)
 
   const nameKey = idx.title[0]
-  const statusKey = idx.status[0]
-
-  const richTextKeys = idx.rich_text
-  const matriculaKey = matchKey(richTextKeys, ['Matrícula', 'Matricula']) ?? richTextKeys[0]
-  const brandKey = matchKey(richTextKeys, ['Marca', 'Brand']) ?? richTextKeys[1]
-  const modelKey = matchKey(richTextKeys, ['Modelo', 'Model']) ?? richTextKeys[2]
 
   const selectKeys = idx.select
-  const lineaNegocioKey = matchKey(selectKeys, ['Línea de negocio', 'Linea de negocio', 'Linea de negocio']) ?? selectKeys[0]
-  const tipoKey = matchKey(selectKeys, ['Tipo de vehículo', 'Tipo', 'Tipo de vehiculo']) ?? selectKeys[1]
+  const statusKey = matchKey(selectKeys, ['Estado Actual', 'Estado']) ?? selectKeys[0]
+
+  const richTextKeys = idx.rich_text
+  const matriculaKey = matchKey(richTextKeys, ['Matricula / VIN', 'Matrícula', 'Matricula']) ?? richTextKeys[0]
+  const brandKey = matchKey(richTextKeys, ['Marca', 'Brand']) ?? richTextKeys[1]
+  const modelKey = matchKey(richTextKeys, ['Modelo', 'Model']) ?? richTextKeys[2]
+  const colorKey = matchKey(richTextKeys, ['Color']) ?? richTextKeys[3]
+  const notasKey = matchKey(richTextKeys, ['Notas']) ?? richTextKeys[richTextKeys.length - 1]
+
+  const combustibleKey = matchKey(selectKeys, ['Combustible']) ?? selectKeys[0]
+  const lineaNegocioKey = matchKey(selectKeys, ['Línea de Negocio', 'Línea de negocio', 'Linea de negocio']) ?? selectKeys[1]
+  const tipoKey = matchKey(selectKeys, ['Tipo de vehículos', 'Tipo de vehículo', 'Tipo', 'Tipo de vehiculo']) ?? selectKeys[2]
 
   const dateKeys = idx.date
-  const fechaCompraKey = matchKey(dateKeys, ['Fecha de compra', 'Fecha compra', 'Fecha de compra']) ?? dateKeys[0]
-  const fechaListoKey = matchKey(dateKeys, ['Fecha listo para venta', 'Fecha listo']) ?? dateKeys[1]
+  const fechaCompraKey = matchKey(dateKeys, ['Fecha de compra', 'Fecha compra']) ?? dateKeys[0]
+  const fechaEntradaTallerKey = matchKey(dateKeys, ['Fecha entrada taller']) ?? dateKeys[1]
+  const fechaEntradaPreparacionKey = matchKey(dateKeys, ['Fecha entrada preparación']) ?? dateKeys[2]
+  const fechaListoKey = matchKey(dateKeys, ['Fecha listo para venta', 'Fecha listo']) ?? dateKeys[3]
 
   const numberKeys = idx.number
   const yearKey = matchKey(numberKeys, ['Año', 'Year', 'Ano']) ?? numberKeys[0]
-  const precioCompraKey = matchKey(numberKeys, ['Precio de compra (€)', 'Precio compra', 'Precio de compra']) ?? numberKeys[1]
-  const precioVentaKey = matchKey(numberKeys, ['Precio de venta (€)', 'Precio venta', 'Precio de venta']) ?? numberKeys[2]
+  const kilometrajeEntradaKey = matchKey(numberKeys, ['Kilometraje entrada']) ?? numberKeys[1]
+  const precioCompraKey = matchKey(numberKeys, ['Precio de compra (€)', 'Precio compra', 'Precio de compra']) ?? numberKeys[2]
+  const precioVentaKey = matchKey(numberKeys, ['Precio venta (€)', 'Precio de venta (€)', 'Precio venta', 'Precio de venta']) ?? numberKeys[3]
 
   const relationKeys = idx.relation
-  const responsableKey = relationKeys[0]
+  const responsableKey = matchKey(relationKeys, ['Responsable Actual', 'Responsable']) ?? relationKeys[0]
 
   const formulaKeys = idx.formula
-  const costeKey = formulaKeys[0]
+  const tiempoTotalKey = matchKey(formulaKeys, ['Tiempo total (días)', 'Tiempo total']) ?? formulaKeys[0]
+  const diasActivoKey = matchKey(formulaKeys, ['Días activo sin cerrar']) ?? formulaKeys[1]
+  const margenBrutoKey = matchKey(formulaKeys, ['Margen bruto (€)', 'Margen bruto']) ?? formulaKeys[2]
 
   return {
     id,
@@ -96,7 +108,15 @@ export function parseVehicleProps(id: string, p: Record<string, NotionProp>) {
     responsable: rel(responsableKey ? p[responsableKey] : undefined),
     precioCompra: num(precioCompraKey ? p[precioCompraKey] : undefined),
     precioVenta: num(precioVentaKey ? p[precioVentaKey] : undefined),
-    costeTotal: formulaNum(costeKey ? p[costeKey] : undefined),
+    combustible: sel(combustibleKey ? p[combustibleKey] : undefined),
+    color: rtv(colorKey ? p[colorKey] : undefined),
+    kilometrajeEntrada: num(kilometrajeEntradaKey ? p[kilometrajeEntradaKey] : undefined),
+    fechaEntradaTaller: dateVal(fechaEntradaTallerKey ? p[fechaEntradaTallerKey] : undefined),
+    fechaEntradaPreparacion: dateVal(fechaEntradaPreparacionKey ? p[fechaEntradaPreparacionKey] : undefined),
+    notas: rtv(notasKey ? p[notasKey] : undefined),
+    tiempoTotalDias: formulaNum(tiempoTotalKey ? p[tiempoTotalKey] : undefined),
+    diasActivoSinCerrar: formulaNum(diasActivoKey ? p[diasActivoKey] : undefined),
+    margenBruto: formulaNum(margenBrutoKey ? p[margenBrutoKey] : undefined),
   }
 }
 
@@ -104,15 +124,15 @@ export function parseEmployeeProps(id: string, p: Record<string, NotionProp>) {
   const idx = indexByType(p)
   const nameKey = idx.title[0]
   const selectKeys = idx.select
-  const roleKey = matchKey(selectKeys, ['Rol / Puesto', 'Rol', 'Role', 'Puesto']) ?? selectKeys[0]
-  const deptKey = matchKey(selectKeys, ['Departamento', 'Department']) ?? selectKeys[1]
-  const statusKey = idx.status[0]
+  const roleKey = matchKey(selectKeys, ['Cargo', 'Rol / Puesto', 'Rol', 'Role', 'Puesto']) ?? selectKeys[1]
+  const deptKey = matchKey(selectKeys, ['Departamento', 'Department']) ?? selectKeys[2]
+  const statusKey = matchKey(selectKeys, ['Estado', 'Estado Actual']) ?? selectKeys[0]
 
   return {
     id,
     name: tv(nameKey ? p[nameKey] : undefined),
     role: sel(roleKey ? p[roleKey] : undefined),
     department: sel(deptKey ? p[deptKey] : undefined),
-    active: (statusKey ? (p[statusKey] as any)?.status?.name === 'Activo' : false),
+    active: sel(statusKey ? p[statusKey] : undefined) === 'Activo',
   }
 }

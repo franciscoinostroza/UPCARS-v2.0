@@ -6,7 +6,7 @@ export const dynamic = 'force-dynamic'
 export async function GET(request: NextRequest) {
   try {
     const vehicles = await getVehicles()
-    const activeStates = ['Comprado', 'Logistica', 'Taller', 'Chapa', 'Preparacion', 'Listo']
+    const activeStates = ['Comprado', 'En logística', 'En taller', 'En chapa', 'En preparación', 'Listo para venta']
 
     const { searchParams } = new URL(request.url)
     const list = searchParams.get('list')
@@ -17,6 +17,15 @@ export async function GET(request: NextRequest) {
     }
 
     const activeVehicles = vehicles.filter((v) => activeStates.includes(v.state))
+
+    function calcDaysInState(v: (typeof activeVehicles)[number]): number {
+      const refDate =
+        v.state === 'En taller' ? v.fechaEntradaTaller
+        : v.state === 'En preparación' ? v.fechaEntradaPreparacion
+        : v.fechaCompra
+      if (!refDate) return 0
+      return Math.floor((Date.now() - new Date(refDate).getTime()) / (1000 * 60 * 60 * 24))
+    }
 
     const pipeline = activeStates.map((state) => ({
       state,
@@ -29,11 +38,8 @@ export async function GET(request: NextRequest) {
           brand: v.brand,
           model: v.model,
           year: v.year,
-          daysInState: v.fechaCompra
-            ? Math.floor(
-                (Date.now() - new Date(v.fechaCompra).getTime()) / (1000 * 60 * 60 * 24)
-              )
-            : 0,
+          combustible: v.combustible,
+          daysInState: calcDaysInState(v),
         })),
     }))
 

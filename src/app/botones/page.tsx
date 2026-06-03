@@ -20,17 +20,17 @@ interface EmployeeItem {
 }
 
 const VALID_NEXT: Record<string, string[]> = {
-  Comprado: ['Logistica'],
-  Logistica: ['Taller', 'Chapa'],
-  Taller: ['Chapa', 'Preparacion'],
-  Chapa: ['Taller', 'Preparacion'],
-  Preparacion: ['Listo'],
-  Listo: [],
+  Comprado: ['En logística'],
+  'En logística': ['En taller', 'En chapa'],
+  'En taller': ['En chapa', 'En preparación'],
+  'En chapa': ['En taller', 'En preparación'],
+  'En preparación': ['Listo para venta'],
+  'Listo para venta': [],
 }
 
 const STATE_LABELS: Record<string, string> = {
-  Comprado: 'Comprado', Logistica: 'Logística', Taller: 'Taller',
-  Chapa: 'Chapa y Pintura', Preparacion: 'Preparación', Listo: 'Listo para venta',
+  Comprado: 'Comprado', 'En logística': 'Logística', 'En taller': 'Taller',
+  'En chapa': 'Chapa y Pintura', 'En preparación': 'Preparación', 'Listo para venta': 'Listo para venta',
 }
 
 type ModalType = 'nuevo' | 'mover' | 'asignar' | 'orden' | null

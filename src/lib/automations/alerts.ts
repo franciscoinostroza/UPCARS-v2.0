@@ -1,6 +1,13 @@
 import { getSupabase } from '@/lib/supabase/client'
 import { checkSLAs } from './sla-engine'
 import { getVehicles } from '@/lib/notion/vehicles'
+import { STUCK_THRESHOLDS } from '@/lib/types'
+import type { VehicleState } from '@/lib/types'
+import { sendEmail } from '@/lib/email/send'
+import { notionPost, getDatabaseId } from '@/lib/notion/client'
+import { getDbSchema, findPropertiesByType } from '@/lib/notion/schema'
+
+const ADMIN_EMAIL = process.env.ADMIN_EMAIL || ''
 
 export async function handleAlertCheck(): Promise<void> {
   await Promise.all([
@@ -33,17 +40,16 @@ async function checkVehicleAlerts() {
       await createVehicleAlert(v.id, v.name, 'vehicle_no_responsible', `Vehículo sin responsable asignado`)
     }
 
-    if (v.state === 'Chapa') {
-      const fechaCompra = v.fechaCompra ? new Date(v.fechaCompra) : null
-      if (fechaCompra && (now.getTime() - fechaCompra.getTime()) / (1000 * 60 * 60 * 24) > 7) {
-        await createVehicleAlert(v.id, v.name, 'chapa_prolonged', `Vehículo en chapa/pintura por más de 7 días`)
-      }
-    }
-
-    if (v.state === 'Comprado' && v.fechaCompra) {
-      const fechaCompra = new Date(v.fechaCompra)
-      if ((now.getTime() - fechaCompra.getTime()) / (1000 * 60 * 60 * 24) > 7) {
-        await createVehicleAlert(v.id, v.name, 'stuck_in_comprado', `Vehículo detenido en estado Comprado por más de 7 días`)
+    const threshold = STUCK_THRESHOLDS[v.state as VehicleState]
+    if (threshold && v.fechaCompra) {
+      const refDate = new Date(v.fechaCompra)
+      if ((now.getTime() - refDate.getTime()) / (1000 * 60 * 60 * 24) > threshold) {
+        const stateKey = v.state.toLowerCase().replace(/\s+/g, '_')
+        await createVehicleAlert(
+          v.id, v.name,
+          `stuck_in_${stateKey}`,
+          `Vehículo detenido en ${v.state} por más de ${threshold} días`
+        )
       }
     }
   }
@@ -51,35 +57,32 @@ async function checkVehicleAlerts() {
 
 async function checkTaskAlerts() {
   try {
-    const dbId = process.env.TASKS_DB_ID
-    if (!dbId) return
+    const dbId = getDatabaseId('tasks')
+    const schema = await getDbSchema('tasks')
 
-    const res = await fetch(`https://api.notion.com/v1/databases/${dbId}/query`, {
-      method: 'POST',
-      headers: {
-        'Authorization': `Bearer ${process.env.NOTION_TOKEN}`,
-        'Notion-Version': '2022-06-28',
-        'Content-Type': 'application/json',
+    const selects = findPropertiesByType(schema, 'select')
+    const dates = findPropertiesByType(schema, 'date')
+
+    const estadoKey = selects.find((s) => s.name === 'Estado')?.name || selects[0]?.name || 'Estado'
+    const fechaKey = dates.find((d) => d.name === 'Fecha límite' || d.name.includes('Fecha'))?.name || dates[0]?.name || 'Fecha límite'
+    const titleKey = 'Nombre de la tarea'
+
+    const data: any = await notionPost(`/databases/${dbId}/query`, {
+      filter: {
+        property: estadoKey,
+        select: { does_not_equal: 'Completada' },
       },
-      body: JSON.stringify({
-        filter: {
-          property: 'Estado',
-          status: { does_not_equal: 'Completada' },
-        },
-      }),
     })
 
-    if (!res.ok) return
-    const data: any = await res.json()
     const now = new Date()
 
     for (const task of data.results || []) {
-      const deadline = task.properties?.['Fecha límite']?.date?.start
+      const deadline = task.properties?.[fechaKey]?.date?.start
       if (!deadline) continue
 
       const dueDate = new Date(deadline)
       if (dueDate < now) {
-        const taskName = task.properties?.['Nombre de la tarea']?.title?.[0]?.plain_text || 'Tarea'
+        const taskName = task.properties?.[titleKey]?.title?.[0]?.plain_text || 'Tarea'
         await getSupabase().from('alert_records').insert({
           vehicle_id: null,
           vehicle_name: taskName,
@@ -89,8 +92,8 @@ async function checkTaskAlerts() {
         } as never)
       }
     }
-  } catch {
-    // Silently fail on task alerts
+  } catch (error) {
+    console.error('checkTaskAlerts error:', error)
   }
 }
 
@@ -112,4 +115,15 @@ async function createVehicleAlert(vehicleId: string, vehicleName: string, type: 
     message,
     resolved: false,
   } as never)
+
+  if (ADMIN_EMAIL) {
+    await sendEmail({
+      to: ADMIN_EMAIL,
+      subject: `⚠️ UPCARS Alerta: ${message}`,
+      html: `<p><strong>${message}</strong></p>
+<p>Vehículo: ${vehicleName}</p>
+<p>Tipo: ${type}</p>
+<p>Fecha: ${new Date().toLocaleString('es-ES')}</p>`,
+    })
+  }
 }

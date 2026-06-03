@@ -9,4 +9,4 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - name: Sync Reviews
-        run: curl -s -f "https://upcars-v2.vercel.app/api/cron/reviews"
+        run: curl -s -f -H "Authorization: Bearer ${{ secrets.CRON_SECRET }}" "https://upcars-v2.vercel.app/api/cron/reviews"
