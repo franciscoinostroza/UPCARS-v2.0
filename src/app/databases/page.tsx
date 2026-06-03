@@ -24,7 +24,6 @@ function DatabasesInner() {
   const [dbs, setDbs] = useState<DBEntry[]>([])
   const [loading, setLoading] = useState(true)
   const [search, setSearch] = useState('')
-  const [selectedDb, setSelectedDb] = useState<DBEntry | null>(null)
 
   useEffect(() => {
     fetch('/api/databases')
@@ -34,14 +33,6 @@ function DatabasesInner() {
       })
       .finally(() => setLoading(false))
   }, [])
-
-  useEffect(() => {
-    function handleKey(e: KeyboardEvent) {
-      if (e.key === 'Escape') setSelectedDb(null)
-    }
-    if (selectedDb) window.addEventListener('keydown', handleKey)
-    return () => window.removeEventListener('keydown', handleKey)
-  }, [selectedDb])
 
   const filtered = search.trim()
     ? dbs.filter((db) =>
@@ -87,33 +78,20 @@ function DatabasesInner() {
                   <p className="text-[11px]" style={{ color: 'var(--text-muted)' }}>{cat.desc}</p>
                 </div>
                 <div className="grid grid-cols-2 sm:grid-cols-3 gap-2">
-                  {items.map((db) =>
-                    db.embedUrl ? (
-                      <button
-                        key={db.key}
-                        onClick={() => setSelectedDb(db)}
-                        className="card p-3 min-h-[72px] text-left transition-all duration-150 hover:scale-[1.02] cursor-pointer"
-                        style={{ background: 'var(--bg-card)', color: 'var(--text)' }}
-                      >
-                        <span className="text-lg">{db.icon}</span>
-                        <p className="text-xs sm:text-sm font-semibold mt-1">{db.name}</p>
-                        <p className="text-[10px] sm:text-[11px]" style={{ color: 'var(--text-muted)' }}>{db.desc}</p>
-                      </button>
-                    ) : (
-                      <a
-                        key={db.key}
-                        href={db.url}
-                        target="_blank"
-                        rel="noopener noreferrer"
-                        className="card p-3 min-h-[72px] block transition-all duration-150 hover:scale-[1.02]"
-                        style={{ background: 'var(--bg-card)', color: 'var(--text)' }}
-                      >
-                        <span className="text-lg">{db.icon}</span>
-                        <p className="text-xs sm:text-sm font-semibold mt-1">{db.name}</p>
-                        <p className="text-[10px] sm:text-[11px]" style={{ color: 'var(--text-muted)' }}>{db.desc}</p>
-                      </a>
-                    )
-                  )}
+                  {items.map((db) => (
+                    <a
+                      key={db.key}
+                      href={db.url}
+                      target={db.embedUrl ? undefined : '_blank'}
+                      rel={db.embedUrl ? undefined : 'noopener noreferrer'}
+                      className="card p-3 min-h-[72px] block transition-all duration-150 hover:scale-[1.02]"
+                      style={{ background: 'var(--bg-card)', color: 'var(--text)' }}
+                    >
+                      <span className="text-lg">{db.icon}</span>
+                      <p className="text-xs sm:text-sm font-semibold mt-1">{db.name}</p>
+                      <p className="text-[10px] sm:text-[11px]" style={{ color: 'var(--text-muted)' }}>{db.desc}</p>
+                    </a>
+                  ))}
                 </div>
               </div>
             )
@@ -124,45 +102,6 @@ function DatabasesInner() {
           UPCARS · Acceso a bases de datos
         </p>
       </div>
-
-      {selectedDb && (
-        <div
-          className="fixed inset-0 z-50 flex items-center justify-center p-4"
-          style={{ background: 'rgba(0,0,0,0.7)' }}
-          onClick={() => setSelectedDb(null)}
-        >
-          <div
-            className="w-full max-w-5xl max-h-[90vh] rounded-xl flex flex-col overflow-hidden"
-            style={{ background: 'var(--bg)', border: '1px solid var(--border)' }}
-            onClick={(e) => e.stopPropagation()}
-          >
-            <div
-              className="flex items-center justify-between px-4 py-3 shrink-0 border-b"
-              style={{ borderColor: 'var(--border)' }}
-            >
-              <span className="text-sm font-semibold" style={{ color: 'var(--text)' }}>
-                {selectedDb.icon} {selectedDb.name}
-              </span>
-              <button
-                onClick={() => setSelectedDb(null)}
-                className="text-sm px-2 py-1 rounded"
-                style={{ color: 'var(--text-muted)' }}
-              >
-                ✕
-              </button>
-            </div>
-            <div className="flex-1 min-h-0">
-              <iframe
-                src={selectedDb.embedUrl!}
-                className="w-full"
-                style={{ height: '75vh', border: 'none' }}
-                title={selectedDb.name}
-                allowFullScreen
-              />
-            </div>
-          </div>
-        </div>
-      )}
     </div>
   )
 }
