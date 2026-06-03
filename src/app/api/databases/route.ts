@@ -18,8 +18,8 @@ interface DBEntry {
   category: 'Operaciones' | 'Movimiento' | 'Gestión'
 }
 
-const DB_META: Record<string, { name: string; icon: string; desc: string; category: DBEntry['category'] }> = {
-  vehicles: { name: 'Vehículos', icon: '🚗', desc: 'Base principal de vehículos', category: 'Operaciones' },
+const DB_META: Record<string, { name: string; icon: string; desc: string; category: DBEntry['category']; viewId?: string }> = {
+  vehicles: { name: 'Vehículos', icon: '🚗', desc: 'Base principal de vehículos', category: 'Operaciones', viewId: '36cf70f8470180d9beae000c38931b70' },
   workshop: { name: 'Taller', icon: '🔧', desc: 'Órdenes de taller mecánico', category: 'Operaciones' },
   chapa: { name: 'Chapa y Pintura', icon: '🎨', desc: 'Trabajos de chapa y pintura', category: 'Operaciones' },
   preparacion: { name: 'Preparación', icon: '✨', desc: 'Preparación previa a venta', category: 'Operaciones' },
@@ -74,8 +74,10 @@ export async function GET() {
     const formattedId = formatId(id)
     const rawId = id.replace(/-/g, '')
     const url = `https://notion.so/${formattedId}`
-    const embeddable = process.env.NOTION_EMBED_DOMAIN && ['vehicles'].includes(key)
-    const embedUrl = embeddable ? `https://${process.env.NOTION_EMBED_DOMAIN}.notion.site/${rawId}` : undefined
+    const domain = process.env.NOTION_EMBED_DOMAIN
+    const embedUrl = domain && meta.viewId
+      ? `https://${domain}.notion.site/ebd/${rawId}?v=${meta.viewId}`
+      : undefined
 
     dbs.push({
       key,
