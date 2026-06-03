@@ -37,7 +37,7 @@ async function checkVehicleAlerts() {
 
   for (const v of vehicles) {
     if (!v.responsable && v.state !== 'Vendido') {
-      await createVehicleAlert(v.id, v.name, 'vehicle_no_responsible', `Vehículo sin responsable asignado`)
+      await createVehicleAlert(v.id, v.name, 'vehicle_no_responsible', `${v.name} sin responsable asignado`)
     }
 
     const threshold = STUCK_THRESHOLDS[v.state as VehicleState]
@@ -48,7 +48,7 @@ async function checkVehicleAlerts() {
         await createVehicleAlert(
           v.id, v.name,
           `stuck_in_${stateKey}`,
-          `Vehículo detenido en ${v.state} por más de ${threshold} días`
+          `${v.name} detenido en ${v.state} por más de ${threshold} días`
         )
       }
     }

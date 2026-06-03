@@ -1,7 +1,36 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { getVehicles, createVehicle } from '@/lib/notion/vehicles'
+import { SLA_THRESHOLDS } from '@/lib/types'
 
 export const dynamic = 'force-dynamic'
+
+const SLA_MAP: Record<string, string> = {
+  'En logística': 'Logistica',
+  'En taller': 'Taller',
+  'En chapa': 'Chapa',
+  'En preparación': 'Preparacion',
+}
+
+const COMPRADO_THRESHOLD_HOURS = 168
+
+function calcSlaStatus(state: string, daysInState: number): 'green' | 'yellow' | 'red' | null {
+  const hours = daysInState * 24
+  let threshold: number | undefined
+
+  if (state === 'Comprado') {
+    threshold = COMPRADO_THRESHOLD_HOURS
+  } else {
+    const area = SLA_MAP[state]
+    threshold = area ? SLA_THRESHOLDS[area] : undefined
+  }
+
+  if (!threshold) return null
+
+  const pct = (hours / threshold) * 100
+  if (pct < 50) return 'green'
+  if (pct <= 80) return 'yellow'
+  return 'red'
+}
 
 export async function GET(request: NextRequest) {
   try {
@@ -31,16 +60,20 @@ export async function GET(request: NextRequest) {
       state,
       vehicles: activeVehicles
         .filter((v) => v.state === state)
-        .map((v) => ({
-          id: v.id,
-          name: v.name,
-          matricula: v.matricula,
-          brand: v.brand,
-          model: v.model,
-          year: v.year,
-          combustible: v.combustible,
-          daysInState: calcDaysInState(v),
-        })),
+        .map((v) => {
+          const daysInState = calcDaysInState(v)
+          return {
+            id: v.id,
+            name: v.name,
+            matricula: v.matricula,
+            brand: v.brand,
+            model: v.model,
+            year: v.year,
+            combustible: v.combustible,
+            daysInState,
+            slaStatus: calcSlaStatus(v.state, daysInState),
+          }
+        }),
     }))
 
     return NextResponse.json({ success: true, data: { pipeline, total: activeVehicles.length } })

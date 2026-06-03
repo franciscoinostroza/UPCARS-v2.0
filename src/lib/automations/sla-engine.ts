@@ -124,7 +124,7 @@ export async function getBottlenecks() {
     .select('*')
     .not('end_time', 'is', null)
 
-  const records = (data as any[]) || []
+  const records = (data ?? []) as any[]
   const byArea: Record<string, number[]> = {}
 
   for (const r of records) {
@@ -149,7 +149,7 @@ export async function getVehicleKPIs() {
     .select('*')
     .not('end_time', 'is', null)
 
-  const records = (data as any[]) || []
+  const records = (data ?? []) as any[]
   const byVehicle: Record<string, { area: string; hours: number; threshold: number; met: boolean }[]> = {}
 
   for (const r of records) {

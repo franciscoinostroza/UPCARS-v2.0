@@ -12,6 +12,7 @@ interface KPIStats {
   activeAlerts: { id: string; vehicle_name: string; type: string; message: string; created_at: string }[]
   totalEvents: number
   employeeKPIs?: { id: string; name: string; role: string; department: string; tasksCompleted: number; tasksTotal: number; efficiency: number }[]
+  vehicleKPIs?: Record<string, { areas: { area: string; hours: number; threshold: number; met: boolean }[]; totalHours: number; allMet: boolean }>
 }
 
 interface PipelineData {
