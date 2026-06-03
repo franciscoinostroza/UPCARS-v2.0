@@ -73,8 +73,8 @@ export async function GET() {
 
     const formattedId = formatId(id)
     const url = `https://notion.so/${formattedId}`
-    const domain = process.env.NOTION_EMBED_DOMAIN
-    const embedUrl = domain ? `https://${domain}.notion.site/${formattedId}` : undefined
+    const embeddable = process.env.NOTION_EMBED_DOMAIN && ['vehicles'].includes(key)
+    const embedUrl = embeddable ? `https://${process.env.NOTION_EMBED_DOMAIN}.notion.site/${formattedId}` : undefined
 
     dbs.push({
       key,
