@@ -150,7 +150,7 @@ function DashboardInner() {
 
         {/* Header */}
         <div className="flex items-center justify-between mb-4 sm:mb-6 animate-fade-up">
-          <h1 className="text-lg sm:text-xl font-bold" style={{ color: 'var(--text)' }}>📊 Dashboard y KPIs</h1>
+          <h1 className="text-lg sm:text-xl font-bold" style={{ color: 'var(--text)' }}>📊 Resumen y KPIs</h1>
           <DarkModeToggle />
         </div>
 
