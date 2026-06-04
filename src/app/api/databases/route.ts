@@ -68,9 +68,8 @@ export async function GET() {
 
     const rawId = id.replace(/-/g, '')
     const url = `notion://notion.so/${rawId}`
-    const webUrl = id.includes('-')
-      ? `https://notion.so/${id}`
-      : `https://notion.so/${rawId}`
+    const params = meta.viewId ? `?v=${meta.viewId}` : ''
+    const webUrl = `https://app.notion.com/p/${rawId}${params}`
     const domain = process.env.NOTION_EMBED_DOMAIN
     const embedUrl = domain && meta.viewId
       ? `https://${domain}.notion.site/ebd/${rawId}?v=${meta.viewId}`
