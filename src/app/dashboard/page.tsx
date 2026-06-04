@@ -117,12 +117,7 @@ function DashboardInner() {
 
         {/* Header */}
         <div className="flex items-center justify-between mb-4 sm:mb-6 animate-fade-up">
-          <div>
-            <h1 className="text-lg sm:text-xl font-bold" style={{ color: 'var(--text)' }}>UPCARS</h1>
-            <p className="text-[11px] sm:text-xs mt-0.5" style={{ color: 'var(--text-secondary)' }}>
-              Panel operativo del concesionario
-            </p>
-          </div>
+          <h1 className="text-lg sm:text-xl font-bold" style={{ color: 'var(--text)' }}>Dashboard y KPIs</h1>
           <DarkModeToggle />
         </div>
 
@@ -303,9 +298,7 @@ function DashboardInner() {
           </section>
         )}
 
-        <p className="text-center text-xs mt-6 sm:mt-8 pb-4" style={{ color: 'var(--text-muted)' }}>
-          UPCARS · Los datos se actualizan cada 30s
-        </p>
+
       </div>
     </div>
   )

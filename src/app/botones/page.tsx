@@ -72,10 +72,7 @@ function BotonesInner() {
       <div className="max-w-lg mx-auto p-4 sm:p-6">
 
         <div className="flex items-center justify-between mb-5 animate-fade-up">
-          <div>
-            <h1 className="text-base sm:text-lg font-bold" style={{ color: 'var(--text)' }}>Acciones Rápidas</h1>
-            <p className="text-[11px] mt-0.5" style={{ color: 'var(--text-secondary)' }}>Panel operativo de botones</p>
-          </div>
+          <h1 className="text-base sm:text-lg font-bold" style={{ color: 'var(--text)' }}>Panel de control</h1>
           <DarkModeToggle />
         </div>
 
@@ -142,9 +139,7 @@ function BotonesInner() {
           </>
         )}
 
-        <p className="text-center text-[11px] mt-6" style={{ color: 'var(--text-muted)' }}>
-          UPCARS · Panel de botones
-        </p>
+
       </div>
 
       {toast && (

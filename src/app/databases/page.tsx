@@ -44,19 +44,13 @@ function DatabasesInner() {
   return (
     <div style={{ background: 'var(--bg)', minHeight: '100vh' }}>
       <div className="max-w-4xl mx-auto p-4 sm:p-6">
-        <div className="flex items-center justify-between mb-5 animate-fade-up">
-          <div>
-            <h1 className="text-base sm:text-lg font-bold" style={{ color: 'var(--text)' }}>Bases de Datos</h1>
-            <p className="text-[11px] mt-0.5" style={{ color: 'var(--text-secondary)' }}>
-              Acceso directo a todas las bases de Notion
-            </p>
-          </div>
+        <div className="flex items-center justify-end mb-5 animate-fade-up">
           <DarkModeToggle />
         </div>
 
         <input
           type="text"
-          placeholder="Buscar base de datos..."
+          placeholder="Buscar..."
           value={search}
           onChange={(e) => setSearch(e.target.value)}
           className="w-full text-sm px-3 py-2 rounded outline-none mb-5 animate-fade-up"
@@ -98,9 +92,7 @@ function DatabasesInner() {
           })
         )}
 
-        <p className="text-center text-[11px] mt-6" style={{ color: 'var(--text-muted)' }}>
-          UPCARS · Acceso a bases de datos
-        </p>
+
       </div>
     </div>
   )
