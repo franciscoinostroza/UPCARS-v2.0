@@ -143,13 +143,15 @@ function VehicleModal({
         style={{ background: 'var(--bg)', border: '1px solid var(--border)', color: 'var(--text)' }}
         onClick={(e) => e.stopPropagation()}
       >
-        <button
-          onClick={onClose}
-          className="absolute top-3 right-3 text-lg leading-none"
-          style={{ color: 'var(--text-muted)' }}
-        >
-          ✕
-        </button>
+        <div className="sticky top-0 z-10 flex justify-end" style={{ background: 'var(--bg)' }}>
+          <button
+            onClick={onClose}
+            className="text-lg leading-none -mr-1 -mt-1"
+            style={{ color: 'var(--text-muted)' }}
+          >
+            ✕
+          </button>
+        </div>
 
         {loading ? (
           <div className="space-y-2 py-4">
@@ -189,7 +191,7 @@ function VehicleModal({
               {data.events.length === 0 ? (
                 <p className="text-xs" style={{ color: 'var(--text-muted)' }}>Sin eventos registrados</p>
               ) : (
-                <div className="relative pl-4">
+                <div className="max-h-48 overflow-y-auto relative pl-4">
                   <div className="absolute left-[5px] top-2 bottom-2 w-px" style={{ background: 'var(--border)' }} />
                   {data.events.map((e) => (
                     <div key={e.id} className="relative pb-3 last:pb-0">
