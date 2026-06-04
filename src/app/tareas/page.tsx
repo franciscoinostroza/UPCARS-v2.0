@@ -90,7 +90,7 @@ function TareasInner() {
     <div style={{ background: 'var(--bg)', minHeight: '100vh' }}>
       <div className="max-w-6xl mx-auto p-4 sm:p-6">
         <div className="flex items-center justify-between mb-4 animate-fade-up">
-          <h1 className="text-base sm:text-lg font-bold" style={{ color: 'var(--text)' }}>Tareas del Equipo</h1>
+          <h1 className="text-base sm:text-lg font-bold" style={{ color: 'var(--text)' }}>📋 Tareas del Equipo</h1>
           <DarkModeToggle />
         </div>
 

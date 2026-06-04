@@ -66,7 +66,7 @@ export default function HealthPage() {
       <div className="max-w-lg mx-auto p-3 sm:p-6">
         {/* Header */}
         <div className="flex items-center justify-between mb-4 sm:mb-6 animate-fade-up">
-          <h1 className="text-lg sm:text-xl font-bold" style={{ color: 'var(--text)' }}>Health Check</h1>
+          <h1 className="text-lg sm:text-xl font-bold" style={{ color: 'var(--text)' }}>🩺 Health Check</h1>
           <Link href="/dashboard" className="text-sm" style={{ color: 'var(--accent-blue)' }}>
             ← Dashboard
           </Link>
