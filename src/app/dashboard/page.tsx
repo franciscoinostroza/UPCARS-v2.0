@@ -175,7 +175,7 @@ function DashboardInner() {
         </div>
 
         {/* Pipeline */}
-        <section className="mb-4 sm:mb-6 animate-fade-up" style={{ animationDelay: '150ms' }}>
+        <section className="mb-4 sm:mb-6">
           <h2 className="text-[11px] font-semibold uppercase tracking-wider mb-2 sm:mb-3" style={{ color: 'var(--text-secondary)' }}>
             Pipeline de vehículos
           </h2>
