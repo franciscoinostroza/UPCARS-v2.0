@@ -108,7 +108,7 @@ function TareasInner() {
             ))}
           </div>
         ) : (
-          <div className="flex gap-1.5 sm:gap-2 overflow-x-auto pb-1 animate-fade-up" style={{ animationDelay: '100ms' }}>
+          <div className="flex gap-1.5 sm:gap-2 overflow-x-auto pb-1" style={{ animationDelay: '100ms' }}>
             {columns.map((col) => (
               <div key={col.state} className="pipeline-column p-2 sm:p-3" style={{ minWidth: 200, flex: 1 }}>
                 <div className="flex items-center gap-1.5 mb-2 sm:mb-3">
@@ -129,7 +129,7 @@ function TareasInner() {
                       <button
                         key={task.id}
                         onClick={() => setSelected(task)}
-                        className="vehicle-card w-full text-left cursor-pointer transition-all duration-150 hover:scale-[1.02]"
+                        className="vehicle-card w-full text-left cursor-pointer transition-all duration-150"
                       >
                         <p className="text-[11px] sm:text-xs font-semibold leading-tight mb-1.5 line-clamp-2" style={{ color: 'var(--text)' }}>
                           {task.name}

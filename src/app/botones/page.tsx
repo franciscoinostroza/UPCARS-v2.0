@@ -85,7 +85,7 @@ function BotonesInner() {
           </div>
         ) : (
           <>
-            <div className="grid grid-cols-2 gap-2 sm:gap-3 animate-fade-up" style={{ animationDelay: '100ms' }}>
+            <div className="grid grid-cols-2 gap-2 sm:gap-3">
               {[
                 { key: 'nuevo' as ModalType, icon: '➕', label: 'Nuevo vehículo', desc: 'Crear en Notion' },
                 { key: 'mover' as ModalType, icon: '🚀', label: 'Mover vehículo', desc: 'Cambiar estado' },
@@ -97,7 +97,7 @@ function BotonesInner() {
                 <button
                   key={btn.key}
                   onClick={() => setModal(btn.key)}
-                  className="card p-3 sm:p-4 text-left min-h-[80px] sm:min-h-[90px] transition-all duration-150 hover:scale-[1.02] cursor-pointer"
+                  className="card p-3 sm:p-4 text-left min-h-[80px] sm:min-h-[90px] transition-all duration-150 cursor-pointer"
                   style={{ background: 'var(--bg-card)', color: 'var(--text)' }}
                 >
                   <span className="text-lg sm:text-xl">{btn.icon}</span>
@@ -107,7 +107,7 @@ function BotonesInner() {
               ))}
             </div>
 
-            <div className="flex gap-2 mt-3 animate-fade-up" style={{ animationDelay: '150ms' }}>
+            <div className="flex gap-2 mt-3">
               <button
                 onClick={async () => {
                   try {

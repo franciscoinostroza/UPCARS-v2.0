@@ -8,6 +8,7 @@ interface DBEntry {
   icon: string
   desc: string
   url: string
+  webUrl: string
   embedUrl?: string
   category: 'Operaciones' | 'Movimiento' | 'Gestión'
 }
@@ -67,6 +68,9 @@ export async function GET() {
 
     const rawId = id.replace(/-/g, '')
     const url = `notion://notion.so/${rawId}`
+    const webUrl = id.includes('-')
+      ? `https://notion.so/${id}`
+      : `https://notion.so/${rawId}`
     const domain = process.env.NOTION_EMBED_DOMAIN
     const embedUrl = domain && meta.viewId
       ? `https://${domain}.notion.site/ebd/${rawId}?v=${meta.viewId}`
@@ -78,6 +82,7 @@ export async function GET() {
       icon: meta.icon,
       desc: meta.desc,
       url,
+      webUrl,
       embedUrl,
       category: meta.category,
     })

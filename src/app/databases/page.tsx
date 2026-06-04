@@ -11,6 +11,7 @@ interface DBEntry {
   icon: string
   desc: string
   url: string
+  webUrl: string
   embedUrl?: string
   category: 'Operaciones' | 'Movimiento' | 'Gestión'
 }
@@ -80,20 +81,24 @@ function DatabasesInner() {
                   <p className="text-[11px]" style={{ color: 'var(--text-muted)' }}>{cat.desc}</p>
                 </div>
                 <div className="grid grid-cols-2 sm:grid-cols-3 gap-2">
-                  {items.map((db) => (
+                  {items.map((db) => {
+                    const isMobile = typeof navigator !== 'undefined' &&
+                      /iPhone|iPad|iPod|Android/i.test(navigator.userAgent)
+                    return (
                     <a
                       key={db.key}
-                      href={db.url}
+                      href={isMobile ? db.url : db.webUrl}
                       target="_blank"
                       rel="noopener noreferrer"
-                      className="card p-3 min-h-[72px] block transition-all duration-150 hover:scale-[1.02]"
+                      className="card p-3 min-h-[72px] block transition-all duration-150"
                       style={{ background: 'var(--bg-card)', color: 'var(--text)' }}
                     >
                       <span className="text-lg">{db.icon}</span>
                       <p className="text-xs sm:text-sm font-semibold mt-1">{db.name}</p>
                       <p className="text-[10px] sm:text-[11px]" style={{ color: 'var(--text-muted)' }}>{db.desc}</p>
                     </a>
-                  ))}
+                    )
+                  })}
                 </div>
               </div>
             )
