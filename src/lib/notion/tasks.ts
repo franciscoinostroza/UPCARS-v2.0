@@ -1,5 +1,7 @@
-import { notionPost, getDatabaseId } from './client'
+import { notionPost, notionPatch, getDatabaseId } from './client'
 import { getDbSchema, findPropertyByType, findPropertiesByType } from './schema'
+import { parseTaskProps } from './props'
+import type { Task } from '@/lib/types'
 
 export async function createTask(
   name: string,
@@ -53,5 +55,23 @@ export async function createTask(
   await notionPost('/pages', {
     parent: { database_id: dbId },
     properties,
+  })
+}
+
+export async function getTasks(): Promise<Task[]> {
+  const dbId = getDatabaseId('tasks')
+  const data: any = await notionPost(`/databases/${dbId}/query`)
+  return (data.results || []).map((r: any) => parseTaskProps(r.id, r.properties))
+}
+
+export async function updateTaskStatus(taskId: string, newStatus: string): Promise<void> {
+  const schema = await getDbSchema('tasks')
+  const selects = findPropertiesByType(schema, 'select')
+  const statusKey = selects.find((s) => s.name === 'Estado')?.name || selects[0]?.name || 'Estado'
+
+  await notionPatch(`/pages/${taskId}`, {
+    properties: {
+      [statusKey]: { select: { name: newStatus } },
+    },
   })
 }

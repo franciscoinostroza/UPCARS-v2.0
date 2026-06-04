@@ -20,6 +20,9 @@ function rel(p: NotionProp | undefined, fallback: string | null = null): string 
 function dateVal(p: NotionProp | undefined, fallback: string | null = null): string | null {
   return (p?.date as any)?.start ?? fallback
 }
+function relAll(p: NotionProp | undefined): string[] {
+  return (p?.relation as any[])?.map((r: any) => r.id) ?? []
+}
 function formulaNum(p: NotionProp | undefined, fallback: number | null = null): number | null {
   return (p?.formula as any)?.number ?? (p?.formula as any)?.value ?? fallback
 }
@@ -134,5 +137,33 @@ export function parseEmployeeProps(id: string, p: Record<string, NotionProp>) {
     role: sel(roleKey ? p[roleKey] : undefined),
     department: sel(deptKey ? p[deptKey] : undefined),
     active: sel(statusKey ? p[statusKey] : undefined) === 'Activo',
+  }
+}
+
+export function parseTaskProps(id: string, p: Record<string, NotionProp>) {
+  const idx = indexByType(p)
+  const nameKey = idx.title[0]
+  const selectKeys = idx.select
+  const relationKeys = idx.relation
+  const dateKeys = idx.date
+
+  const statusKey = matchKey(selectKeys, ['Estado']) ?? selectKeys[0]
+  const priorityKey = matchKey(selectKeys, ['Prioridad']) ?? selectKeys[1]
+  const deptKey = matchKey(selectKeys, ['Departamento', 'Department']) ?? selectKeys[2]
+  const typeKey = matchKey(selectKeys, ['Tipo', 'Type']) ?? selectKeys[3]
+  const vehicleRelKey = relationKeys.find((k) => k.includes('Vehículo')) ?? relationKeys[0]
+  const responsibleRelKey = matchKey(relationKeys, ['Responsable']) ?? relationKeys[1]
+  const deadlineKey = matchKey(dateKeys, ['Fecha límite', 'Fecha limite', 'Deadline', 'Fecha de vencimiento']) ?? dateKeys[0]
+
+  return {
+    id,
+    name: tv(nameKey ? p[nameKey] : undefined),
+    vehicleId: rel(vehicleRelKey ? p[vehicleRelKey] : undefined),
+    responsibleIds: relAll(responsibleRelKey ? p[responsibleRelKey] : undefined),
+    priority: sel(priorityKey ? p[priorityKey] : undefined, 'Media') as 'Alta' | 'Media' | 'Baja',
+    state: sel(statusKey ? p[statusKey] : undefined, 'Sin empezar') as 'Sin empezar' | 'En progreso' | 'Bloqueada' | 'Completada' | 'Cancelada',
+    deadline: dateVal(deadlineKey ? p[deadlineKey] : undefined),
+    area: sel(deptKey ? p[deptKey] : undefined),
+    type: sel(typeKey ? p[typeKey] : undefined),
   }
 }

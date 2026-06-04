@@ -1,7 +1,20 @@
 import { NextRequest, NextResponse } from 'next/server'
-import { createTask } from '@/lib/notion/tasks'
+import { getTasks, createTask } from '@/lib/notion/tasks'
 
 export const dynamic = 'force-dynamic'
+
+export async function GET() {
+  try {
+    const tasks = await getTasks()
+    return NextResponse.json({ success: true, data: tasks })
+  } catch (error: any) {
+    console.error('Tasks GET error:', error)
+    return NextResponse.json(
+      { success: false, error: error?.message || 'Failed to fetch tasks' },
+      { status: 500 }
+    )
+  }
+}
 
 export async function POST(request: NextRequest) {
   try {
