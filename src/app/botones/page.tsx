@@ -3,6 +3,7 @@
 import { useState, useEffect, useCallback } from 'react'
 import { ThemeProvider, useTheme } from '../dashboard/theme-context'
 import { DarkModeToggle } from '../dashboard/dark-mode'
+import { Skeleton } from '@/components/skeleton'
 
 interface VehicleItem {
   id: string
@@ -77,8 +78,10 @@ function BotonesInner() {
         </div>
 
         {loading ? (
-          <div className="flex justify-center py-12">
-            <div className="w-5 h-5 rounded-full border-2 border-[var(--accent-blue)] border-t-transparent animate-spin" />
+          <div className="grid grid-cols-2 gap-2 sm:gap-3 animate-fade-up" style={{ animationDelay: '100ms' }}>
+            {[1,2,3,4,5,6].map((i) => (
+              <Skeleton key={i} style={{ height: 90 }} />
+            ))}
           </div>
         ) : (
           <>

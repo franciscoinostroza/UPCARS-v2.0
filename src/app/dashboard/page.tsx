@@ -4,6 +4,7 @@ import { useEffect, useState, useCallback } from 'react'
 import { ThemeProvider, useTheme } from './theme-context'
 import { DarkModeToggle } from './dark-mode'
 import Pipeline from './pipeline'
+import { Skeleton } from '@/components/skeleton'
 
 interface KPIStats {
   slas: Record<string, { avg: number; count: number }>
@@ -94,11 +95,43 @@ function DashboardInner() {
   }
 
   if (loading) {
+    const PIPELINE_STATES = ['Comprado', 'En logística', 'En taller', 'En chapa', 'En preparación', 'Listo para venta']
     return (
-      <div className="min-h-screen flex items-center justify-center" style={{ background: 'var(--bg)' }}>
-        <div className="flex flex-col items-center gap-3">
-          <div className="w-6 h-6 rounded-full border-2 border-[var(--accent-blue)] border-t-transparent animate-spin" />
-          <p className="text-sm" style={{ color: 'var(--text-muted)' }}>Cargando...</p>
+      <div style={{ background: 'var(--bg)', minHeight: '100vh' }}>
+        <div className="max-w-6xl mx-auto p-4 sm:p-6">
+          <div className="flex items-center justify-between mb-4 sm:mb-6 animate-fade-up">
+            <Skeleton style={{ width: 160, height: 22 }} />
+            <Skeleton style={{ width: 36, height: 36, borderRadius: 8 }} />
+          </div>
+
+          <div className="flex gap-2 mb-4 sm:mb-6 animate-fade-up" style={{ animationDelay: '50ms' }}>
+            {[1,2,3,4].map((i) => (
+              <Skeleton key={i} className="flex-1" style={{ height: 72 }} />
+            ))}
+          </div>
+
+          <div className="flex items-center gap-2 mb-3 animate-fade-up" style={{ animationDelay: '75ms' }}>
+            <Skeleton style={{ width: 160, height: 16 }} />
+            <Skeleton style={{ width: 28, height: 16, borderRadius: 8 }} />
+          </div>
+
+          <div className="flex gap-1.5 sm:gap-2 overflow-x-auto pb-1 animate-fade-up" style={{ animationDelay: '100ms' }}>
+            {PIPELINE_STATES.map((_, i) => (
+              <div key={i} className="pipeline-column p-2 sm:p-3" style={{ minWidth: 140 }}>
+                <Skeleton style={{ width: '60%', height: 14, marginBottom: 10 }} />
+                <div className="space-y-1.5 sm:space-y-2">
+                  {[1,2,3].map((j) => (
+                    <Skeleton key={j} style={{ width: '100%', height: 52 }} />
+                  ))}
+                </div>
+              </div>
+            ))}
+          </div>
+
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 mt-4 animate-fade-up" style={{ animationDelay: '150ms' }}>
+            <Skeleton style={{ height: 140 }} />
+            <Skeleton style={{ height: 140 }} />
+          </div>
         </div>
       </div>
     )

@@ -2,6 +2,7 @@
 
 import { useEffect, useState } from 'react'
 import Link from 'next/link'
+import { Skeleton } from '@/components/skeleton'
 
 interface HealthInfo {
   status: string
@@ -48,8 +49,15 @@ export default function Home() {
 
         {/* Status */}
         {loading ? (
-          <div className="card p-4 sm:p-5 text-center animate-fade-up" style={{ animationDelay: '100ms' }}>
-            <div className="w-5 h-5 rounded-full border-2 border-[var(--accent-blue)] border-t-transparent animate-spin mx-auto" />
+          <div className="card p-4 sm:p-5 animate-fade-up" style={{ animationDelay: '100ms' }}>
+            <div className="flex items-center gap-2.5 mb-3 sm:mb-4">
+              <Skeleton style={{ width: 8, height: 8, borderRadius: '50%' }} />
+              <Skeleton style={{ width: 120, height: 16 }} />
+            </div>
+            <div className="grid grid-cols-2 gap-1.5 sm:gap-2">
+              <Skeleton style={{ height: 36 }} />
+              <Skeleton style={{ height: 36 }} />
+            </div>
           </div>
         ) : (
           <div className="card p-4 sm:p-5 animate-fade-up" style={{ animationDelay: '100ms' }}>

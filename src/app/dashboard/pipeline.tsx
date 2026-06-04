@@ -1,6 +1,7 @@
 'use client'
 
 import { useState, useEffect, useCallback } from 'react'
+import { Skeleton } from '@/components/skeleton'
 
 const STATE_LABELS: Record<string, string> = {
   Comprado: 'Comprado',
@@ -151,7 +152,11 @@ function VehicleModal({
         </button>
 
         {loading ? (
-          <p style={{ color: 'var(--text-muted)' }}>Cargando...</p>
+          <div className="space-y-2 py-4">
+            {[1,2,3,4].map((i) => (
+              <Skeleton key={i} style={{ width: i % 2 === 0 ? '70%' : '85%', height: 14 }} />
+            ))}
+          </div>
         ) : !data ? (
           <p style={{ color: 'var(--text-muted)' }}>Error al cargar datos</p>
         ) : (

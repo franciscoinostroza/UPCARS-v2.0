@@ -1,8 +1,9 @@
 'use client'
 
 import { useState, useEffect } from 'react'
-import { ThemeProvider } from '../dashboard/theme-context'
+import { ThemeProvider, useTheme } from '../dashboard/theme-context'
 import { DarkModeToggle } from '../dashboard/dark-mode'
+import { Skeleton } from '@/components/skeleton'
 
 interface DBEntry {
   key: string
@@ -44,22 +45,29 @@ function DatabasesInner() {
   return (
     <div style={{ background: 'var(--bg)', minHeight: '100vh' }}>
       <div className="max-w-4xl mx-auto p-4 sm:p-6">
-        <div className="flex items-center justify-end mb-5 animate-fade-up">
+        <div className="flex items-center gap-2 mb-5 animate-fade-up">
+          <input
+            type="text"
+            placeholder="Buscar..."
+            value={search}
+            onChange={(e) => setSearch(e.target.value)}
+            className="flex-1 text-sm px-3 py-2 rounded outline-none"
+            style={{ background: 'var(--bg-card)', color: 'var(--text)', border: '1px solid var(--border)' }}
+          />
           <DarkModeToggle />
         </div>
 
-        <input
-          type="text"
-          placeholder="Buscar..."
-          value={search}
-          onChange={(e) => setSearch(e.target.value)}
-          className="w-full text-sm px-3 py-2 rounded outline-none mb-5 animate-fade-up"
-          style={{ background: 'var(--bg-card)', color: 'var(--text)', border: '1px solid var(--border)' }}
-        />
-
         {loading ? (
-          <div className="flex justify-center py-12">
-            <div className="w-5 h-5 rounded-full border-2 border-[var(--accent-blue)] border-t-transparent animate-spin" />
+          <div className="animate-fade-up">
+            <div className="flex items-center gap-2 mb-5">
+              <Skeleton className="flex-1" style={{ height: 40 }} />
+              <Skeleton style={{ width: 36, height: 36, borderRadius: 8 }} />
+            </div>
+            <div className="grid grid-cols-2 sm:grid-cols-3 gap-2 sm:gap-3">
+              {[1,2,3,4,5,6].map((i) => (
+                <Skeleton key={i} style={{ height: 80 }} />
+              ))}
+            </div>
           </div>
         ) : (
           CATEGORIES.map((cat) => {

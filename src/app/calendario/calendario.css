@@ -1,0 +1,141 @@
+:root {
+  --cal-bg: var(--bg, #ffffff);
+  --cal-border: var(--border, #e5e7eb);
+  --cal-text: var(--text, #111827);
+  --cal-header: var(--text-secondary, #6b7280);
+  --cal-today: var(--accent-blue, #3b82f6);
+  --cal-event-compra: #7c3aed;
+  --cal-event-taller: #f59e0b;
+  --cal-event-preparacion: #10b981;
+  --cal-event-listo: #3b82f6;
+  --cal-event-logistica: #06b6d4;
+  --cal-event-rrhh: #ec4899;
+  --cal-hover: rgba(0, 0, 0, 0.04);
+}
+
+.dark {
+  --cal-bg: var(--bg, #0f0f0f);
+  --cal-border: var(--border, #1f2937);
+  --cal-text: var(--text, #f3f4f6);
+  --cal-header: var(--text-secondary, #9ca3af);
+  --cal-today: var(--accent-blue, #60a5fa);
+  --cal-hover: rgba(255, 255, 255, 0.06);
+}
+
+/* Month view header */
+.rbc-header {
+  padding: 6px 4px !important;
+  font-size: 11px !important;
+  font-weight: 600 !important;
+  text-transform: uppercase;
+  color: var(--cal-header) !important;
+  background: var(--cal-bg) !important;
+  border-color: var(--cal-border) !important;
+}
+
+/* Cell backgrounds */
+.rbc-month-view,
+.rbc-month-row,
+.rbc-day-bg,
+.rbc-row-bg {
+  background: var(--cal-bg);
+  border-color: var(--cal-border) !important;
+}
+
+.rbc-month-row {
+  border-color: var(--cal-border) !important;
+}
+
+.rbc-day-bg + .rbc-day-bg {
+  border-color: var(--cal-border) !important;
+}
+
+/* Today highlight */
+.rbc-today {
+  background-color: color-mix(in srgb, var(--cal-today) 8%, transparent) !important;
+}
+
+/* Date numbers */
+.rbc-date-cell {
+  font-size: 11px !important;
+  padding: 2px 4px !important;
+}
+
+.rbc-date-cell a {
+  color: var(--cal-text) !important;
+}
+
+/* Events */
+.rbc-event {
+  padding: 1px 4px !important;
+  border-radius: 3px !important;
+  font-size: 10px !important;
+  line-height: 1.3 !important;
+  border: none !important;
+  margin-bottom: 1px !important;
+}
+
+.rbc-event.event-compra { background: var(--cal-event-compra) !important; }
+.rbc-event.event-taller { background: var(--cal-event-taller) !important; }
+.rbc-event.event-preparacion { background: var(--cal-event-preparacion) !important; }
+.rbc-event.event-listo { background: var(--cal-event-listo) !important; }
+.rbc-event.event-logistica { background: var(--cal-event-logistica) !important; }
+.rbc-event.event-rrhh { background: var(--cal-event-rrhh) !important; }
+
+.rbc-event-label {
+  display: none !important;
+}
+
+/* Row bg */
+.rbc-row-segment {
+  padding: 0 2px !important;
+}
+
+/* Off-range days */
+.rbc-off-range-bg {
+  background: color-mix(in srgb, var(--cal-border) 30%, transparent) !important;
+}
+
+.rbc-off-range a {
+  opacity: 0.4 !important;
+}
+
+/* Toolbar */
+.rbc-toolbar {
+  margin-bottom: 10px !important;
+  gap: 6px !important;
+}
+
+.rbc-toolbar button {
+  font-size: 11px !important;
+  padding: 4px 10px !important;
+  border-radius: 6px !important;
+  border: 1px solid var(--cal-border) !important;
+  background: var(--cal-bg) !important;
+  color: var(--cal-text) !important;
+  cursor: pointer !important;
+  transition: all 0.15s !important;
+}
+
+.rbc-toolbar button:hover {
+  background: var(--cal-hover) !important;
+}
+
+.rbc-toolbar button.rbc-active {
+  background: var(--cal-today) !important;
+  color: #fff !important;
+  border-color: var(--cal-today) !important;
+}
+
+.rbc-toolbar-label {
+  font-size: 14px !important;
+  font-weight: 700 !important;
+  color: var(--cal-text) !important;
+  padding: 0 8px !important;
+}
+
+/* Add event button */
+.rbc-btn-group:first-child button {
+  min-width: 36px !important;
+  text-align: center !important;
+}

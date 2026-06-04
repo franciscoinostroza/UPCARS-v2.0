@@ -2,6 +2,7 @@
 
 import { useEffect, useState } from 'react'
 import Link from 'next/link'
+import { Skeleton } from '@/components/skeleton'
 
 interface HealthData {
   status: string
@@ -44,10 +45,17 @@ export default function HealthPage() {
 
   if (loading) {
     return (
-      <div className="min-h-screen flex items-center justify-center" style={{ background: 'var(--bg)' }}>
-        <div className="flex flex-col items-center gap-2">
-          <div className="w-5 h-5 rounded-full border-2 border-[var(--accent-blue)] border-t-transparent animate-spin" />
-          <p className="text-sm" style={{ color: 'var(--text-muted)' }}>Verificando...</p>
+      <div style={{ background: 'var(--bg)', minHeight: '100vh' }}>
+        <div className="max-w-lg mx-auto p-3 sm:p-6">
+          <div className="flex items-center justify-between mb-4 sm:mb-6 animate-fade-up">
+            <Skeleton style={{ width: 120, height: 22 }} />
+            <Skeleton style={{ width: 80, height: 16 }} />
+          </div>
+          <div className="space-y-3 animate-fade-up" style={{ animationDelay: '50ms' }}>
+            <Skeleton style={{ height: 80 }} />
+            <Skeleton style={{ height: 120 }} />
+            <Skeleton style={{ height: 80 }} />
+          </div>
         </div>
       </div>
     )
