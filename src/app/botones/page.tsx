@@ -30,10 +30,10 @@ const VALID_NEXT: Record<string, string[]> = {
 
 const STATE_LABELS: Record<string, string> = {
   Comprado: 'Comprado', 'En logística': 'Logística', 'En taller': 'Taller',
-  'En chapa': 'Chapa y Pintura', 'En preparación': 'Preparación', 'Listo para venta': 'Listo para venta',
+  'En chapa': 'Chapa y Pintura', 'En preparación': 'Preparación', 'Listo para venta': 'Listo para venta', 'Vendido': 'Vendido',
 }
 
-type ModalType = 'nuevo' | 'mover' | 'asignar' | 'orden' | null
+type ModalType = 'nuevo' | 'mover' | 'asignar' | 'orden' | 'vender' | 'task' | null
 
 function BotonesInner() {
   const { dark } = useTheme()
@@ -91,6 +91,8 @@ function BotonesInner() {
                 { key: 'mover' as ModalType, icon: '🚀', label: 'Mover vehículo', desc: 'Cambiar estado' },
                 { key: 'asignar' as ModalType, icon: '👤', label: 'Asignar responsable', desc: 'Vehículo → empleado' },
                 { key: 'orden' as ModalType, icon: '📋', label: 'Nueva orden taller', desc: 'Taller / Chapa / Prep / Log' },
+                { key: 'vender' as ModalType, icon: '🏷️', label: 'Marcar como Vendido', desc: 'Desde Listo para venta' },
+                { key: 'task' as ModalType, icon: '📝', label: 'Crear tarea rápida', desc: 'En Tareas del Equipo' },
               ].map((btn) => (
                 <button
                   key={btn.key}
@@ -118,13 +120,7 @@ function BotonesInner() {
               >
                 🔄 Forzar sync
               </button>
-              <a
-                href="/databases"
-                className="card flex-1 text-center text-xs sm:text-sm font-medium px-3 py-2.5 min-h-[44px] block"
-                style={{ color: 'var(--text)' }}
-              >
-                🗄️ Bases de datos
-              </a>
+
               <button
                 onClick={async () => {
                   try {
@@ -197,6 +193,24 @@ function BotonesInner() {
           <OrdenForm
             vehicles={vehicles}
             onSuccess={() => { setModal(null); showToast('Orden creada ✓'); fetchData() }}
+            onError={(msg) => showToast(msg, true)}
+          />
+        </Modal>
+      )}
+      {modal === 'vender' && (
+        <Modal onClose={() => setModal(null)} title="🏷️ Marcar como Vendido">
+          <VenderForm
+            vehicles={vehicles}
+            onSuccess={() => { setModal(null); showToast('Vehículo marcado como Vendido ✓'); fetchData() }}
+            onError={(msg) => showToast(msg, true)}
+          />
+        </Modal>
+      )}
+      {modal === 'task' && (
+        <Modal onClose={() => setModal(null)} title="📝 Crear tarea rápida">
+          <TaskForm
+            vehicles={vehicles}
+            onSuccess={() => { setModal(null); showToast('Tarea creada ✓'); fetchData() }}
             onError={(msg) => showToast(msg, true)}
           />
         </Modal>
@@ -472,6 +486,119 @@ function OrdenForm({ vehicles, onSuccess, onError }: { vehicles: VehicleItem[]; 
         style={{ background: 'var(--accent-blue)', color: '#fff' }}
       >
         {saving ? 'Creando...' : 'Crear orden'}
+      </button>
+    </form>
+  )
+}
+
+/* ─── Form: Marcar como Vendido ─── */
+
+function VenderForm({ vehicles, onSuccess, onError }: { vehicles: VehicleItem[]; onSuccess: () => void; onError: (msg: string) => void }) {
+  const [vehicleId, setVehicleId] = useState('')
+  const [saving, setSaving] = useState(false)
+
+  const listos = vehicles.filter((v) => v.state === 'Listo para venta')
+
+  async function handleSubmit(e: React.FormEvent) {
+    e.preventDefault()
+    if (!vehicleId) return
+    setSaving(true)
+    try {
+      const res = await fetch(`/api/vehicles/${vehicleId}`, {
+        method: 'PATCH',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ state: 'Vendido' }),
+      })
+      const data = await res.json()
+      if (res.ok) onSuccess()
+      else onError(data.error || 'Error al marcar como vendido')
+    } catch (err: any) {
+      onError(err?.message || 'Error de red')
+    } finally {
+      setSaving(false)
+    }
+  }
+
+  return (
+    <form onSubmit={handleSubmit} className="space-y-3">
+      {listos.length === 0 ? (
+        <p className="text-sm py-4 text-center" style={{ color: 'var(--text-muted)' }}>
+          No hay vehículos en "Listo para venta".
+        </p>
+      ) : (
+        <Select
+          label="Vehículo" value={vehicleId} onChange={setVehicleId}
+          options={listos.map((v) => ({ value: v.id, label: `${v.name} (${v.matricula || v.brand || '—'})` }))}
+        />
+      )}
+      {vehicleId && (
+        <div className="text-xs px-2 py-1.5 rounded" style={{ background: 'var(--bg-pill)', color: 'var(--text-secondary)' }}>
+          Estado actual: <strong style={{ color: 'var(--text)' }}>Listo para venta</strong>
+        </div>
+      )}
+      <button
+        type="submit"
+        disabled={saving || !vehicleId || listos.length === 0}
+        className="w-full text-sm font-semibold py-2.5 rounded min-h-[44px] transition-opacity disabled:opacity-40"
+        style={{ background: 'var(--accent-blue)', color: '#fff' }}
+      >
+        {saving ? 'Marcando...' : '🏷️ Marcar como Vendido'}
+      </button>
+    </form>
+  )
+}
+
+/* ─── Form: Crear tarea rápida ─── */
+
+function TaskForm({ vehicles, onSuccess, onError }: { vehicles: VehicleItem[]; onSuccess: () => void; onError: (msg: string) => void }) {
+  const [name, setName] = useState('')
+  const [vehicleId, setVehicleId] = useState('')
+  const [area, setArea] = useState('')
+  const [saving, setSaving] = useState(false)
+
+  async function handleSubmit(e: React.FormEvent) {
+    e.preventDefault()
+    if (!name.trim() || !area) return
+    setSaving(true)
+    try {
+      const res = await fetch('/api/tasks', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ name: name.trim(), vehicleId: vehicleId || null, area }),
+      })
+      const data = await res.json()
+      if (res.ok) onSuccess()
+      else onError(data.error || 'Error al crear tarea')
+    } catch (err: any) {
+      onError(err?.message || 'Error de red')
+    } finally {
+      setSaving(false)
+    }
+  }
+
+  return (
+    <form onSubmit={handleSubmit} className="space-y-3">
+      <Input label="Nombre de la tarea *" value={name} onChange={setName} required />
+      <Select
+        label="Vehículo (opcional)" value={vehicleId} onChange={setVehicleId}
+        options={vehicles.map((v) => ({ value: v.id, label: `${v.name} (${v.matricula || v.brand || '—'})` }))}
+      />
+      <Select
+        label="Área *" value={area} onChange={setArea}
+        options={[
+          { value: 'Taller', label: '🔧 Taller' },
+          { value: 'Logística', label: '🚛 Logística' },
+          { value: 'Marketing', label: '📢 Marketing' },
+          { value: 'Ventas', label: '💰 Ventas' },
+        ]}
+      />
+      <button
+        type="submit"
+        disabled={saving || !name.trim() || !area}
+        className="w-full text-sm font-semibold py-2.5 rounded min-h-[44px] transition-opacity disabled:opacity-40"
+        style={{ background: 'var(--accent-blue)', color: '#fff' }}
+      >
+        {saving ? 'Creando...' : '📝 Crear tarea'}
       </button>
     </form>
   )

@@ -4,9 +4,9 @@ import { getDbSchema, findPropertyByType, findPropertiesByType } from './schema'
 export async function createTask(
   name: string,
   vehicleId: string | null,
-  responsibleIds: string[],
-  priority: 'Alta' | 'Media' | 'Baja',
-  area: string
+  responsibleIds: string[] = [],
+  priority: 'Alta' | 'Media' | 'Baja' = 'Media',
+  area: string = ''
 ) {
   const dbId = getDatabaseId('tasks')
   const schema = await getDbSchema('tasks')
@@ -35,8 +35,11 @@ export async function createTask(
     [titleKey]: { title: [{ text: { content: name } }] },
     [priorityKey]: { select: { name: priority } },
     [statusKey]: { select: { name: 'Sin empezar' } },
-    [deptKey]: { select: { name: area } },
     [typeKey]: { select: { name: 'Departamental' } },
+  }
+
+  if (area) {
+    properties[deptKey] = { select: { name: area } }
   }
 
   if (vehicleId) {
