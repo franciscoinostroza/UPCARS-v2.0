@@ -17,6 +17,13 @@ interface TaskItem {
   type: string
 }
 
+interface EmployeeItem {
+  id: string
+  name: string
+  role: string
+  department: string
+}
+
 const ACTIVE_STATES = ['Sin empezar', 'En progreso', 'Bloqueada'] as const
 
 const STATE_ICONS: Record<string, string> = {
@@ -31,18 +38,56 @@ const PRIORITY_COLORS: Record<string, string> = {
   Baja: 'var(--accent-green)',
 }
 
+const AREAS = ['Taller', 'Logística', 'Marketing', 'Ventas']
+
 const STATE_TRANSITIONS: Record<string, string[]> = {
   'Sin empezar': ['En progreso', 'Bloqueada'],
   'En progreso': ['Bloqueada', 'Completada'],
   Bloqueada: ['En progreso'],
 }
 
+const LS_KEY = 'tareas_mi_nombre'
+
+function FilterSelect({ label, value, onChange, options }: {
+  label: string
+  value: string
+  onChange: (v: string) => void
+  options: { value: string; label: string }[]
+}) {
+  return (
+    <select
+      value={value}
+      onChange={(e) => onChange(e.target.value)}
+      className="text-[11px] sm:text-xs px-2 py-1.5 rounded outline-none appearance-none cursor-pointer"
+      style={{ background: 'var(--bg-card)', color: 'var(--text)', border: '1px solid var(--border)', minWidth: 0 }}
+    >
+      {options.map((o) => (
+        <option key={o.value} value={o.value}>{o.label}</option>
+      ))}
+    </select>
+  )
+}
+
 function TareasInner() {
   const { dark } = useTheme()
   const [tasks, setTasks] = useState<TaskItem[]>([])
+  const [employees, setEmployees] = useState<EmployeeItem[]>([])
   const [loading, setLoading] = useState(true)
   const [selected, setSelected] = useState<TaskItem | null>(null)
   const [moving, setMoving] = useState<string | null>(null)
+
+  const [filterArea, setFilterArea] = useState('')
+  const [filterPriority, setFilterPriority] = useState('')
+  const [filterEmployee, setFilterEmployee] = useState('')
+  const [myName, setMyName] = useState('')
+
+  useEffect(() => {
+    const saved = localStorage.getItem(LS_KEY)
+    if (saved) {
+      setMyName(saved)
+      setFilterEmployee(saved)
+    }
+  }, [])
 
   const fetchTasks = useCallback(async () => {
     try {
@@ -56,14 +101,44 @@ function TareasInner() {
     }
   }, [])
 
-  useEffect(() => { fetchTasks() }, [fetchTasks])
+  const fetchEmployees = useCallback(async () => {
+    try {
+      const res = await fetch('/api/employees')
+      const json = await res.json()
+      if (json.success) setEmployees(json.data)
+    } catch {
+      // silent
+    }
+  }, [])
+
+  useEffect(() => {
+    fetchTasks()
+    fetchEmployees()
+  }, [fetchTasks, fetchEmployees])
 
   const activeTasks = tasks.filter((t) => ACTIVE_STATES.includes(t.state as any))
 
+  const filteredTasks = activeTasks.filter((t) => {
+    if (filterArea && t.area !== filterArea) return false
+    if (filterPriority && t.priority !== filterPriority) return false
+    if (filterEmployee && !t.responsibleIds.includes(filterEmployee)) return false
+    return true
+  })
+
   const columns = ACTIVE_STATES.map((state) => ({
     state,
-    tasks: activeTasks.filter((t) => t.state === state),
+    tasks: filteredTasks.filter((t) => t.state === state),
   }))
+
+  function handleEmployeeChange(id: string) {
+    setFilterEmployee(id)
+    setMyName(id)
+    if (id) {
+      localStorage.setItem(LS_KEY, id)
+    } else {
+      localStorage.removeItem(LS_KEY)
+    }
+  }
 
   async function handleMove(taskId: string, newState: string) {
     setMoving(taskId)
@@ -89,13 +164,56 @@ function TareasInner() {
   return (
     <div style={{ background: 'var(--bg)', minHeight: '100vh' }}>
       <div className="max-w-6xl mx-auto p-4 sm:p-6">
-        <div className="flex items-center justify-between mb-4 animate-fade-up">
+        <div className="flex items-center justify-between mb-3 animate-fade-up">
           <h1 className="text-base sm:text-lg font-bold" style={{ color: 'var(--text)' }}>📋 Tareas del Equipo</h1>
           <DarkModeToggle />
         </div>
 
+        {!loading && (
+          <div className="flex flex-wrap items-center gap-1.5 mb-3 animate-fade-up" style={{ animationDelay: '50ms' }}>
+            <FilterSelect
+              label="Área"
+              value={filterArea}
+              onChange={setFilterArea}
+              options={[{ value: '', label: '📂 Todas las áreas' }, ...AREAS.map((a) => ({ value: a, label: a }))]}
+            />
+            <FilterSelect
+              label="Prioridad"
+              value={filterPriority}
+              onChange={setFilterPriority}
+              options={[
+                { value: '', label: '🏷️ Todas' },
+                { value: 'Alta', label: '🔴 Alta' },
+                { value: 'Media', label: '🟡 Media' },
+                { value: 'Baja', label: '🟢 Baja' },
+              ]}
+            />
+            <FilterSelect
+              label="Responsable"
+              value={filterEmployee}
+              onChange={handleEmployeeChange}
+              options={[
+                { value: '', label: '👥 Todos' },
+                ...employees.map((e) => ({ value: e.id, label: e.name })),
+              ]}
+            />
+            {myName && (
+              <button
+                onClick={() => {
+                  setFilterEmployee('')
+                  handleEmployeeChange('')
+                }}
+                className="text-[11px] px-2 py-1.5 rounded font-medium transition-opacity hover:opacity-70"
+                style={{ background: 'var(--bg-pill)', color: 'var(--text-secondary)' }}
+              >
+                ✕ Limpiar
+              </button>
+            )}
+          </div>
+        )}
+
         {loading ? (
-          <div className="flex gap-1.5 sm:gap-2 animate-fade-up" style={{ animationDelay: '50ms' }}>
+          <div className="flex gap-1.5 sm:gap-2" style={{ animationDelay: '50ms' }}>
             {[1,2,3].map((i) => (
               <div key={i} className="pipeline-column p-2 sm:p-3" style={{ minWidth: 200, flex: 1 }}>
                 <Skeleton style={{ width: '60%', height: 14, marginBottom: 12 }} />
@@ -108,55 +226,77 @@ function TareasInner() {
             ))}
           </div>
         ) : (
-          <div className="flex gap-1.5 sm:gap-2 overflow-x-auto pb-1" style={{ animationDelay: '100ms' }}>
-            {columns.map((col) => (
-              <div key={col.state} className="pipeline-column p-2 sm:p-3" style={{ minWidth: 200, flex: 1 }}>
-                <div className="flex items-center gap-1.5 mb-2 sm:mb-3">
-                  <span className="text-xs">{STATE_ICONS[col.state]}</span>
-                  <h3 className="text-[10px] sm:text-xs font-semibold uppercase tracking-wider" style={{ color: 'var(--text-secondary)' }}>
-                    {col.state}
-                  </h3>
-                  <span className="ml-auto text-[10px] font-medium px-1.5 py-0.5 rounded" style={{ background: 'var(--bg-pill)', color: 'var(--text-muted)' }}>
-                    {col.tasks.length}
-                  </span>
-                </div>
-
-                <div className="space-y-1.5 sm:space-y-2">
-                  {col.tasks.length === 0 ? (
-                    <p className="text-[11px] py-4 text-center" style={{ color: 'var(--text-muted)' }}>Vacío</p>
-                  ) : (
-                    col.tasks.map((task) => (
-                      <button
-                        key={task.id}
-                        onClick={() => setSelected(task)}
-                        className="vehicle-card w-full text-left cursor-pointer transition-all duration-150"
-                      >
-                        <p className="text-[11px] sm:text-xs font-semibold leading-tight mb-1.5 line-clamp-2" style={{ color: 'var(--text)' }}>
-                          {task.name}
-                        </p>
-                        <div className="flex items-center gap-1 flex-wrap">
-                          <span
-                            className="text-[9px] font-semibold px-1.5 py-0.5 rounded"
-                            style={{
-                              background: `${PRIORITY_COLORS[task.priority]}20`,
-                              color: PRIORITY_COLORS[task.priority],
-                            }}
-                          >
-                            {task.priority}
-                          </span>
-                          {task.area && (
-                            <span className="text-[9px] px-1.5 py-0.5 rounded" style={{ background: 'var(--bg-pill)', color: 'var(--text-muted)' }}>
-                              {task.area}
-                            </span>
-                          )}
-                        </div>
-                      </button>
-                    ))
-                  )}
-                </div>
+          <>
+            {!myName && employees.length > 0 && (
+              <div className="mb-3 p-3 rounded animate-fade-up flex items-center gap-2" style={{ background: 'var(--bg-card)', border: '1px solid var(--border)' }}>
+                <span className="text-sm">👤</span>
+                <span className="text-[11px] sm:text-xs" style={{ color: 'var(--text-secondary)' }}>¿Quién eres? Selecciona tu nombre para ver tus tareas:</span>
+                <select
+                  value=""
+                  onChange={(e) => {
+                    if (e.target.value) handleEmployeeChange(e.target.value)
+                  }}
+                  className="text-[11px] sm:text-xs px-2 py-1 rounded outline-none font-medium ml-auto"
+                  style={{ background: 'var(--bg)', color: 'var(--text)', border: '1px solid var(--border)' }}
+                >
+                  <option value="">Elegir...</option>
+                  {employees.map((e) => (
+                    <option key={e.id} value={e.id}>{e.name}</option>
+                  ))}
+                </select>
               </div>
-            ))}
-          </div>
+            )}
+
+            <div className="flex gap-1.5 sm:gap-2 overflow-x-auto pb-1">
+              {columns.map((col) => (
+                <div key={col.state} className="pipeline-column p-2 sm:p-3" style={{ minWidth: 200, flex: 1 }}>
+                  <div className="flex items-center gap-1.5 mb-2 sm:mb-3">
+                    <span className="text-xs">{STATE_ICONS[col.state]}</span>
+                    <h3 className="text-[10px] sm:text-xs font-semibold uppercase tracking-wider" style={{ color: 'var(--text-secondary)' }}>
+                      {col.state}
+                    </h3>
+                    <span className="ml-auto text-[10px] font-medium px-1.5 py-0.5 rounded" style={{ background: 'var(--bg-pill)', color: 'var(--text-muted)' }}>
+                      {col.tasks.length}
+                    </span>
+                  </div>
+
+                  <div className="space-y-1.5 sm:space-y-2">
+                    {col.tasks.length === 0 ? (
+                      <p className="text-[11px] py-4 text-center" style={{ color: 'var(--text-muted)' }}>Vacío</p>
+                    ) : (
+                      col.tasks.map((task) => (
+                        <button
+                          key={task.id}
+                          onClick={() => setSelected(task)}
+                          className="vehicle-card w-full text-left cursor-pointer transition-all duration-150"
+                        >
+                          <p className="text-[11px] sm:text-xs font-semibold leading-tight mb-1.5 line-clamp-2" style={{ color: 'var(--text)' }}>
+                            {task.name}
+                          </p>
+                          <div className="flex items-center gap-1 flex-wrap">
+                            <span
+                              className="text-[9px] font-semibold px-1.5 py-0.5 rounded"
+                              style={{
+                                background: `${PRIORITY_COLORS[task.priority]}20`,
+                                color: PRIORITY_COLORS[task.priority],
+                              }}
+                            >
+                              {task.priority}
+                            </span>
+                            {task.area && (
+                              <span className="text-[9px] px-1.5 py-0.5 rounded" style={{ background: 'var(--bg-pill)', color: 'var(--text-muted)' }}>
+                                {task.area}
+                              </span>
+                            )}
+                          </div>
+                        </button>
+                      ))
+                    )}
+                  </div>
+                </div>
+              ))}
+            </div>
+          </>
         )}
 
         {selected && (
