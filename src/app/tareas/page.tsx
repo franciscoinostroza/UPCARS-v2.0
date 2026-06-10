@@ -38,7 +38,7 @@ const PRIORITY_COLORS: Record<string, string> = {
   Baja: 'var(--accent-green)',
 }
 
-const AREAS = ['Taller', 'Logística', 'Marketing', 'Ventas']
+const AREAS = ['Gerencia', 'Administración', 'Ventas', 'Taller', 'Logística', 'Marketing']
 
 const STATE_TRANSITIONS: Record<string, string[]> = {
   'Sin empezar': ['En progreso', 'Bloqueada'],
@@ -172,10 +172,10 @@ function TareasInner() {
         {!loading && (
           <div className="flex flex-wrap items-center gap-1.5 mb-3 animate-fade-up" style={{ animationDelay: '50ms' }}>
             <FilterSelect
-              label="Área"
+              label="Departamento"
               value={filterArea}
               onChange={setFilterArea}
-              options={[{ value: '', label: '📂 Todas las áreas' }, ...AREAS.map((a) => ({ value: a, label: a }))]}
+              options={[{ value: '', label: '📂 Todos los departamentos' }, ...AREAS.map((a) => ({ value: a, label: a }))]}
             />
             <FilterSelect
               label="Prioridad"
