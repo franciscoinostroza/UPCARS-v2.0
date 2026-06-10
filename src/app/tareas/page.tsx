@@ -24,12 +24,14 @@ interface EmployeeItem {
   department: string
 }
 
-const ACTIVE_STATES = ['Sin empezar', 'En progreso', 'Bloqueada'] as const
+const ALL_STATES = ['Sin empezar', 'En progreso', 'Bloqueada', 'Completada', 'Cancelada'] as const
 
 const STATE_ICONS: Record<string, string> = {
   'Sin empezar': '⏳',
   'En progreso': '🔄',
   Bloqueada: '🚫',
+  Completada: '✅',
+  Cancelada: '❌',
 }
 
 const PRIORITY_COLORS: Record<string, string> = {
@@ -116,18 +118,18 @@ function TareasInner() {
     fetchEmployees()
   }, [fetchTasks, fetchEmployees])
 
-  const activeTasks = tasks.filter((t) => ACTIVE_STATES.includes(t.state as any))
-
-  const filteredTasks = activeTasks.filter((t) => {
+  const filteredTasks = tasks.filter((t) => {
     if (filterArea && t.area !== filterArea) return false
     if (filterPriority && t.priority !== filterPriority) return false
     if (filterEmployee && !t.responsibleIds.includes(filterEmployee)) return false
     return true
   })
 
-  const columns = ACTIVE_STATES.map((state) => ({
+  const TERMINAL = ['Completada', 'Cancelada']
+  const columns = ALL_STATES.map((state) => ({
     state,
     tasks: filteredTasks.filter((t) => t.state === state),
+    terminal: TERMINAL.includes(state),
   }))
 
   function handleEmployeeChange(id: string) {
@@ -249,7 +251,7 @@ function TareasInner() {
 
             <div className="flex gap-1.5 sm:gap-2 overflow-x-auto pb-1">
               {columns.map((col) => (
-                <div key={col.state} className="pipeline-column p-2 sm:p-3" style={{ minWidth: 200, flex: 1 }}>
+                <div key={col.state} className="pipeline-column p-2 sm:p-3" style={{ minWidth: col.terminal ? 160 : 200, flex: 1, opacity: col.terminal ? 0.55 : 1 }}>
                   <div className="flex items-center gap-1.5 mb-2 sm:mb-3">
                     <span className="text-xs">{STATE_ICONS[col.state]}</span>
                     <h3 className="text-[10px] sm:text-xs font-semibold uppercase tracking-wider" style={{ color: 'var(--text-secondary)' }}>
@@ -269,8 +271,9 @@ function TareasInner() {
                           key={task.id}
                           onClick={() => setSelected(task)}
                           className="vehicle-card w-full text-left cursor-pointer transition-all duration-150"
+                          style={col.terminal ? { borderColor: 'transparent' } : undefined}
                         >
-                          <p className="text-[11px] sm:text-xs font-semibold leading-tight mb-1.5 line-clamp-2" style={{ color: 'var(--text)' }}>
+                          <p className="text-[11px] sm:text-xs font-semibold leading-tight mb-1.5 line-clamp-2" style={{ color: col.terminal ? 'var(--text-muted)' : 'var(--text)' }}>
                             {task.name}
                           </p>
                           <div className="flex items-center gap-1 flex-wrap">
@@ -278,13 +281,13 @@ function TareasInner() {
                               className="text-[9px] font-semibold px-1.5 py-0.5 rounded"
                               style={{
                                 background: `${PRIORITY_COLORS[task.priority]}20`,
-                                color: PRIORITY_COLORS[task.priority],
+                                color: col.terminal ? 'var(--text-muted)' : PRIORITY_COLORS[task.priority],
                               }}
                             >
                               {task.priority}
                             </span>
                             {task.area && (
-                              <span className="text-[9px] px-1.5 py-0.5 rounded" style={{ background: 'var(--bg-pill)', color: 'var(--text-muted)' }}>
+                              <span className="text-[9px] px-1.5 py-0.5 rounded" style={{ background: 'var(--bg-pill)', color: col.terminal ? 'var(--text-muted)' : 'var(--text-muted)' }}>
                                 {task.area}
                               </span>
                             )}
@@ -345,17 +348,23 @@ function TareasInner() {
               </div>
 
               <div className="flex flex-col gap-1.5">
-                {(STATE_TRANSITIONS[selected.state] || []).map((ns) => (
-                  <button
-                    key={ns}
-                    onClick={() => handleMove(selected.id, ns)}
-                    disabled={moving === selected.id}
-                    className="w-full text-[11px] font-semibold py-2 rounded min-h-[36px] transition-opacity disabled:opacity-40"
-                    style={{ background: 'var(--accent-blue)', color: '#fff' }}
-                  >
-                    {moving === selected.id ? '...' : `${STATE_ICONS[ns] || '→'} Mover a ${ns}`}
-                  </button>
-                ))}
+                {TERMINAL.includes(selected.state) ? (
+                  <p className="text-[11px] text-center py-2" style={{ color: 'var(--text-muted)' }}>
+                    Tarea {selected.state === 'Completada' ? 'completada' : 'cancelada'}
+                  </p>
+                ) : (
+                  (STATE_TRANSITIONS[selected.state] || []).map((ns) => (
+                    <button
+                      key={ns}
+                      onClick={() => handleMove(selected.id, ns)}
+                      disabled={moving === selected.id}
+                      className="w-full text-[11px] font-semibold py-2 rounded min-h-[36px] transition-opacity disabled:opacity-40"
+                      style={{ background: 'var(--accent-blue)', color: '#fff' }}
+                    >
+                      {moving === selected.id ? '...' : `${STATE_ICONS[ns] || '→'} Mover a ${ns}`}
+                    </button>
+                  ))
+                )}
               </div>
             </div>
           </div>
