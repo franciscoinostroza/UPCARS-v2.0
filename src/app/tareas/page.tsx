@@ -43,9 +43,9 @@ const PRIORITY_COLORS: Record<string, string> = {
 const AREAS = ['Gerencia', 'Administración', 'Ventas', 'Taller', 'Logística', 'Marketing']
 
 const STATE_TRANSITIONS: Record<string, string[]> = {
-  'Sin empezar': ['En progreso', 'Bloqueada'],
-  'En progreso': ['Bloqueada', 'Completada'],
-  Bloqueada: ['En progreso'],
+  'Sin empezar': ['En progreso', 'Bloqueada', 'Cancelada'],
+  'En progreso': ['Bloqueada', 'Completada', 'Cancelada'],
+  Bloqueada: ['En progreso', 'Cancelada'],
 }
 
 const LS_KEY = 'tareas_mi_nombre'
@@ -350,12 +350,11 @@ function TareasInner() {
               <div className="flex flex-col gap-1.5">
                 {TERMINAL.includes(selected.state) ? (
                   <button
-                    onClick={() => handleMove(selected.id, 'Sin empezar')}
-                    disabled={moving === selected.id}
-                    className="w-full text-[11px] font-semibold py-2 rounded min-h-[36px] transition-opacity disabled:opacity-40"
+                    onClick={() => setSelected(null)}
+                    className="w-full text-[11px] font-semibold py-2 rounded min-h-[36px]"
                     style={{ background: 'var(--bg-pill)', color: 'var(--text)' }}
                   >
-                    {moving === selected.id ? '...' : `↩ Reabrir tarea`}
+                    ✕ Limpiar
                   </button>
                 ) : (
                   (STATE_TRANSITIONS[selected.state] || []).map((ns) => (
