@@ -125,11 +125,9 @@ function TareasInner() {
     return true
   })
 
-  const TERMINAL = ['Completada', 'Cancelada']
   const columns = ALL_STATES.map((state) => ({
     state,
     tasks: filteredTasks.filter((t) => t.state === state),
-    terminal: TERMINAL.includes(state),
   }))
 
   function handleEmployeeChange(id: string) {
@@ -251,7 +249,7 @@ function TareasInner() {
 
             <div className="flex gap-1.5 sm:gap-2 overflow-x-auto pb-1">
               {columns.map((col) => (
-                <div key={col.state} className="pipeline-column p-2 sm:p-3" style={{ minWidth: col.terminal ? 160 : 200, flex: 1, opacity: col.terminal ? 0.55 : 1 }}>
+                <div key={col.state} className="pipeline-column p-2 sm:p-3" style={{ minWidth: 180, flex: 1 }}>
                   <div className="flex items-center gap-1.5 mb-2 sm:mb-3">
                     <span className="text-xs">{STATE_ICONS[col.state]}</span>
                     <h3 className="text-[10px] sm:text-xs font-semibold uppercase tracking-wider" style={{ color: 'var(--text-secondary)' }}>
@@ -271,9 +269,8 @@ function TareasInner() {
                           key={task.id}
                           onClick={() => setSelected(task)}
                           className="vehicle-card w-full text-left cursor-pointer transition-all duration-150"
-                          style={col.terminal ? { borderColor: 'transparent' } : undefined}
                         >
-                          <p className="text-[11px] sm:text-xs font-semibold leading-tight mb-1.5 line-clamp-2" style={{ color: col.terminal ? 'var(--text-muted)' : 'var(--text)' }}>
+                          <p className="text-[11px] sm:text-xs font-semibold leading-tight mb-1.5 line-clamp-2" style={{ color: 'var(--text)' }}>
                             {task.name}
                           </p>
                           <div className="flex items-center gap-1 flex-wrap">
@@ -281,13 +278,13 @@ function TareasInner() {
                               className="text-[9px] font-semibold px-1.5 py-0.5 rounded"
                               style={{
                                 background: `${PRIORITY_COLORS[task.priority]}20`,
-                                color: col.terminal ? 'var(--text-muted)' : PRIORITY_COLORS[task.priority],
+                                color: PRIORITY_COLORS[task.priority],
                               }}
                             >
                               {task.priority}
                             </span>
                             {task.area && (
-                              <span className="text-[9px] px-1.5 py-0.5 rounded" style={{ background: 'var(--bg-pill)', color: col.terminal ? 'var(--text-muted)' : 'var(--text-muted)' }}>
+                              <span className="text-[9px] px-1.5 py-0.5 rounded" style={{ background: 'var(--bg-pill)', color: 'var(--text-muted)' }}>
                                 {task.area}
                               </span>
                             )}
@@ -348,27 +345,25 @@ function TareasInner() {
               </div>
 
               <div className="flex flex-col gap-1.5">
-                {TERMINAL.includes(selected.state) ? (
+                {(STATE_TRANSITIONS[selected.state] || []).map((ns) => (
                   <button
-                    onClick={() => setSelected(null)}
-                    className="w-full text-[11px] font-semibold py-2 rounded min-h-[36px]"
-                    style={{ background: 'var(--bg-pill)', color: 'var(--text)' }}
+                    key={ns}
+                    onClick={() => handleMove(selected.id, ns)}
+                    disabled={moving === selected.id}
+                    className="w-full text-[11px] font-semibold py-2 rounded min-h-[36px] transition-opacity disabled:opacity-40"
+                    style={{ background: 'var(--accent-blue)', color: '#fff' }}
                   >
-                    ✕ Limpiar
+                    {moving === selected.id ? '...' : `${STATE_ICONS[ns] || '→'} Mover a ${ns}`}
                   </button>
-                ) : (
-                  (STATE_TRANSITIONS[selected.state] || []).map((ns) => (
-                    <button
-                      key={ns}
-                      onClick={() => handleMove(selected.id, ns)}
-                      disabled={moving === selected.id}
-                      className="w-full text-[11px] font-semibold py-2 rounded min-h-[36px] transition-opacity disabled:opacity-40"
-                      style={{ background: 'var(--accent-blue)', color: '#fff' }}
-                    >
-                      {moving === selected.id ? '...' : `${STATE_ICONS[ns] || '→'} Mover a ${ns}`}
-                    </button>
-                  ))
-                )}
+                ))}
+                <button
+                  onClick={() => setSelected(null)}
+                  className="w-full text-[11px] font-semibold py-2 rounded min-h-[36px]"
+                  style={{ background: 'var(--bg-pill)', color: 'var(--text)' }}
+                >
+                  ✕ Limpiar
+                </button>
+              </div>
               </div>
             </div>
           </div>
