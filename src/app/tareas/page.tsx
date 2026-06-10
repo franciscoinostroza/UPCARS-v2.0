@@ -349,9 +349,14 @@ function TareasInner() {
 
               <div className="flex flex-col gap-1.5">
                 {TERMINAL.includes(selected.state) ? (
-                  <p className="text-[11px] text-center py-2" style={{ color: 'var(--text-muted)' }}>
-                    Tarea {selected.state === 'Completada' ? 'completada' : 'cancelada'}
-                  </p>
+                  <button
+                    onClick={() => handleMove(selected.id, 'Sin empezar')}
+                    disabled={moving === selected.id}
+                    className="w-full text-[11px] font-semibold py-2 rounded min-h-[36px] transition-opacity disabled:opacity-40"
+                    style={{ background: 'var(--bg-pill)', color: 'var(--text)' }}
+                  >
+                    {moving === selected.id ? '...' : `↩ Reabrir tarea`}
+                  </button>
                 ) : (
                   (STATE_TRANSITIONS[selected.state] || []).map((ns) => (
                     <button
