@@ -64,6 +64,12 @@ export async function getTasks(): Promise<Task[]> {
   return (data.results || []).map((r: any) => parseTaskProps(r.id, r.properties))
 }
 
+export async function archiveTask(taskId: string): Promise<void> {
+  await notionPatch(`/pages/${taskId}`, {
+    archived: true,
+  })
+}
+
 export async function updateTaskStatus(taskId: string, newStatus: string): Promise<void> {
   const schema = await getDbSchema('tasks')
   const selects = findPropertiesByType(schema, 'select')

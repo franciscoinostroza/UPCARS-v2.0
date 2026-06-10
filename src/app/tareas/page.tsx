@@ -161,6 +161,18 @@ function TareasInner() {
     }
   }
 
+  async function handleArchive(taskId: string) {
+    try {
+      const res = await fetch(`/api/tasks/${taskId}`, { method: 'DELETE' })
+      if (res.ok) {
+        setTasks((prev) => prev.filter((t) => t.id !== taskId))
+        setSelected(null)
+      }
+    } catch {
+      // silent
+    }
+  }
+
   return (
     <div style={{ background: 'var(--bg)', minHeight: '100vh' }}>
       <div className="max-w-6xl mx-auto p-4 sm:p-6">
@@ -357,11 +369,11 @@ function TareasInner() {
                   </button>
                 ))}
                 <button
-                  onClick={() => setSelected(null)}
+                  onClick={() => handleArchive(selected.id)}
                   className="w-full text-[11px] font-semibold py-2 rounded min-h-[36px]"
                   style={{ background: 'var(--bg-pill)', color: 'var(--text)' }}
                 >
-                  ✕ Limpiar
+                  🗑 Limpiar
                 </button>
               </div>
               </div>
