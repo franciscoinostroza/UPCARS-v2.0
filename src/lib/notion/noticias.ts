@@ -14,7 +14,7 @@ function parseNoticiaProps(id: string, p: Record<string, any>): Noticia {
   return {
     id,
     titulo: p.Título?.title?.[0]?.plain_text ?? '',
-    cuerpo: p.Cuerpo?.rich_text?.[0]?.plain_text ?? '',
+    cuerpo: (p.Cuerpo?.rich_text ?? []).map((t: any) => t.plain_text).join(''),
     autorId: p.Autor?.relation?.[0]?.id ?? null,
     fecha: p['Fecha de publicación']?.date?.start ?? null,
     activo: p.Activo?.checkbox ?? true,
