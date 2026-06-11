@@ -12,12 +12,6 @@ interface NoticiaItem {
   autorId: string | null
   fecha: string | null
   activo: boolean
-  visto: boolean
-}
-
-interface NoticiaVistoEmpleado {
-  empleado_id: string
-  visto_at: string
 }
 
 interface EmployeeItem {
@@ -26,14 +20,30 @@ interface EmployeeItem {
 }
 
 const LS_KEY = 'noticias_mi_nombre'
+const VISTOS_KEY = 'noticias_vistos'
+
+function getVistos(): Set<string> {
+  try {
+    const raw = localStorage.getItem(VISTOS_KEY)
+    return new Set(raw ? JSON.parse(raw) : [])
+  } catch {
+    return new Set()
+  }
+}
+
+function addVisto(id: string) {
+  const vistos = getVistos()
+  vistos.add(id)
+  localStorage.setItem(VISTOS_KEY, JSON.stringify([...vistos]))
+}
 
 function NoticiasInner() {
   const { dark } = useTheme()
   const [noticias, setNoticias] = useState<NoticiaItem[]>([])
+  const [vistos, setVistos] = useState<Set<string>>(new Set())
   const [employees, setEmployees] = useState<EmployeeItem[]>([])
   const [loading, setLoading] = useState(true)
   const [selected, setSelected] = useState<NoticiaItem | null>(null)
-  const [selectedVistos, setSelectedVistos] = useState<NoticiaVistoEmpleado[]>([])
   const [myId, setMyId] = useState('')
 
   const [showCrear, setShowCrear] = useState(false)
@@ -42,20 +52,21 @@ function NoticiasInner() {
   const [creating, setCreating] = useState(false)
 
   useEffect(() => {
-    setMyId(localStorage.getItem(LS_KEY) || '')
+    const saved = localStorage.getItem(LS_KEY)
+    if (saved) setMyId(saved)
+    setVistos(getVistos())
   }, [])
 
   const fetchNoticias = useCallback(async () => {
     try {
-      const params = myId ? `?empleadoId=${myId}` : ''
-      const res = await fetch(`/api/noticias${params}`)
+      const res = await fetch('/api/noticias')
       const json = await res.json()
       if (json.success) setNoticias(json.data)
     } catch {
     } finally {
       setLoading(false)
     }
-  }, [myId])
+  }, [])
 
   const fetchEmployees = useCallback(async () => {
     try {
@@ -71,7 +82,7 @@ function NoticiasInner() {
     fetchEmployees()
   }, [fetchNoticias, fetchEmployees])
 
-  async function handleEmployeeChange(id: string) {
+  function handleEmployeeChange(id: string) {
     setMyId(id)
     if (id) {
       localStorage.setItem(LS_KEY, id)
@@ -84,29 +95,11 @@ function NoticiasInner() {
     return employees.find((e) => e.id === id)?.name || id.slice(0, 8)
   }
 
-  async function openNoticia(n: NoticiaItem) {
+  function openNoticia(n: NoticiaItem) {
     setSelected(n)
-
-    if (myId && !n.visto) {
-      try {
-        await fetch(`/api/noticias/${n.id}/visto`, {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ empleadoId: myId }),
-        })
-        setNoticias((prev) =>
-          prev.map((x) => (x.id === n.id ? { ...x, visto: true } : x))
-        )
-      } catch {
-      }
-    }
-
-    try {
-      const res = await fetch(`/api/noticias/${n.id}/visto`)
-      const json = await res.json()
-      if (json.success) setSelectedVistos(json.data || [])
-    } catch {
-      setSelectedVistos([])
+    if (!vistos.has(n.id)) {
+      addVisto(n.id)
+      setVistos(new Set([...vistos, n.id]))
     }
   }
 
@@ -209,7 +202,7 @@ function NoticiasInner() {
                 key={n.id}
                 onClick={() => openNoticia(n)}
                 className="card w-full text-left p-3 sm:p-4 cursor-pointer transition-all duration-150"
-                style={{ opacity: n.visto ? 0.5 : 1 }}
+                style={{ opacity: vistos.has(n.id) ? 0.5 : 1 }}
               >
                 <div className="flex items-center gap-2 mb-1">
                   <span className="text-xs">🗞️</span>
@@ -253,18 +246,6 @@ function NoticiasInner() {
               <div className="text-[13px] leading-relaxed whitespace-pre-wrap mb-4" style={{ color: 'var(--text)' }}>
                 {selected.cuerpo}
               </div>
-
-              {selectedVistos.length > 0 && (
-                <div className="text-[11px]" style={{ color: 'var(--text-muted)' }}>
-                  <span>👁️ Visto por: </span>
-                  {selectedVistos.map((v, i) => (
-                    <span key={v.empleado_id}>
-                      {getEmployeeName(v.empleado_id)}{i < selectedVistos.length - 1 ? ', ' : ''}
-                    </span>
-                  ))}
-                  <span> ({selectedVistos.length})</span>
-                </div>
-              )}
 
               {selected.autorId === myId && (
                 <button

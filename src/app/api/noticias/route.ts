@@ -1,21 +1,12 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { getNoticias, createNoticia } from '@/lib/notion/noticias'
-import { getNoticiasVistas } from '@/lib/supabase/noticias'
 
 export const dynamic = 'force-dynamic'
 
-export async function GET(request: NextRequest) {
+export async function GET() {
   try {
-    const empleadoId = request.nextUrl.searchParams.get('empleadoId')
-    const [noticias, vistas] = await Promise.all([
-      getNoticias(),
-      empleadoId ? getNoticiasVistas(empleadoId) : Promise.resolve([]),
-    ])
-    const data = noticias.map((n) => ({
-      ...n,
-      visto: vistas.includes(n.id),
-    }))
-    return NextResponse.json({ success: true, data })
+    const noticias = await getNoticias()
+    return NextResponse.json({ success: true, data: noticias })
   } catch (error: any) {
     console.error('Noticias GET error:', error)
     return NextResponse.json(
