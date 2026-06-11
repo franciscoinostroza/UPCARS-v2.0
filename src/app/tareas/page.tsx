@@ -376,7 +376,6 @@ function TareasInner() {
                   🗑 Limpiar
                 </button>
               </div>
-              </div>
             </div>
           </div>
         )}

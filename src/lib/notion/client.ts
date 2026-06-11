@@ -59,6 +59,7 @@ export function getDatabaseId(name: string): string {
     operaciones_financiadas: process.env.OPERACIONES_FINANCIADAS_DB_ID,
     finanzas: process.env.FINANZAS_DB_ID,
     buzon_mejora: process.env.BUZON_MEJORA_DB_ID,
+    noticias: process.env.NOTICIAS_DB_ID,
   }
   const id = ids[name]
   if (!id) throw new Error(`Database ID not found for: ${name}`)
