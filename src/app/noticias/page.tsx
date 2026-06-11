@@ -5,6 +5,14 @@ import { ThemeProvider, useTheme } from '../dashboard/theme-context'
 import { DarkModeToggle } from '../dashboard/dark-mode'
 import { Skeleton } from '@/components/skeleton'
 
+interface LinkPreview {
+  url: string
+  title: string
+  description: string
+  image: string
+  siteName: string
+}
+
 interface NoticiaItem {
   id: string
   titulo: string
@@ -12,6 +20,7 @@ interface NoticiaItem {
   autorId: string | null
   fecha: string | null
   activo: boolean
+  linkPreview: LinkPreview | null
 }
 
 interface EmployeeItem {
@@ -35,6 +44,40 @@ function addVisto(id: string) {
   const vistos = getVistos()
   vistos.add(id)
   localStorage.setItem(VISTOS_KEY, JSON.stringify([...vistos]))
+}
+
+function LinkPreviewCard({ preview }: { preview: LinkPreview }) {
+  return (
+    <a
+      href={preview.url}
+      target="_blank"
+      rel="noopener noreferrer"
+      onClick={(e) => e.stopPropagation()}
+      className="block mt-2 rounded overflow-hidden transition-opacity hover:opacity-80"
+      style={{ border: '1px solid var(--border)', background: 'var(--bg)' }}
+    >
+      <div className="flex">
+        {preview.image && (
+          <div className="w-20 h-20 sm:w-24 sm:h-24 flex-shrink-0 bg-cover bg-center"
+            style={{ backgroundImage: `url(${preview.image})` }}
+          />
+        )}
+        <div className="flex-1 min-w-0 p-2 sm:p-3">
+          <p className="text-[11px] font-semibold leading-tight line-clamp-2" style={{ color: 'var(--text)' }}>
+            {preview.title}
+          </p>
+          {preview.description && (
+            <p className="text-[10px] leading-snug line-clamp-2 mt-0.5" style={{ color: 'var(--text-secondary)' }}>
+              {preview.description}
+            </p>
+          )}
+          <p className="text-[9px] mt-1" style={{ color: 'var(--text-muted)' }}>
+            {preview.siteName}
+          </p>
+        </div>
+      </div>
+    </a>
+  )
 }
 
 function NoticiasInner() {
@@ -213,7 +256,8 @@ function NoticiasInner() {
                 <p className="text-[11px] leading-relaxed line-clamp-2 mb-1" style={{ color: 'var(--text-secondary)' }}>
                   {n.cuerpo}
                 </p>
-                <div className="flex items-center gap-2 text-[10px]" style={{ color: 'var(--text-muted)' }}>
+                {n.linkPreview && <LinkPreviewCard preview={n.linkPreview} />}
+                <div className="flex items-center gap-2 text-[10px] mt-1" style={{ color: 'var(--text-muted)' }}>
                   <span>{getEmployeeName(n.autorId || '')}</span>
                   {n.fecha && <span>· {formatFecha(n.fecha)}</span>}
                 </div>
@@ -243,9 +287,11 @@ function NoticiasInner() {
                 {selected.fecha && <span>· {formatFecha(selected.fecha)}</span>}
               </div>
 
-              <div className="text-[13px] leading-relaxed whitespace-pre-wrap mb-4" style={{ color: 'var(--text)' }}>
+              <div className="text-[13px] leading-relaxed whitespace-pre-wrap mb-2" style={{ color: 'var(--text)' }}>
                 {selected.cuerpo}
               </div>
+
+              {selected.linkPreview && <LinkPreviewCard preview={selected.linkPreview} />}
 
               {selected.autorId === myId && (
                 <button

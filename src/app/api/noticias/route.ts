@@ -1,12 +1,22 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { getNoticias, createNoticia } from '@/lib/notion/noticias'
+import { extractUrls, fetchOGData } from '@/lib/og-fetcher'
 
 export const dynamic = 'force-dynamic'
 
 export async function GET() {
   try {
     const noticias = await getNoticias()
-    return NextResponse.json({ success: true, data: noticias })
+
+    const enriched = await Promise.all(
+      noticias.map(async (n) => {
+        const urls = extractUrls(n.cuerpo)
+        const linkPreview = urls.length > 0 ? await fetchOGData(urls[0]) : null
+        return { ...n, linkPreview }
+      })
+    )
+
+    return NextResponse.json({ success: true, data: enriched })
   } catch (error: any) {
     console.error('Noticias GET error:', error)
     return NextResponse.json(
