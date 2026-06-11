@@ -31,7 +31,7 @@ function decodeEntities(s: string): string {
 export async function fetchOGData(url: string): Promise<OGData | null> {
   try {
     const controller = new AbortController()
-    const timeout = setTimeout(() => controller.abort(), 3000)
+    const timeout = setTimeout(() => controller.abort(), 6000)
     const res = await fetch(url, {
       headers: { 'User-Agent': 'Mozilla/5.0 (compatible; OGPreviewBot/1.0)' },
       signal: controller.signal,
@@ -45,9 +45,12 @@ export async function fetchOGData(url: string): Promise<OGData | null> {
 
     const decoder = new TextDecoder()
     let html = ''
-    let chunk
-    while (html.length < 10000 && !(chunk = await reader.read()).done) {
-      html += decoder.decode(chunk.value, { stream: true })
+    let maxBytes = 15000
+    while (maxBytes > 0) {
+      const { done, value } = await reader.read()
+      if (done) break
+      html += decoder.decode(value.slice(0, maxBytes), { stream: true })
+      maxBytes -= value.length
     }
     reader.cancel()
 
