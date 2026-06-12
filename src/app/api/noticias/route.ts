@@ -8,13 +8,12 @@ export async function GET() {
   try {
     const noticias = await getNoticias()
 
-    const enriched = await Promise.all(
-      noticias.map(async (n) => {
-        const url = n.link?.startsWith('http') ? n.link : `https://${n.link}`
-        const linkPreview = n.link ? await fetchOGData(url) : null
-        return { ...n, linkPreview }
-      })
-    )
+    const enriched = []
+    for (const n of noticias) {
+      const url = n.link?.startsWith('http') ? n.link : `https://${n.link}`
+      const linkPreview = n.link ? await fetchOGData(url) : null
+      enriched.push({ ...n, linkPreview })
+    }
 
     return NextResponse.json({ success: true, data: enriched })
   } catch (error: any) {

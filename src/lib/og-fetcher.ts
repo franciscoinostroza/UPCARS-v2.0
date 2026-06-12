@@ -9,29 +9,34 @@ export interface OGData {
 export async function fetchOGData(url: string): Promise<OGData | null> {
   try {
     const controller = new AbortController()
-    const timeout = setTimeout(() => controller.abort(), 4000)
+    const timeout = setTimeout(() => controller.abort(), 6000)
     const res = await fetch(url, {
       headers: { 'User-Agent': 'Mozilla/5.0 (compatible; OGPreviewBot/1.0)' },
       signal: controller.signal,
       redirect: 'follow',
     })
     clearTimeout(timeout)
-    if (!res.ok) return null
-
-    const reader = res.body?.getReader()
-    if (!reader) return null
-
-    const decoder = new TextDecoder()
-    let html = ''
-    let remaining = 12000
-    while (remaining > 0) {
-      const { done, value } = await reader.read()
-      if (done) break
-      const chunk = value.slice(0, remaining)
-      html += decoder.decode(chunk, { stream: true })
-      remaining -= chunk.length
+    if (!res.ok) {
+      console.error(`OG fetch ${url}: status ${res.status}`)
+      return null
     }
-    reader.cancel()
+
+    let html = ''
+    const reader = res.body?.getReader()
+    if (reader) {
+      const decoder = new TextDecoder()
+      let remaining = 12000
+      while (remaining > 0) {
+        const { done, value } = await reader.read()
+        if (done) break
+        const chunk = value.slice(0, remaining)
+        html += decoder.decode(chunk, { stream: true })
+        remaining -= chunk.length
+      }
+      reader.cancel()
+    } else {
+      html = (await res.text()).slice(0, 12000)
+    }
 
     function og(prop: string): string | null {
       const p = [
@@ -53,7 +58,8 @@ export async function fetchOGData(url: string): Promise<OGData | null> {
       image: og('og:image') || og('twitter:image') || '',
       siteName,
     }
-  } catch {
+  } catch (err: any) {
+    console.error(`OG fetch error for ${url}:`, err?.message || err)
     return null
   }
 }
