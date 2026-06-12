@@ -11,7 +11,7 @@ export async function fetchOGData(url: string): Promise<OGData | null> {
     const controller = new AbortController()
     const timeout = setTimeout(() => controller.abort(), 4000)
     const res = await fetch(url, {
-      htmlers: { 'User-Agent': 'Mozilla/5.0 (compatible; OGPreviewBot/1.0)' },
+      headers: { 'User-Agent': 'Mozilla/5.0 (compatible; OGPreviewBot/1.0)' },
       signal: controller.signal,
       redirect: 'follow',
     })
