@@ -1,4 +1,4 @@
-import { notionGet, notionPost, getDatabaseId } from './client'
+import { notionGet, notionPost, notionPatch, getDatabaseId } from './client'
 
 let userCache: Record<string, string> | null = null
 
@@ -48,4 +48,20 @@ export async function createNotificacion(titulo: string, link: string | null, em
     parent: { database_id: dbId },
     properties: props,
   })
+}
+
+export async function cleanupOldNotificaciones(): Promise<number> {
+  const dbId = getDatabaseId('notificaciones')
+  const threeDaysAgo = new Date(Date.now() - 3 * 24 * 60 * 60 * 1000).toISOString().split('T')[0]
+
+  const data: any = await notionPost(`/databases/${dbId}/query`, {
+    filter: {
+      property: 'Fecha',
+      date: { before: threeDaysAgo },
+    },
+  })
+
+  const pages = data.results || []
+  await Promise.all(pages.map((p: any) => notionPatch(`/pages/${p.id}`, { archived: true })))
+  return pages.length
 }
