@@ -16,17 +16,6 @@ interface NoticiaItem {
   activo: boolean
 }
 
-interface NoticiaItem {
-  id: string
-  titulo: string
-  cuerpo: string
-  link: string | null
-  autorId: string | null
-  fecha: string | null
-  activo: boolean
-  linkPreview: LinkPreview | null
-}
-
 interface EmployeeItem {
   id: string
   name: string
