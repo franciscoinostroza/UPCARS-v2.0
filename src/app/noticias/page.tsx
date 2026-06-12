@@ -17,6 +17,7 @@ interface NoticiaItem {
   id: string
   titulo: string
   cuerpo: string
+  link: string | null
   autorId: string | null
   fecha: string | null
   activo: boolean
@@ -92,6 +93,7 @@ function NoticiasInner() {
   const [showCrear, setShowCrear] = useState(false)
   const [newTitulo, setNewTitulo] = useState('')
   const [newCuerpo, setNewCuerpo] = useState('')
+  const [newLink, setNewLink] = useState('')
   const [creating, setCreating] = useState(false)
 
   useEffect(() => {
@@ -165,11 +167,12 @@ function NoticiasInner() {
       const res = await fetch('/api/noticias', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ titulo: newTitulo.trim(), cuerpo: newCuerpo.trim(), autorId: myId }),
+        body: JSON.stringify({ titulo: newTitulo.trim(), cuerpo: newCuerpo.trim(), autorId: myId, link: newLink.trim() || undefined }),
       })
       if (res.ok) {
         setNewTitulo('')
         setNewCuerpo('')
+        setNewLink('')
         setShowCrear(false)
         fetchNoticias()
       }
@@ -340,6 +343,16 @@ function NoticiasInner() {
                     className="w-full text-[13px] px-3 py-2 rounded outline-none resize-none min-h-[120px]"
                     style={{ background: 'var(--bg)', color: 'var(--text)', border: '1px solid var(--border)' }}
                     required
+                  />
+                </div>
+                <div>
+                  <input
+                    type="url"
+                    placeholder="Link (opcional)"
+                    value={newLink}
+                    onChange={(e) => setNewLink(e.target.value)}
+                    className="w-full text-[13px] px-3 py-2 rounded outline-none"
+                    style={{ background: 'var(--bg)', color: 'var(--text)', border: '1px solid var(--border)' }}
                   />
                 </div>
                 <button

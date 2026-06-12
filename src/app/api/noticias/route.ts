@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { getNoticias, createNoticia } from '@/lib/notion/noticias'
-import { extractUrls, fetchOGData } from '@/lib/og-fetcher'
+import { fetchOGData } from '@/lib/og-fetcher'
 
 export const dynamic = 'force-dynamic'
 
@@ -10,8 +10,8 @@ export async function GET() {
 
     const enriched = await Promise.all(
       noticias.map(async (n) => {
-        const urls = extractUrls(n.cuerpo)
-        const linkPreview = urls.length > 0 ? await fetchOGData(urls[0]) : null
+        const url = n.link?.startsWith('http') ? n.link : `https://${n.link}`
+        const linkPreview = n.link ? await fetchOGData(url) : null
         return { ...n, linkPreview }
       })
     )
@@ -29,7 +29,7 @@ export async function GET() {
 export async function POST(request: NextRequest) {
   try {
     const body = await request.json()
-    const { titulo, cuerpo, autorId, fecha } = body
+    const { titulo, cuerpo, autorId, link, fecha } = body
 
     if (!titulo || !cuerpo || !autorId) {
       return NextResponse.json(
@@ -38,7 +38,9 @@ export async function POST(request: NextRequest) {
       )
     }
 
-    await createNoticia(titulo.trim(), cuerpo.trim(), autorId, fecha || undefined)
+    const cleanLink = link?.trim()
+    const normalizedLink = cleanLink && !cleanLink.startsWith('http') ? `https://${cleanLink}` : cleanLink
+    await createNoticia(titulo.trim(), cuerpo.trim(), autorId, normalizedLink || undefined, fecha || undefined)
     return NextResponse.json({ success: true }, { status: 201 })
   } catch (error: any) {
     console.error('Noticias POST error:', error)

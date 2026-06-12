@@ -6,12 +6,6 @@ export interface OGData {
   siteName: string
 }
 
-const URL_REGEX = /https?:\/\/[^\s"]+/g
-
-export function extractUrls(text: string): string[] {
-  return text.match(URL_REGEX) || []
-}
-
 export async function fetchOGData(url: string): Promise<OGData | null> {
   try {
     const controller = new AbortController()

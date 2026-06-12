@@ -5,6 +5,7 @@ export interface Noticia {
   id: string
   titulo: string
   cuerpo: string
+  link: string | null
   autorId: string | null
   fecha: string | null
   activo: boolean
@@ -15,6 +16,7 @@ function parseNoticiaProps(id: string, p: Record<string, any>): Noticia {
     id,
     titulo: p.Título?.title?.[0]?.plain_text ?? '',
     cuerpo: (p.Cuerpo?.rich_text ?? []).map((t: any) => t.plain_text).join(''),
+    link: p.Link?.url ?? null,
     autorId: p.Autor?.relation?.[0]?.id ?? null,
     fecha: p['Fecha de publicación']?.date?.start ?? null,
     activo: p.Activo?.checkbox ?? true,
@@ -33,18 +35,22 @@ export async function getNoticias(): Promise<Noticia[]> {
   return (data.results || []).map((r: any) => parseNoticiaProps(r.id, r.properties))
 }
 
-export async function createNoticia(titulo: string, cuerpo: string, autorId: string, fecha?: string) {
+export async function createNoticia(titulo: string, cuerpo: string, autorId: string, link?: string, fecha?: string) {
   const dbId = getDatabaseId('noticias')
   const today = fecha || new Date().toISOString().split('T')[0]
+  const props: Record<string, any> = {
+    Título: { title: [{ text: { content: titulo } }] },
+    Cuerpo: { rich_text: [{ text: { content: cuerpo } }] },
+    Autor: { relation: [{ id: autorId }] },
+    'Fecha de publicación': { date: { start: today } },
+    Activo: { checkbox: true },
+  }
+  if (link) {
+    props.Link = { url: link }
+  }
   await notionPost('/pages', {
     parent: { database_id: dbId },
-    properties: {
-      Título: { title: [{ text: { content: titulo } }] },
-      Cuerpo: { rich_text: [{ text: { content: cuerpo } }] },
-      Autor: { relation: [{ id: autorId }] },
-      'Fecha de publicación': { date: { start: today } },
-      Activo: { checkbox: true },
-    },
+    properties: props,
   })
 }
 
