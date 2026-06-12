@@ -1,0 +1,14 @@
+name: Cleanup notificaciones viejas
+
+on:
+  schedule:
+    - cron: "0 0 */3 * *"
+  workflow_dispatch:
+
+jobs:
+  cleanup:
+    runs-on: ubuntu-latest
+    steps:
+      - run: |
+          curl -s -X GET "https://upcars-v2.vercel.app/api/cron/cleanup-notifications" \
+            -H "Authorization: Bearer ${{ secrets.CRON_SECRET }}"
