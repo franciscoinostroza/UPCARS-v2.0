@@ -1,10 +1,10 @@
 'use client'
 
-import { useState, useEffect, useCallback, useRef } from 'react'
+import { useState, useEffect, useCallback } from 'react'
 import { ThemeProvider, useTheme } from '../dashboard/theme-context'
 import { DarkModeToggle } from '../dashboard/dark-mode'
 import { Skeleton } from '@/components/skeleton'
-import { fetchOGClient } from '@/lib/og-fetcher'
+
 
 interface LinkPreview {
   url: string
@@ -32,8 +32,7 @@ interface EmployeeItem {
 
 const LS_KEY = 'noticias_mi_nombre'
 const VISTOS_KEY = 'noticias_vistos'
-const OG_CACHE_PREFIX = 'og_cache_'
-const OG_CACHE_TTL = 24 * 60 * 60 * 1000
+
 
 function getVistos(): Set<string> {
   try {
@@ -48,27 +47,6 @@ function addVisto(id: string) {
   const vistos = getVistos()
   vistos.add(id)
   localStorage.setItem(VISTOS_KEY, JSON.stringify([...vistos]))
-}
-
-function getCachedOG(url: string): LinkPreview | null {
-  try {
-    const raw = localStorage.getItem(OG_CACHE_PREFIX + url)
-    if (!raw) return null
-    const { data, ts } = JSON.parse(raw)
-    if (Date.now() - ts > OG_CACHE_TTL) {
-      localStorage.removeItem(OG_CACHE_PREFIX + url)
-      return null
-    }
-    return data
-  } catch {
-    return null
-  }
-}
-
-function setCachedOG(url: string, data: LinkPreview) {
-  try {
-    localStorage.setItem(OG_CACHE_PREFIX + url, JSON.stringify({ data, ts: Date.now() }))
-  } catch {}
 }
 
 function LinkPreviewCard({ preview }: { preview: LinkPreview }) {
@@ -106,7 +84,7 @@ function LinkPreviewCard({ preview }: { preview: LinkPreview }) {
 }
 
 function NoticiasInner() {
-  const { dark } = useTheme()
+  useTheme()
   const [noticias, setNoticias] = useState<NoticiaItem[]>([])
   const [vistos, setVistos] = useState<Set<string>>(new Set())
   const [employees, setEmployees] = useState<EmployeeItem[]>([])
@@ -120,62 +98,22 @@ function NoticiasInner() {
   const [newLink, setNewLink] = useState('')
   const [creating, setCreating] = useState(false)
 
-  const queueRef = useRef<string[]>([])
-  const activeRef = useRef(0)
-
   useEffect(() => {
     const saved = localStorage.getItem(LS_KEY)
     if (saved) setMyId(saved)
     setVistos(getVistos())
   }, [])
 
-  const processQueue = useCallback(() => {
-    if (activeRef.current >= 2 || queueRef.current.length === 0) return
-    activeRef.current++
-    const url = queueRef.current.shift()!
-
-    const cached = getCachedOG(url)
-    if (cached) {
-      setNoticias((prev) => prev.map((n) => (n.link === url ? { ...n, linkPreview: cached } : n)))
-      activeRef.current--
-      processQueue()
-      return
-    }
-
-    fetchOGClient(url).then((og) => {
-      if (og) {
-        setCachedOG(url, og)
-        setNoticias((prev) => prev.map((n) => (n.link === url ? { ...n, linkPreview: og } : n)))
-      }
-      activeRef.current--
-      processQueue()
-    })
-  }, [])
-
-  const enqueueOG = useCallback(
-    (url: string) => {
-      queueRef.current.push(url)
-      processQueue()
-    },
-    [processQueue]
-  )
-
   const fetchNoticias = useCallback(async () => {
     try {
       const res = await fetch('/api/noticias')
       const json = await res.json()
-      if (json.success) {
-        const items = json.data.map((n: NoticiaItem) => ({ ...n, linkPreview: null }))
-        setNoticias(items)
-        items.forEach((n: NoticiaItem) => {
-          if (n.link) enqueueOG(n.link)
-        })
-      }
+      if (json.success) setNoticias(json.data)
     } catch {
     } finally {
       setLoading(false)
     }
-  }, [enqueueOG])
+  }, [])
 
   const fetchEmployees = useCallback(async () => {
     try {

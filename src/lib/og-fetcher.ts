@@ -6,13 +6,32 @@ export interface OGData {
   siteName: string
 }
 
-export async function fetchOGClient(url: string): Promise<OGData | null> {
+export async function fetchOGData(url: string): Promise<OGData | null> {
   try {
-    const proxyUrl = `https://api.allorigins.win/raw?url=${encodeURIComponent(url)}`
-    const res = await fetch(proxyUrl)
+    const controller = new AbortController()
+    const timeout = setTimeout(() => controller.abort(), 4000)
+    const res = await fetch(url, {
+      htmlers: { 'User-Agent': 'Mozilla/5.0 (compatible; OGPreviewBot/1.0)' },
+      signal: controller.signal,
+      redirect: 'follow',
+    })
+    clearTimeout(timeout)
     if (!res.ok) return null
-    const html = await res.text()
-    const head = html.slice(0, 10000)
+
+    const reader = res.body?.getReader()
+    if (!reader) return null
+
+    const decoder = new TextDecoder()
+    let html = ''
+    let remaining = 12000
+    while (remaining > 0) {
+      const { done, value } = await reader.read()
+      if (done) break
+      const chunk = value.slice(0, remaining)
+      html += decoder.decode(chunk, { stream: true })
+      remaining -= chunk.length
+    }
+    reader.cancel()
 
     function og(prop: string): string | null {
       const p = [
@@ -20,8 +39,8 @@ export async function fetchOGClient(url: string): Promise<OGData | null> {
         new RegExp(`<meta[^>]+content=["']([^"']+)["'][^>]+(?:property|name)=["']${prop}["']`, 'i'),
       ]
       for (const r of p) {
-        const m = head.match(r)
-        if (m) return m[1].replace(/&amp;/g, '&').replace(/&lt;/g, '<').replace(/&gt;/g, '>').replace(/&quot;/g, '"')
+        const m = html.match(r)
+        if (m) return m[1].replace(/&amp;/g,'&').replace(/&lt;/g,'<').replace(/&gt;/g,'>').replace(/&quot;/g,'"')
       }
       return null
     }
@@ -29,7 +48,7 @@ export async function fetchOGClient(url: string): Promise<OGData | null> {
     const siteName = og('og:site_name') || new URL(url).hostname.replace('www.', '')
     return {
       url,
-      title: og('og:title') || og('twitter:title') || head.match(/<title>([^<]+)<\/title>/i)?.[1] || siteName,
+      title: og('og:title') || og('twitter:title') || html.match(/<title>([^<]+)<\/title>/i)?.[1] || siteName,
       description: og('og:description') || og('twitter:description') || '',
       image: og('og:image') || og('twitter:image') || '',
       siteName,
