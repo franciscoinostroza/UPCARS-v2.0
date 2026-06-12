@@ -4,14 +4,16 @@ import { useState, useEffect, useCallback } from 'react'
 import { ThemeProvider, useTheme } from '../dashboard/theme-context'
 import { DarkModeToggle } from '../dashboard/dark-mode'
 import { Skeleton } from '@/components/skeleton'
+import { getDomain, getFaviconUrl } from '@/lib/og-fetcher'
 
-
-interface LinkPreview {
-  url: string
-  title: string
-  description: string
-  image: string
-  siteName: string
+interface NoticiaItem {
+  id: string
+  titulo: string
+  cuerpo: string
+  link: string | null
+  autorId: string | null
+  fecha: string | null
+  activo: boolean
 }
 
 interface NoticiaItem {
@@ -49,36 +51,28 @@ function addVisto(id: string) {
   localStorage.setItem(VISTOS_KEY, JSON.stringify([...vistos]))
 }
 
-function LinkPreviewCard({ preview }: { preview: LinkPreview }) {
+function LinkCard({ url }: { url: string }) {
+  const domain = getDomain(url)
   return (
     <a
-      href={preview.url}
+      href={url}
       target="_blank"
       rel="noopener noreferrer"
       onClick={(e) => e.stopPropagation()}
-      className="block mt-2 rounded overflow-hidden transition-opacity hover:opacity-80"
-      style={{ border: '1px solid var(--border)', background: 'var(--bg)' }}
+      className="inline-flex items-center gap-2 mt-2 px-3 py-2 rounded text-xs font-medium transition-opacity hover:opacity-70"
+      style={{ background: 'var(--bg-pill)', color: 'var(--accent-blue)' }}
     >
-      <div className="flex">
-        {preview.image && (
-          <div className="w-20 h-20 sm:w-24 sm:h-24 flex-shrink-0 bg-cover bg-center"
-            style={{ backgroundImage: `url(${preview.image})` }}
-          />
-        )}
-        <div className="flex-1 min-w-0 p-2 sm:p-3">
-          <p className="text-[11px] font-semibold leading-tight line-clamp-2" style={{ color: 'var(--text)' }}>
-            {preview.title}
-          </p>
-          {preview.description && (
-            <p className="text-[10px] leading-snug line-clamp-2 mt-0.5" style={{ color: 'var(--text-secondary)' }}>
-              {preview.description}
-            </p>
-          )}
-          <p className="text-[9px] mt-1" style={{ color: 'var(--text-muted)' }}>
-            {preview.siteName}
-          </p>
-        </div>
-      </div>
+      <img
+        src={getFaviconUrl(url)}
+        alt=""
+        width="16"
+        height="16"
+        className="rounded-sm flex-shrink-0"
+        style={{ filter: 'grayscale(0.3)' }}
+        onError={(e) => { (e.target as HTMLImageElement).style.display = 'none' }}
+      />
+      <span className="truncate max-w-[200px]">{domain}</span>
+      <span>→</span>
     </a>
   )
 }
@@ -261,7 +255,7 @@ function NoticiasInner() {
                 <p className="text-[11px] leading-relaxed line-clamp-2 mb-1" style={{ color: 'var(--text-secondary)' }}>
                   {n.cuerpo}
                 </p>
-                {n.linkPreview && <LinkPreviewCard preview={n.linkPreview} />}
+                {n.link && <LinkCard url={n.link} />}
                 <div className="flex items-center gap-2 text-[10px] mt-1" style={{ color: 'var(--text-muted)' }}>
                   <span>{getEmployeeName(n.autorId || '')}</span>
                   {n.fecha && <span>· {formatFecha(n.fecha)}</span>}
@@ -296,7 +290,7 @@ function NoticiasInner() {
                 {selected.cuerpo}
               </div>
 
-              {selected.linkPreview && <LinkPreviewCard preview={selected.linkPreview} />}
+              {selected.link && <LinkCard url={selected.link} />}
 
               {selected.autorId === myId && (
                 <button

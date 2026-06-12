@@ -6,60 +6,19 @@ export interface OGData {
   siteName: string
 }
 
-export async function fetchOGData(url: string): Promise<OGData | null> {
+export function getDomain(url: string): string {
   try {
-    const controller = new AbortController()
-    const timeout = setTimeout(() => controller.abort(), 6000)
-    const res = await fetch(url, {
-      headers: { 'User-Agent': 'Mozilla/5.0 (compatible; OGPreviewBot/1.0)' },
-      signal: controller.signal,
-      redirect: 'follow',
-    })
-    clearTimeout(timeout)
-    if (!res.ok) {
-      console.error(`OG fetch ${url}: status ${res.status}`)
-      return null
-    }
+    return new URL(url).hostname.replace('www.', '')
+  } catch {
+    return url
+  }
+}
 
-    let html = ''
-    const reader = res.body?.getReader()
-    if (reader) {
-      const decoder = new TextDecoder()
-      let remaining = 12000
-      while (remaining > 0) {
-        const { done, value } = await reader.read()
-        if (done) break
-        const chunk = value.slice(0, remaining)
-        html += decoder.decode(chunk, { stream: true })
-        remaining -= chunk.length
-      }
-      reader.cancel()
-    } else {
-      html = (await res.text()).slice(0, 12000)
-    }
-
-    function og(prop: string): string | null {
-      const p = [
-        new RegExp(`<meta[^>]+(?:property|name)=["']${prop}["'][^>]+content=["']([^"']+)["']`, 'i'),
-        new RegExp(`<meta[^>]+content=["']([^"']+)["'][^>]+(?:property|name)=["']${prop}["']`, 'i'),
-      ]
-      for (const r of p) {
-        const m = html.match(r)
-        if (m) return m[1].replace(/&amp;/g,'&').replace(/&lt;/g,'<').replace(/&gt;/g,'>').replace(/&quot;/g,'"')
-      }
-      return null
-    }
-
-    const siteName = og('og:site_name') || new URL(url).hostname.replace('www.', '')
-    return {
-      url,
-      title: og('og:title') || og('twitter:title') || html.match(/<title>([^<]+)<\/title>/i)?.[1] || siteName,
-      description: og('og:description') || og('twitter:description') || '',
-      image: og('og:image') || og('twitter:image') || '',
-      siteName,
-    }
-  } catch (err: any) {
-    console.error(`OG fetch error for ${url}:`, err?.message || err)
-    return null
+export function getFaviconUrl(url: string): string {
+  try {
+    const domain = new URL(url).hostname
+    return `https://www.google.com/s2/favicons?domain=${domain}&sz=64`
+  } catch {
+    return ''
   }
 }
