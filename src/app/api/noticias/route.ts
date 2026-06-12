@@ -35,12 +35,13 @@ export async function POST(request: NextRequest) {
     await createNoticia(titulo.trim(), cuerpo.trim(), autorId, normalizedLink || undefined, fecha || undefined)
 
     const employees = await getEmployees()
+    const autor = employees.find(e => e.id === autorId)
     const activeEmails = employees.filter(e => e.active && e.email).map(e => e.email)
     await createNotificacion(
       `📢 Nueva noticia: ${titulo.trim()}`,
-      'noticia',
       normalizedLink || null,
-      activeEmails
+      activeEmails,
+      autor?.name
     )
 
     return NextResponse.json({ success: true }, { status: 201 })

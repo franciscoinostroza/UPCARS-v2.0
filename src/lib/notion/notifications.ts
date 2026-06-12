@@ -19,7 +19,7 @@ export function clearUserCache() {
   userCache = null
 }
 
-export async function createNotificacion(titulo: string, tipo: string, link: string | null, employeeEmails: string[]) {
+export async function createNotificacion(titulo: string, link: string | null, employeeEmails: string[], autorNombre?: string) {
   const users = await getUsersByEmail()
   const peopleIds = employeeEmails
     .map(e => users[e.toLowerCase()])
@@ -28,8 +28,14 @@ export async function createNotificacion(titulo: string, tipo: string, link: str
   if (peopleIds.length === 0) return
 
   const dbId = getDatabaseId('notificaciones')
+  const bodyParts = [titulo]
+  if (autorNombre) bodyParts.push(`\nPor: ${autorNombre}`)
+  if (link) bodyParts.push(`\nLink: ${link}`)
+  bodyParts.push('\n\n─────────\nPara leer la nota completa, ingresá a UPCARS.')
+
   const props: Record<string, any> = {
     Título: { title: [{ text: { content: titulo } }] },
+    Cuerpo: { rich_text: [{ text: { content: bodyParts.join('') } }] },
     Asignado: { people: peopleIds.map((id: string) => ({ id })) },
     Leída: { checkbox: false },
     Fecha: { date: { start: new Date().toISOString().split('T')[0] } },
