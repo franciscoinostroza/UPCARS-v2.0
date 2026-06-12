@@ -1,5 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { getNoticias, createNoticia } from '@/lib/notion/noticias'
+import { getEmployees } from '@/lib/notion/employees'
+import { createNotificacion } from '@/lib/notion/notifications'
 
 export const dynamic = 'force-dynamic'
 
@@ -31,6 +33,16 @@ export async function POST(request: NextRequest) {
     const cleanLink = link?.trim()
     const normalizedLink = cleanLink && !cleanLink.startsWith('http') ? `https://${cleanLink}` : cleanLink
     await createNoticia(titulo.trim(), cuerpo.trim(), autorId, normalizedLink || undefined, fecha || undefined)
+
+    const employees = await getEmployees()
+    const activeEmails = employees.filter(e => e.active && e.email).map(e => e.email)
+    await createNotificacion(
+      `📢 Nueva noticia: ${titulo.trim()}`,
+      'noticia',
+      normalizedLink || null,
+      activeEmails
+    )
+
     return NextResponse.json({ success: true }, { status: 201 })
   } catch (error: any) {
     console.error('Noticias POST error:', error)

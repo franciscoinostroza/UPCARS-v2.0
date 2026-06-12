@@ -130,10 +130,12 @@ export function parseEmployeeProps(id: string, p: Record<string, NotionProp>) {
   const roleKey = matchKey(selectKeys, ['Cargo', 'Rol / Puesto', 'Rol', 'Role', 'Puesto']) ?? selectKeys[1]
   const deptKey = matchKey(selectKeys, ['Departamento', 'Department']) ?? selectKeys[2]
   const statusKey = matchKey(selectKeys, ['Estado', 'Estado Actual']) ?? selectKeys[0]
+  const emailKey = Object.keys(p).find(k => (p[k] as any)?.type === 'email') || 'Email'
 
   return {
     id,
     name: tv(nameKey ? p[nameKey] : undefined),
+    email: (p[emailKey] as any)?.email ?? '',
     role: sel(roleKey ? p[roleKey] : undefined),
     department: sel(deptKey ? p[deptKey] : undefined),
     active: sel(statusKey ? p[statusKey] : undefined) === 'Activo',
