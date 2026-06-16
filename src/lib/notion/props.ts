@@ -81,6 +81,7 @@ export function parseVehicleProps(id: string, p: Record<string, NotionProp>) {
   const fechaEntradaTallerKey = matchKey(dateKeys, ['Fecha entrada taller']) ?? dateKeys[1]
   const fechaEntradaPreparacionKey = matchKey(dateKeys, ['Fecha entrada preparación']) ?? dateKeys[2]
   const fechaListoKey = matchKey(dateKeys, ['Fecha listo para venta', 'Fecha listo']) ?? dateKeys[3]
+  const fechaVendidoKey = matchKey(dateKeys, ['Fecha de venta', 'Fecha venta']) ?? dateKeys[4]
 
   const numberKeys = idx.number
   const yearKey = matchKey(numberKeys, ['Año', 'Year', 'Ano']) ?? numberKeys[0]
@@ -108,6 +109,7 @@ export function parseVehicleProps(id: string, p: Record<string, NotionProp>) {
     state: sel(statusKey ? p[statusKey] : undefined, 'Comprado') as VehicleState,
     fechaCompra: dateVal(fechaCompraKey ? p[fechaCompraKey] : undefined, '')!,
     fechaListo: dateVal(fechaListoKey ? p[fechaListoKey] : undefined),
+    fechaVendido: dateVal(fechaVendidoKey ? p[fechaVendidoKey] : undefined),
     responsable: rel(responsableKey ? p[responsableKey] : undefined),
     precioCompra: num(precioCompraKey ? p[precioCompraKey] : undefined),
     precioVenta: num(precioVentaKey ? p[precioVentaKey] : undefined),

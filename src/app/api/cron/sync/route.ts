@@ -5,6 +5,7 @@ import { handleSLAChange } from '@/lib/automations/sla-engine'
 import { logVehicleEvent } from '@/lib/automations/task-engine'
 import { detectChanges, fullResync } from '@/lib/automations/event-engine'
 import { isValidTransition } from '@/lib/automations/state-machine'
+import { createVenta, getVentasByVehicle } from '@/lib/notion/ventas'
 import { VehicleState } from '@/lib/types'
 
 export const maxDuration = 60
@@ -20,6 +21,7 @@ export async function GET(req: NextRequest) {
 
   try {
     const vehicles = await getVehicles()
+    const vehicleMap = new Map(vehicles.map((v) => [v.id, v]))
     const vehicleStates = vehicles.map((v) => ({ id: v.id, name: v.name, state: v.state }))
 
     const fullResyncFlag = req.nextUrl.searchParams.get('resync') === 'true'
@@ -63,6 +65,21 @@ export async function GET(req: NextRequest) {
           timestamp: now,
         }),
       ])
+
+      if (to === 'Vendido') {
+        const existing = await getVentasByVehicle(change.vehicleId)
+        if (existing.length === 0) {
+          const vehicle = vehicleMap.get(change.vehicleId)
+          const today = now.toISOString().split('T')[0]
+          await createVenta({
+            nombre: `Venta - ${change.vehicleName}`,
+            vehiculoId: change.vehicleId,
+            fechaVenta: vehicle?.fechaVendido || today,
+            precioVenta: vehicle?.precioVenta ?? null,
+            vendedorId: vehicle?.responsable ?? null,
+          }).catch((err) => console.error('Auto-create venta failed:', err))
+        }
+      }
 
       results.push({
         vehicleId: change.vehicleId,

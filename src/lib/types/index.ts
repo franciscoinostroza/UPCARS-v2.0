@@ -20,6 +20,7 @@ export interface Vehicle {
   state: VehicleState
   fechaCompra: string
   fechaListo: string | null
+  fechaVendido: string | null
   responsable: string | null
   precioCompra: number | null
   precioVenta: number | null
@@ -76,6 +77,24 @@ export interface Employee {
   role: string
   department: string
   active: boolean
+}
+
+export interface Venta {
+  id: string
+  nombre: string
+  precioVenta: number | null
+  precioCompra: number | null
+  margenBruto: number | null
+  margenPorcentaje: number | null
+  fechaVenta: string | null
+  vehiculoId: string | null
+  vendedorId: string | null
+  clienteNombre: string
+  clienteContacto: string
+  formaPago: string
+  financiada: boolean
+  financieraId: string | null
+  observaciones: string
 }
 
 export interface GoogleReview {

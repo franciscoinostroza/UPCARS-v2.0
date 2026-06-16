@@ -1,9 +1,19 @@
 import { NextResponse } from 'next/server'
 import { getKPIStats, getBottlenecks, getVehicleKPIs } from '@/lib/automations/sla-engine'
 import { getEmployeeKPIs } from '@/lib/automations/employee-kpis'
+import { getVehicles } from '@/lib/notion/vehicles'
 import { getSupabase } from '@/lib/supabase/client'
 
 export const dynamic = 'force-dynamic'
+
+function avg(nums: (number | null)[]): number | null {
+  const valid = nums.filter((n): n is number => n !== null)
+  return valid.length ? Math.round((valid.reduce((a, b) => a + b, 0) / valid.length) * 100) / 100 : null
+}
+
+function daysBetween(a: string, b: string): number {
+  return Math.round((new Date(b).getTime() - new Date(a).getTime()) / (1000 * 60 * 60 * 24))
+}
 
 async function getVehicleCycleTimes() {
   const { data: events } = await getSupabase()
@@ -66,6 +76,32 @@ export async function GET() {
     const vehicleKPIs = await getVehicleKPIs()
     const employeeKPIs = await getEmployeeKPIs()
 
+    const allVehicles = await getVehicles()
+    const sold = allVehicles.filter(v => v.state === 'Vendido')
+    const soldWithDate = sold.filter(v => v.fechaVendido)
+
+    const sales = {
+      totalSold: sold.length,
+      avgSalePrice: avg(sold.map(v => v.precioVenta)),
+      avgMargin: avg(sold.map(v => v.margenBruto)),
+      totalRevenue: sold.reduce((s, v) => s + (v.precioVenta ?? 0), 0),
+      totalMargin: sold.reduce((s, v) => s + (v.margenBruto ?? 0), 0),
+      avgDaysToSell: avg(soldWithDate.map(v =>
+        v.fechaCompra ? daysBetween(v.fechaCompra, v.fechaVendido!) : null
+      )),
+      byMonth: Object.entries(
+        soldWithDate.reduce((acc: Record<string, { count: number; revenue: number; margin: number }>, v) => {
+          if (!v.fechaVendido) return acc
+          const m = v.fechaVendido.slice(0, 7)
+          if (!acc[m]) acc[m] = { count: 0, revenue: 0, margin: 0 }
+          acc[m].count++
+          acc[m].revenue += v.precioVenta ?? 0
+          acc[m].margin += v.margenBruto ?? 0
+          return acc
+        }, {})
+      ).map(([month, d]) => ({ month, ...d })).sort((a, b) => a.month.localeCompare(b.month)),
+    }
+
     return NextResponse.json({
       success: true,
       data: {
@@ -74,6 +110,7 @@ export async function GET() {
         bottlenecks,
         vehicleKPIs,
         employeeKPIs,
+        sales,
         activeAlerts: alerts || [],
         totalEvents: totalEvents || 0,
         vehicleCycles,
