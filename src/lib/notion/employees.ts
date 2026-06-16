@@ -17,3 +17,9 @@ export async function getEmployeesByDepartment(dept: string): Promise<Employee[]
   const employees = await getEmployees()
   return employees.filter((e) => e.department === dept && e.active)
 }
+
+export async function getEmployeesByNames(names: string[]): Promise<Employee[]> {
+  const employees = await getEmployees()
+  const lower = names.map(n => n.toLowerCase().trim())
+  return employees.filter(e => lower.includes(e.name.toLowerCase().trim()) && e.active)
+}

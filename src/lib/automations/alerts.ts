@@ -6,8 +6,11 @@ import type { VehicleState } from '@/lib/types'
 import { sendEmail } from '@/lib/email/send'
 import { notionPost, getDatabaseId } from '@/lib/notion/client'
 import { getDbSchema, findPropertiesByType } from '@/lib/notion/schema'
+import { getEmployees, getEmployeesByNames, getEmployeeByRole } from '@/lib/notion/employees'
+import { createNotificacion } from '@/lib/notion/notifications'
 
 const ADMIN_EMAIL = process.env.ADMIN_EMAIL || ''
+const ALERT_STAFF = ['José', 'Luis Miguel', 'David']
 
 export async function handleAlertCheck(): Promise<void> {
   await Promise.all([
@@ -19,6 +22,9 @@ export async function handleAlertCheck(): Promise<void> {
 
 async function checkSLAAlerts() {
   const violations = await checkSLAs()
+  const allVehicles = await getVehicles()
+  const staff = await getEmployeesByNames(ALERT_STAFF)
+  const staffEmails = staff.map(e => e.email).filter(Boolean)
 
   for (const violation of violations) {
     await getSupabase().from('alert_records').insert({
@@ -28,6 +34,30 @@ async function checkSLAAlerts() {
       message: `SLA excedido en ${violation.area} para vehículo ${violation.vehicle_id}`,
       resolved: false,
     } as never)
+
+    const v = allVehicles.find(ve => ve.id === violation.vehicle_id)
+    const emails = [...staffEmails]
+    if (violation.area === 'Logistica') {
+      const e = await getEmployeeByRole('Logística')
+      if (e?.email && !emails.includes(e.email)) emails.push(e.email)
+    } else if (violation.area === 'Taller') {
+      const e = await getEmployeeByRole('Mecánico')
+      if (e?.email && !emails.includes(e.email)) emails.push(e.email)
+    } else if (violation.area === 'Chapa') {
+      const chapa = await getEmployeesByNames(['Luis Miguel', 'Víctor', 'José'])
+      chapa.forEach(e => { if (e.email && !emails.includes(e.email)) emails.push(e.email) })
+    } else if (violation.area === 'Preparacion') {
+      const e = await getEmployeeByRole('Preparador')
+      if (e?.email && !emails.includes(e.email)) emails.push(e.email)
+    }
+
+    if (emails.length > 0) {
+      await createNotificacion(
+        `⏰ SLA excedido en ${violation.area}${v ? ` - ${v.name}` : ''}`,
+        null,
+        emails
+      ).catch(err => console.error('Notificación SLA falló:', err))
+    }
   }
 }
 
@@ -76,6 +106,8 @@ async function checkTaskAlerts() {
 
     const now = new Date()
 
+    const allEmployees = await getEmployees()
+
     for (const task of data.results || []) {
       const deadline = task.properties?.[fechaKey]?.date?.start
       if (!deadline) continue
@@ -90,6 +122,21 @@ async function checkTaskAlerts() {
           message: `Tarea vencida: ${taskName}`,
           resolved: false,
         } as never)
+
+        const responsableIds: string[] = task.properties?.Responsable?.relation?.map((r: any) => r.id) || []
+        if (responsableIds.length > 0) {
+          const taskEmails = responsableIds
+            .map((id: string) => allEmployees.find(e => e.id === id))
+            .filter((e: any): e is any => e?.email)
+            .map((e: any) => e.email)
+          if (taskEmails.length > 0) {
+            await createNotificacion(
+              `⏰ Tarea vencida: ${taskName}`,
+              null,
+              taskEmails
+            ).catch(err => console.error('Notificación tarea vencida falló:', err))
+          }
+        }
       }
     }
   } catch (error) {
@@ -125,5 +172,15 @@ async function createVehicleAlert(vehicleId: string, vehicleName: string, type: 
 <p>Tipo: ${type}</p>
 <p>Fecha: ${new Date().toLocaleString('es-ES')}</p>`,
     })
+  }
+
+  const staff = await getEmployeesByNames(ALERT_STAFF)
+  const emails = staff.map(e => e.email).filter(Boolean)
+  if (emails.length > 0) {
+    await createNotificacion(
+      `⚠️ ${message}`,
+      null,
+      emails
+    ).catch(err => console.error('Notificación alerta falló:', err))
   }
 }

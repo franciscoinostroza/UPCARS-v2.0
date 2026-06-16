@@ -6,6 +6,8 @@ import { logVehicleEvent } from '@/lib/automations/task-engine'
 import { detectChanges, fullResync } from '@/lib/automations/event-engine'
 import { isValidTransition } from '@/lib/automations/state-machine'
 import { createVenta, getVentasByVehicle } from '@/lib/notion/ventas'
+import { getEmployeeByRole, getEmployeesByNames } from '@/lib/notion/employees'
+import { createNotificacion } from '@/lib/notion/notifications'
 import { VehicleState } from '@/lib/types'
 
 export const maxDuration = 60
@@ -65,6 +67,35 @@ export async function GET(req: NextRequest) {
           timestamp: now,
         }),
       ])
+
+      await (async () => {
+        const vehicle = vehicleMap.get(change.vehicleId)
+        let emails: string[] = []
+        const stateLabel = to.replace('En ', '').replace('_', ' ')
+        if (to === 'En logística') {
+          const e = await getEmployeeByRole('Logística')
+          if (e?.email) emails = [e.email]
+        } else if (to === 'En taller') {
+          const e = await getEmployeeByRole('Mecánico')
+          if (e?.email) emails = [e.email]
+        } else if (to === 'En chapa') {
+          const emps = await getEmployeesByNames(['Luis Miguel', 'Víctor', 'José'])
+          emails = emps.map(e => e.email).filter(Boolean)
+        } else if (to === 'En preparación') {
+          const e = await getEmployeeByRole('Preparador')
+          if (e?.email) emails = [e.email]
+        } else if (to === 'Listo para venta') {
+          const emps = await getEmployeesByNames(['Luis Miguel', 'José'])
+          emails = emps.map(e => e.email).filter(Boolean)
+        }
+        if (emails.length > 0) {
+          await createNotificacion(
+            `🚗 ${change.vehicleName} → ${stateLabel}`,
+            null,
+            emails
+          ).catch(err => console.error('Notificación cambio estado falló:', err))
+        }
+      })()
 
       if (to === 'Vendido') {
         const existing = await getVentasByVehicle(change.vehicleId)
