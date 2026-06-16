@@ -89,20 +89,13 @@ export default function Home() {
 
         {/* Actions */}
         <div className="grid grid-cols-2 gap-2 animate-fade-up" style={{ animationDelay: '200ms' }}>
-          <Link
-            href="/dashboard"
-            className="card text-center font-medium px-3 py-2.5 sm:py-2 text-xs sm:text-sm min-h-[44px] flex items-center justify-center"
-            style={{ color: 'var(--text)' }}
-          >
-            Dashboard →
-          </Link>
-          <Link
-            href="/health"
-            className="card text-center font-medium px-3 py-2.5 sm:py-2 text-xs sm:text-sm min-h-[44px] flex items-center justify-center"
-            style={{ color: 'var(--text)' }}
-          >
-            Health Check →
-          </Link>
+          <Link href="/dashboard" className="card text-center font-medium px-3 py-2.5 sm:py-2 text-xs sm:text-sm min-h-[44px] flex items-center justify-center" style={{ color: 'var(--text)' }}>📊 Dashboard →</Link>
+          <Link href="/ventas" className="card text-center font-medium px-3 py-2.5 sm:py-2 text-xs sm:text-sm min-h-[44px] flex items-center justify-center" style={{ color: 'var(--text)' }}>💰 Ventas →</Link>
+          <Link href="/tareas" className="card text-center font-medium px-3 py-2.5 sm:py-2 text-xs sm:text-sm min-h-[44px] flex items-center justify-center" style={{ color: 'var(--text)' }}>📋 Tareas →</Link>
+          <Link href="/noticias" className="card text-center font-medium px-3 py-2.5 sm:py-2 text-xs sm:text-sm min-h-[44px] flex items-center justify-center" style={{ color: 'var(--text)' }}>📰 Noticias →</Link>
+          <Link href="/botones" className="card text-center font-medium px-3 py-2.5 sm:py-2 text-xs sm:text-sm min-h-[44px] flex items-center justify-center" style={{ color: 'var(--text)' }}>🔘 Botones →</Link>
+          <Link href="/databases" className="card text-center font-medium px-3 py-2.5 sm:py-2 text-xs sm:text-sm min-h-[44px] flex items-center justify-center" style={{ color: 'var(--text)' }}>🗄️ Bases de datos →</Link>
+          <Link href="/health" className="card text-center font-medium px-3 py-2.5 sm:py-2 text-xs sm:text-sm min-h-[44px] flex items-center justify-center" style={{ color: 'var(--text)' }}>🔍 Health Check →</Link>
         </div>
 
         {/* Footer */}
