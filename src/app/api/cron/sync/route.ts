@@ -6,7 +6,7 @@ import { logVehicleEvent } from '@/lib/automations/task-engine'
 import { detectChanges, fullResync } from '@/lib/automations/event-engine'
 import { isValidTransition } from '@/lib/automations/state-machine'
 import { createVenta, getVentasByVehicle } from '@/lib/notion/ventas'
-import { getEmployeeByRole, getEmployeesByNames } from '@/lib/notion/employees'
+import { getEmployeeByRole, getEmployeesByNames, getEmployees } from '@/lib/notion/employees'
 import { createNotificacion } from '@/lib/notion/notifications'
 import { VehicleState } from '@/lib/types'
 
@@ -87,6 +87,13 @@ export async function GET(req: NextRequest) {
         } else if (to === 'Listo para venta') {
           const emps = await getEmployeesByNames(['Luis Miguel', 'José'])
           emails = emps.map(e => e.email).filter(Boolean)
+        } else if (to === 'Autorizado' && vehicle?.responsable) {
+          const allEmps = await getEmployees()
+          const conductor = allEmps.find(e => e.id === vehicle.responsable)
+          if (conductor?.email) emails = [conductor.email]
+        } else if (to === 'Entregado al concesionario') {
+          const e = await getEmployeeByRole('Preparador')
+          if (e?.email) emails = [e.email]
         }
         if (emails.length > 0) {
           await createNotificacion(

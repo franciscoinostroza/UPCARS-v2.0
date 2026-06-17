@@ -1,5 +1,8 @@
 export type VehicleState =
   | 'Comprado'
+  | 'Pendiente autorización'
+  | 'Autorizado'
+  | 'Entregado al concesionario'
   | 'En logística'
   | 'En taller'
   | 'En chapa'
@@ -141,6 +144,9 @@ export const SLA_THRESHOLDS: Record<string, number> = {
 
 export const STUCK_THRESHOLDS: Partial<Record<VehicleState, number>> = {
   Comprado: 7,
+  'Pendiente autorización': 7,
+  'Autorizado': 7,
+  'Entregado al concesionario': 7,
   'En logística': 3,
   'En taller': 5,
   'En chapa': 7,
@@ -150,7 +156,10 @@ export const STUCK_THRESHOLDS: Partial<Record<VehicleState, number>> = {
 }
 
 export const VALID_TRANSITIONS: Record<VehicleState, VehicleState[]> = {
-  Comprado: ['En logística'],
+  Comprado: ['Pendiente autorización', 'En logística'],
+  'Pendiente autorización': ['Autorizado'],
+  'Autorizado': ['Entregado al concesionario'],
+  'Entregado al concesionario': ['En preparación'],
   'En logística': ['En taller', 'En chapa', 'Cedido'],
   'En taller': ['En chapa', 'En preparación'],
   'En chapa': ['En taller', 'En preparación'],

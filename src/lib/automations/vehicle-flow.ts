@@ -11,6 +11,7 @@ const STATE_TO_AREA: Record<string, WorkshopArea> = {
   'En taller': 'Taller',
   'En chapa': 'Chapa',
   'En preparación': 'Preparacion',
+  'Entregado al concesionario': 'Preparacion',
 }
 
 const STATE_TO_DEPT: Record<string, string> = {
@@ -18,6 +19,7 @@ const STATE_TO_DEPT: Record<string, string> = {
   'En taller': 'Taller',
   'En chapa': 'Taller',
   'En preparación': 'Taller',
+  'Entregado al concesionario': 'Taller',
 }
 
 export async function handleVehicleStateChange(event: StateChangeEvent): Promise<void> {
@@ -30,6 +32,9 @@ export async function handleVehicleStateChange(event: StateChangeEvent): Promise
       break
     case 'En chapa':
       await handleChapa(event)
+      break
+    case 'Entregado al concesionario':
+      await handleEntregaConcesionario(event)
       break
     case 'En preparación':
       await handlePreparacion(event)
@@ -64,6 +69,19 @@ async function handleTaller(event: StateChangeEvent) {
     mecanico ? [mecanico.id] : [],
     'Alta',
     STATE_TO_DEPT['En taller']
+  )
+}
+
+async function handleEntregaConcesionario(event: StateChangeEvent) {
+  const today = new Date().toISOString().split('T')[0]
+  await setVehicleDate(event.vehicleId, ['entrada', 'preparación'], today)
+  await createWorkshopOrder('Preparacion', event.vehicleId, null, 'Vehículo recibido en concesionario - Pendiente limpieza')
+  await createTask(
+    `Recibir y preparar - ${event.vehicleName}`,
+    event.vehicleId,
+    [],
+    'Alta',
+    STATE_TO_DEPT['Entregado al concesionario']
   )
 }
 

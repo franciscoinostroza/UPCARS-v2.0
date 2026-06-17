@@ -95,7 +95,7 @@ function DashboardInner() {
   }
 
   if (loading) {
-    const PIPELINE_STATES = ['Comprado', 'En logística', 'En taller', 'En chapa', 'En preparación', 'Listo para venta']
+    const PIPELINE_STATES = ['Comprado', 'Pendiente autorización', 'Autorizado', 'Entregado al concesionario', 'En logística', 'En taller', 'En chapa', 'En preparación', 'Listo para venta']
     return (
       <div style={{ background: 'var(--bg)', minHeight: '100vh' }}>
         <div className="max-w-6xl mx-auto p-4 sm:p-6">

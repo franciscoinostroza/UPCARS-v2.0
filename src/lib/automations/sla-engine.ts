@@ -6,6 +6,7 @@ const AREA_MAP: Record<string, string> = {
   'En taller': 'Taller',
   'En chapa': 'Chapa',
   'En preparación': 'Preparacion',
+  'Entregado al concesionario': 'Preparacion',
 }
 
 const db = () => getSupabase()

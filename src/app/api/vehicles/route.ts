@@ -9,6 +9,7 @@ const SLA_MAP: Record<string, string> = {
   'En taller': 'Taller',
   'En chapa': 'Chapa',
   'En preparación': 'Preparacion',
+  'Entregado al concesionario': 'Preparacion',
 }
 
 const COMPRADO_THRESHOLD_HOURS = 168
@@ -35,7 +36,7 @@ function calcSlaStatus(state: string, daysInState: number): 'green' | 'yellow' |
 export async function GET(request: NextRequest) {
   try {
     const vehicles = await getVehicles()
-    const activeStates = ['Comprado', 'En logística', 'En taller', 'En chapa', 'En preparación', 'Listo para venta']
+    const activeStates = ['Comprado', 'Pendiente autorización', 'Autorizado', 'Entregado al concesionario', 'En logística', 'En taller', 'En chapa', 'En preparación', 'Listo para venta']
 
     const { searchParams } = new URL(request.url)
     const list = searchParams.get('list')
