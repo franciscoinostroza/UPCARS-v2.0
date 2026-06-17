@@ -5,11 +5,14 @@
 **UPCARS** es un sistema de automatización operativa para concesionarios de autos. Usa **Notion** como base de datos visual y fuente de verdad, y agrega un motor de automatizaciones serverless que gestiona:
 
 - Ciclo de vida de vehículos (Comprado → Vendido)
+- Flujo de autorización de conductores (Pendiente autorización → Autorizado)
 - Órdenes de taller y tareas por área
 - Tracking de SLA (Service Level Agreements) por etapa
 - Alertas (SLA vencido, vehículo atascado, tarea vencida, sin responsable)
 - KPIs por vehículo, empleado y por área
+- **Rendimiento de ventas** (KPIs de autos vendidos, registro de ventas)
 - Sincronización de reseñas de Google My Business
+- **Notificaciones internas 🔔** (vía People column de Notion)
 - Notificaciones por email
 
 **Stack:** Next.js 16 + React 19 + Supabase + Notion API + Google My Business + Resend + Vercel
@@ -21,16 +24,21 @@
 Cada vehículo pasa por los siguientes estados (nombres reales desde Notion):
 
 ```
-Comprado → En logística → En taller ↔ En chapa → En preparación → Listo para venta → Vendido
-             ↓                                                                    ↓
-           Cedido ←───────────────────────────────────────────────────────────── Cedido
+Comprado → Pendiente autorización → Autorizado → Entregado al concesionario
+  │                                                                         │
+  └──── En logística → En taller ↔ En chapa → En preparación → Listo para venta → Vendido
+                          ↓                                                           ↓
+                        Cedido ←─────────────────────────────────────────────────── Cedido
 ```
 
 ### Transiciones válidas
 
 | Desde | Hacia |
 |---|---|
-| Comprado | En logística |
+| Comprado | Pendiente autorización, En logística |
+| Pendiente autorización | Autorizado |
+| Autorizado | Entregado al concesionario |
+| Entregado al concesionario | En preparación |
 | En logística | En taller, En chapa, Cedido |
 | En taller | En chapa, En preparación |
 | En chapa | En taller, En preparación |
@@ -60,6 +68,13 @@ Cuando un vehículo cambia de estado (manualmente en Notion o desde el Dashboard
 - Crea **registro en Chapa y Pintura** (estado "En taller externo", fecha salida, notas)
 - Crea **tarea** "Gestionar chapa y pintura" (prioridad Alta, departamento Taller)
 - Inicia **SLA** de Chapa (120h / 5 días)
+
+### → Entregado al concesionario
+- **Fija automáticamente** la fecha en el campo "Fecha entrada preparación"
+- Crea **orden de taller** tipo Preparación con notas "Vehículo recibido en concesionario"
+- Crea **tarea** "Recibir y preparar" (prioridad Alta, departamento Taller)
+- Inicia **SLA** de Preparación (24h / 1 día)
+- Notifica al Preparador (Víctor)
 
 ### → En preparación
 - Crea **orden de taller** tipo Preparación con preparador asignado (estado "En proceso")
@@ -123,6 +138,9 @@ Al salir de cualquier área con SLA (Logística, Taller, Chapa, Preparación), e
 | Estado | Días antes de alertar |
 |---|---|
 | Comprado | 7 |
+| Pendiente autorización | 7 |
+| Autorizado | 7 |
+| Entregado al concesionario | 7 |
 | En logística | 3 |
 | En taller | 5 |
 | En chapa | 7 |
@@ -142,6 +160,13 @@ El cron **"cron-hourly"** ejecuta `GET /api/cron/alerts` cada hora, que corre:
 Cada alerta nueva **envía un email** al `ADMIN_EMAIL` vía Resend con:
 - Asunto: "⚠️ UPCARS Alerta: {mensaje}"
 - Cuerpo: mensaje, vehículo, tipo, fecha
+
+Además del email, las alertas también **generan una notificación 🔔 en Notion** asignada a:
+- **Alertas de vehículo** (atasco, sin responsable): José, Luis Miguel, David
+- **Alertas SLA**: el staff + el responsable del área correspondiente
+- **Tareas vencidas**: el responsable asignado a la tarea
+
+Las notificaciones se crean en la DB "Notificaciones" de Notion y aparecen como campanita 🔔 en la interfaz de Notion de cada usuario.
 
 ### Cómo resolver una alerta
 
@@ -214,7 +239,7 @@ Sincroniza reseñas de Google My Business a una base de datos de Notion cada **1
 | Método | Ruta | Descripción |
 |---|---|---|
 | GET | `/api/health` | Health check (Notion + Supabase) |
-| GET | `/api/kpis` | Todos los KPIs del dashboard |
+| GET | `/api/kpis` | Todos los KPIs del dashboard (incluye sales KPIs) |
 | GET | `/api/vehicles` | Pipeline de vehículos (agrupados por estado). `?list=true` para lista plana |
 | POST | `/api/vehicles` | Crear nuevo vehículo en Notion |
 | PATCH | `/api/vehicles/{id}` | Cambiar estado de un vehículo (valida transición) |
@@ -222,15 +247,18 @@ Sincroniza reseñas de Google My Business a una base de datos de Notion cada **1
 | GET | `/api/employees` | Listar empleados activos |
 | POST | `/api/workshop-orders` | Crear orden de taller |
 | PATCH | `/api/alerts/{id}` | Resolver una alerta |
+| GET | `/api/ventas` | Listar ventas + KPIs de rendimiento (total vendidos, precio prom., margen, por mes, por empleado) |
+| POST | `/api/ventas` | Crear un registro de venta manual |
 
 ### Rutas de Cron (protegidas con `CRON_SECRET`)
 
 | Método | Ruta | Frecuencia | Descripción |
 |---|---|---|---|
-| GET | `/api/cron/sync` | Cada 5 min | Sincronización principal: detecta cambios en Notion, ejecuta automatizaciones, logea eventos |
+| GET | `/api/cron/sync` | Cada 5 min | Sincronización principal: detecta cambios en Notion, ejecuta automatizaciones, logea eventos + **notifica cambios de estado** + **auto-crea ventas** cuando un vehículo se vende |
 | GET | `/api/cron/sla` | Cada hora | Revisa SLA abiertos y reporta violaciones |
-| GET | `/api/cron/alerts` | Cada hora | Genera alertas (SLA, atascados, tareas vencidas) |
-| GET | `/api/cron/reviews` | Cada 15 min | Sincroniza reseñas de Google My Business |
+| GET | `/api/cron/alerts` | Cada hora | Genera alertas (SLA, atascados, tareas vencidas) + **notifica 🔔** a los responsables |
+| GET | `/api/cron/reviews` | Cada 15 min | Sincroniza reseñas de Google My Business + **notifica 🔔** a todos los empleados activos |
+| GET | `/api/cron/cleanup-notifications` | Cada 3 días | Archiva notificaciones con más de 3 días de antigüedad |
 
 **Autenticación:** Los endpoints de cron requieren header `Authorization: Bearer {CRON_SECRET}`. Si `CRON_SECRET` no está configurado, se omiten los checks.
 
@@ -244,7 +272,7 @@ Sincroniza reseñas de Google My Business a una base de datos de Notion cada **1
 Pantalla de inicio con estado del sistema:
 - Conexión Notion / Supabase
 - Total vehículos
-- Enlaces a Dashboard y Health Check
+- Enlaces a todas las secciones: Dashboard, Ventas, Tareas, Noticias, Botones, Bases de datos, Health
 
 ### `/dashboard` — Dashboard Operativo
 Panel principal con auto-refresh cada 30 segundos:
@@ -257,6 +285,18 @@ Panel principal con auto-refresh cada 30 segundos:
 | **Cuellos de botella** | Áreas ordenadas por mayor tiempo promedio, con colores |
 | **Alertas activas** | Lista de alertas con botón de resolver |
 | **Rendimiento empleados** | Tarjetas por empleado: nombre, rol, eficiencia, tareas completadas/total |
+
+### `/ventas` — Rendimiento de Ventas
+Panel de métricas comerciales:
+
+| Sección | Contenido |
+|---|---|
+| **KPIs** | Total vendidos, precio promedio, margen promedio, días promedio, ingreso total |
+| **Gráfico mensual** | Barras de cantidad de ventas por mes |
+| **Rendimiento por empleado** | Tabla: empleado, cantidad vendida, ingresos, margen generado |
+| **Ventas registradas** | Tabla con detalle de cada venta (cliente, precio, margen, fecha, forma de pago) |
+
+Los KPIs se calculan desde la DB Vehículos (estado `Vendido` + `fechaVendido`) y la DB Ventas (registros de venta con cliente, vendedor, forma de pago).
 
 ### `/botones` — Acciones rápidas (touch-friendly)
 Formularios modales para operaciones comunes:
@@ -297,6 +337,8 @@ FINANCIERAS_DB_ID=<id>
 OPERACIONES_FINANCIADAS_DB_ID=<id>
 FINANZAS_DB_ID=<id>
 BUZON_MEJORA_DB_ID=<id>
+NOTICIAS_DB_ID=<id>            # Tablón de noticias
+NOTIFICACIONES_DB_ID=<id>      # Notificaciones 🔔
 ```
 
 ### Supabase
@@ -390,7 +432,7 @@ PORT=3000
 
 ## 12. Bases de Datos en Notion
 
-El sistema utiliza **17 bases de datos** en Notion:
+El sistema utiliza **19 bases de datos** en Notion:
 
 | Nombre lógico | Variable de entorno | Propósito |
 |---|---|---|
@@ -411,6 +453,8 @@ El sistema utiliza **17 bases de datos** en Notion:
 | operaciones_financiadas | `OPERACIONES_FINANCIADAS_DB_ID` | Operaciones con financiación |
 | finanzas | `FINANZAS_DB_ID` | Registros financieros |
 | buzon_mejora | `BUZON_MEJORA_DB_ID` | Buzón de sugerencias y mejoras |
+| noticias | `NOTICIAS_DB_ID` | Tablón de noticias / anuncios |
+| notificaciones | `NOTIFICACIONES_DB_ID` | Notificaciones 🔔 (se asignan a personas vía People column) |
 
 ---
 
@@ -436,6 +480,13 @@ El sistema utiliza **17 bases de datos** en Notion:
 - calls GET /api/cron/sla
 - calls GET /api/cron/alerts
 - Genera alertas de SLA, vehículos atascados, tareas vencidas
+- Notifica 🔔 a los responsables
+```
+
+### `cleanup-notifications.yml` — Cada 3 días
+```yaml
+- calls GET /api/cron/cleanup-notifications
+- Archiva notificaciones de la DB Notificaciones con más de 3 días
 ```
 
 ---
@@ -490,6 +541,7 @@ Dashboard → click "✓" en la alerta. Se marca como resuelta en Supabase.
 | `fechaEntradaTaller` | string \| null | Fecha entrada taller (date) | `dateVal()` |
 | `fechaEntradaPreparacion` | string \| null | Fecha entrada preparación (date) | `dateVal()` |
 | `fechaListo` | string \| null | Fecha listo para venta (date) | `dateVal()` |
+| `fechaVendido` | string \| null | Fecha de venta (date) | `dateVal()` |
 | `responsable` | string \| null | Responsable Actual (relation) | `rel()` |
 | `precioCompra` | number \| null | Precio de compra (€) (number) | `num()` |
 | `precioVenta` | number \| null | Precio venta (€) (number) | `num()` |
@@ -510,24 +562,103 @@ En el endpoint `GET /api/vehicles`, se calcula `daysInState` según el estado ac
 
 ---
 
-## 16. Arquitectura General
+## 16. Sistema de Notificaciones 🔔
+
+### ¿Cómo funciona?
+
+Cada vez que ocurre un evento relevante, el sistema crea una página en la DB **"Notificaciones"** de Notion y asigna personas en la columna **Asignado** (tipo `people`). Esto activa la campanita 🔔 automática en la interfaz de Notion de cada usuario asignado.
+
+### ¿Quién recibe cada notificación?
+
+El sistema busca los emails en la DB **Empleados** en tiempo real. Si el email del empleado coincide con una cuenta de Notion en el workspace, recibe la 🔔. Si no, simplemente no se asigna (no hay error).
+
+| Evento | Notifica a | Cómo se determina |
+|---|---|---|
+| **Vehículo → Logística** | Empleado con rol Logística | `getEmployeeByRole('Logística')` |
+| **Vehículo → Taller** | Empleado con rol Mecánico | `getEmployeeByRole('Mecánico')` |
+| **Vehículo → Chapa** | Luis Miguel, Víctor, José | `getEmployeesByNames()` |
+| **Vehículo → Preparación** | Empleado con rol Preparador (Víctor) | `getEmployeeByRole('Preparador')` |
+| **Vehículo → Listo para venta** | Luis Miguel, José | `getEmployeesByNames()` |
+| **Autorizado** | Conductor asignado (Responsable Actual) | `vehicle.responsable → employee.email` |
+| **Entregado al concesionario** | Preparador (Víctor) | `getEmployeeByRole('Preparador')` |
+| **Tarea creada** | Empleado asignado a la tarea | `responsableId → employee.email` |
+| **Noticia publicada** | Todos los empleados activos con email | `getEmployees().filter(active && email)` |
+| **Reseña Google nueva** | Todos los empleados activos con email | `getEmployees().filter(active && email)` |
+| **Alerta de vehículo** (atasco, sin responsable) | José, Luis Miguel, David | `getEmployeesByNames()` |
+| **Alerta SLA** | Staff + responsable del área | `getEmployeesByNames()` + `getEmployeeByRole()` |
+| **Tarea vencida** | Responsable de la tarea | `task.Responsable → employee.email` |
+
+### Cleanup automático
+
+Las notificaciones con más de **3 días** se archivan automáticamente cada 3 días vía `GET /api/cron/cleanup-notifications`.
+
+### DB Notificaciones
+
+| Columna | Tipo | Descripción |
+|---|---|---|
+| Título | title | Título de la notificación |
+| Cuerpo | rich_text | Contenido con autor, link, mensaje |
+| Asignado | people | Usuarios de Notion que reciben la 🔔 |
+| Link | url | Enlace opcional relacionado |
+| Leída | checkbox | Control de lectura (pendiente de implementar en frontend) |
+| Fecha | date | Fecha de creación |
+
+---
+
+## 17. Rendimiento de Ventas 💰
+
+### ¿Qué mide?
+
+El sistema calcula automáticamente métricas de rendimiento comercial a partir de:
+- **Vehículos con estado `Vendido`** en la DB Vehículos
+- **Registros en la DB Ventas** (con cliente, vendedor, forma de pago)
+
+### KPIs disponibles
+
+| Métrica | Cálculo | Dónde se ve |
+|---|---|---|
+| Total vendidos | Cantidad de vehículos con estado `Vendido` | Dashboard, `/ventas` |
+| Precio de venta promedio | `avg(precioVenta)` de todos los vendidos | `/ventas` |
+| Margen bruto promedio | `avg(margenBruto)` de todos los vendidos | `/ventas` |
+| Días totales promedio | `avg(fechaVendido - fechaCompra)` | `/ventas` |
+| Días en venta promedio | `avg(fechaVendido - fechaListo)` | `/ventas` |
+| Ingreso total | `sum(precioVenta)` de todos los vendidos | `/ventas` |
+| Ventas por mes | Agrupación por mes de `fechaVendido` | `/ventas` (gráfico) |
+| Rendimiento por empleado | Ventas + margen agrupado por responsable | `/ventas` |
+
+### Auto-creación de ventas
+
+Cuando un vehículo cambia a estado **`Vendido`** (detectado por el cron sync), el sistema crea automáticamente un registro en la DB Ventas con los datos disponibles:
+- Nombre: `Venta - {vehicleName}`
+- Vehículo: relación al vehículo
+- Fecha de venta: columna `fechaVendido` del vehículo (o fecha actual)
+- Precio de venta: columna `precioVenta` del vehículo
+- Vendedor: columna `Responsable Actual` del vehículo
+
+El usuario puede completar los datos faltantes (cliente, forma de pago, etc.) después desde Notion o vía `POST /api/ventas`.
+
+---
+
+## 18. Arquitectura General
 
 ```
 GitHub Actions (Cron) ──► Vercel (Next.js App)
                                 │
-                    ┌───────────┼───────────┐
-                    │           │           │
-                    ▼           ▼           ▼
-                  Notion     Supabase   Google My Business
-                  (17 DBs)   (3 tablas)   (Reviews)
+                    ┌───────────┼──────────────┐
+                    │           │              │
+                    ▼           ▼              ▼
+                  Notion     Supabase      Google My Bus.
+              (19 DBs + 🔔)  (3 tablas)     (Reviews)
                     │
-                    ▼
-                 Resend (Email)
+                    ├──► Resend (Email)
+                    │
+                    └──► 🔔 Notion Notifications (People column)
 ```
 
-- **Source of Truth:** Notion (todo el dato operativo vive aquí)
+- **Source of Truth:** Notion (todo el dato operativo vive aquí, incluyendo notificaciones)
 - **Estado transicional:** Supabase (eventos, SLA, alertas)
-- **UI:** Next.js en Vercel (dashboard + botones + health)
+- **UI:** Next.js en Vercel (dashboard + botones + ventas + health)
 - **Cron:** GitHub Actions (gatillan los workers serverless)
 - **Email:** Resend (notificaciones de alertas y reviews)
+- **Notificaciones 🔔:** Notion People column (campanita 🔔 interna)
 - **Reviews:** Google My Business API
