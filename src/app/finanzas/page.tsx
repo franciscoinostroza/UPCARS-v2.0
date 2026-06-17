@@ -4,7 +4,7 @@ import { useState, useEffect, useCallback } from 'react'
 import { ThemeProvider, useTheme } from '../dashboard/theme-context'
 import { DarkModeToggle } from '../dashboard/dark-mode'
 import { Skeleton } from '@/components/skeleton'
-import { PieChart, Pie, Cell, ResponsiveContainer, Tooltip } from 'recharts'
+import { BarChart, Bar, XAxis, YAxis, Cell, ResponsiveContainer, Tooltip } from 'recharts'
 
 interface FinanzaRecord {
   id: string
@@ -197,74 +197,42 @@ function FinanzasInner() {
           )}
         </div>
 
-        {/* Pie chart - ingresos por categoría */}
-        {ingresosCat.length > 0 && (
+        {/* Combined chart - ingresos vs egresos por categoría */}
+        {(ingresosCat.length > 0 || egresosCat.length > 0) && (
           <section className="mb-6 animate-fade-up" style={{ animationDelay: '105ms' }}>
-            <h2 className="text-[11px] font-semibold uppercase tracking-wider mb-3" style={{ color: 'var(--accent-green, #22c55e)' }}>
-              Distribución de ingresos
+            <h2 className="text-[11px] font-semibold uppercase tracking-wider mb-3" style={{ color: 'var(--text-secondary)' }}>
+              Ingresos vs Gastos por categoría
             </h2>
             <div className="card p-4">
-              <ResponsiveContainer width="100%" height={260}>
-                <PieChart>
-                  <Pie
-                    data={ingresosCat.map(([name, value]) => ({ name, value }))}
-                    cx="50%" cy="50%" innerRadius={50} outerRadius={90} paddingAngle={3} dataKey="value"
-                  >
-                    {ingresosCat.map(([name]) => (
-                      <Cell key={name} fill={COLORS[name] || '#22c55e'} />
-                    ))}
-                  </Pie>
+              <div className="flex items-center gap-4 mb-3 text-xs" style={{ color: 'var(--text-muted)' }}>
+                <span><span style={{ display: 'inline-block', width: 10, height: 10, background: '#22c55e', borderRadius: 2, marginRight: 4 }} /> Ingresos</span>
+                <span><span style={{ display: 'inline-block', width: 10, height: 10, background: '#ef4444', borderRadius: 2, marginRight: 4 }} /> Gastos</span>
+              </div>
+              <ResponsiveContainer width="100%" height={Math.max(200, Math.max(ingresosCat.length, egresosCat.length) * 36)}>
+                <BarChart
+                  layout="vertical"
+                  data={(() => {
+                    const cats = new Set([...ingresosCat.map(([n]) => n), ...egresosCat.map(([n]) => n)])
+                    const ingMap = Object.fromEntries(ingresosCat)
+                    const egrMap = Object.fromEntries(egresosCat)
+                    return [...cats].map(name => ({
+                      name,
+                      ingresos: ingMap[name] || 0,
+                      gastos: -(egrMap[name] || 0),
+                    }))
+                  })()}
+                  margin={{ top: 4, right: 20, bottom: 4, left: 80 }}
+                >
+                  <XAxis type="number" tick={{ fontSize: 11, fill: 'var(--text-muted)' }} />
+                  <YAxis type="category" dataKey="name" tick={{ fontSize: 11, fill: 'var(--text)' }} width={80} />
                   <Tooltip
-                    formatter={(value: any) => (typeof value === 'number' ? value.toLocaleString('es-ES', { style: 'currency', currency: 'EUR' }) : value)}
+                    formatter={(value: any) => (typeof value === 'number' ? Math.abs(value).toLocaleString('es-ES', { style: 'currency', currency: 'EUR' }) : value)}
                     contentStyle={{ background: 'var(--card-bg)', border: '1px solid var(--border)', borderRadius: 8, fontSize: 12 }}
                   />
-                </PieChart>
+                  <Bar dataKey="gastos" fill="#ef4444" radius={[0, 3, 3, 0]} />
+                  <Bar dataKey="ingresos" fill="#22c55e" radius={[3, 0, 0, 3]} />
+                </BarChart>
               </ResponsiveContainer>
-              <div className="flex flex-wrap gap-2 mt-2 justify-center">
-                {ingresosCat.map(([name, value]) => (
-                  <div key={name} className="flex items-center gap-1.5 text-xs">
-                    <span style={{ width: 10, height: 10, borderRadius: 2, background: COLORS[name] || '#22c55e', display: 'inline-block' }} />
-                    <span style={{ color: 'var(--text)' }}>{name}</span>
-                    <span style={{ color: 'var(--text-muted)' }}>{fmtEur(value)}</span>
-                  </div>
-                ))}
-              </div>
-            </div>
-          </section>
-        )}
-
-        {/* Pie chart - gastos por categoría */}
-        {egresosCat.length > 0 && (
-          <section className="mb-6 animate-fade-up" style={{ animationDelay: '110ms' }}>
-            <h2 className="text-[11px] font-semibold uppercase tracking-wider mb-3" style={{ color: 'var(--accent-red)' }}>
-              Distribución de gastos
-            </h2>
-            <div className="card p-4">
-              <ResponsiveContainer width="100%" height={260}>
-                <PieChart>
-                  <Pie
-                    data={egresosCat.map(([name, value]) => ({ name, value }))}
-                    cx="50%" cy="50%" innerRadius={50} outerRadius={90} paddingAngle={3} dataKey="value"
-                  >
-                    {egresosCat.map(([name]) => (
-                      <Cell key={name} fill={COLORS[name] || '#666'} />
-                    ))}
-                  </Pie>
-                  <Tooltip
-                    formatter={(value: any) => (typeof value === 'number' ? value.toLocaleString('es-ES', { style: 'currency', currency: 'EUR' }) : value)}
-                    contentStyle={{ background: 'var(--card-bg)', border: '1px solid var(--border)', borderRadius: 8, fontSize: 12 }}
-                  />
-                </PieChart>
-              </ResponsiveContainer>
-              <div className="flex flex-wrap gap-2 mt-2 justify-center">
-                {egresosCat.map(([name, value]) => (
-                  <div key={name} className="flex items-center gap-1.5 text-xs">
-                    <span style={{ width: 10, height: 10, borderRadius: 2, background: COLORS[name] || '#666', display: 'inline-block' }} />
-                    <span style={{ color: 'var(--text)' }}>{name}</span>
-                    <span style={{ color: 'var(--text-muted)' }}>{fmtEur(value)}</span>
-                  </div>
-                ))}
-              </div>
             </div>
           </section>
         )}
