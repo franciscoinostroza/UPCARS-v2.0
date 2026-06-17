@@ -220,7 +220,7 @@ function FinanzasInner() {
                     ))}
                   </Pie>
                   <Tooltip
-                    formatter={(value: number) => value.toLocaleString('es-ES', { style: 'currency', currency: 'EUR' })}
+                    formatter={(value: any) => (typeof value === 'number' ? value.toLocaleString('es-ES', { style: 'currency', currency: 'EUR' }) : value)}
                     contentStyle={{ background: 'var(--card-bg)', border: '1px solid var(--border)', borderRadius: 8, fontSize: 12 }}
                   />
                 </PieChart>
