@@ -8,6 +8,7 @@ import { isValidTransition } from '@/lib/automations/state-machine'
 import { createVenta, getVentasByVehicle } from '@/lib/notion/ventas'
 import { getEmployeeByRole, getEmployeesByNames, getEmployees } from '@/lib/notion/employees'
 import { createNotificacion } from '@/lib/notion/notifications'
+import { createFinanzaRecord, getFinanzasByVehicle } from '@/lib/notion/finanzas'
 import { VehicleState } from '@/lib/types'
 
 export const maxDuration = 60
@@ -105,10 +106,11 @@ export async function GET(req: NextRequest) {
       })()
 
       if (to === 'Vendido') {
-        const existing = await getVentasByVehicle(change.vehicleId)
-        if (existing.length === 0) {
-          const vehicle = vehicleMap.get(change.vehicleId)
-          const today = now.toISOString().split('T')[0]
+        const vehicle = vehicleMap.get(change.vehicleId)
+        const today = now.toISOString().split('T')[0]
+
+        const existingVentas = await getVentasByVehicle(change.vehicleId)
+        if (existingVentas.length === 0) {
           await createVenta({
             nombre: `Venta - ${change.vehicleName}`,
             vehiculoId: change.vehicleId,
@@ -116,6 +118,36 @@ export async function GET(req: NextRequest) {
             precioVenta: vehicle?.precioVenta ?? null,
             vendedorId: vehicle?.responsable ?? null,
           }).catch((err) => console.error('Auto-create venta failed:', err))
+        }
+
+        const existingFin = await getFinanzasByVehicle(change.vehicleId)
+        if (existingFin.length === 0 && vehicle?.precioVenta) {
+          await createFinanzaRecord({
+            concepto: `Venta - ${change.vehicleName}`,
+            tipo: 'Ingreso',
+            categoria: 'Venta',
+            importe: vehicle.precioVenta,
+            fecha: vehicle?.fechaVendido || today,
+            vehiculoId: change.vehicleId,
+            lineaNegocio: vehicle?.lineaNegocio || undefined,
+          }).catch((err) => console.error('Auto-create finanza ingreso failed:', err))
+        }
+      }
+
+      if (from === null && to === 'Comprado') {
+        const vehicle = vehicleMap.get(change.vehicleId)
+        if (vehicle?.precioCompra) {
+          const existingFin = await getFinanzasByVehicle(change.vehicleId)
+          if (existingFin.length === 0) {
+            await createFinanzaRecord({
+              concepto: `Compra - ${change.vehicleName}`,
+              tipo: 'Egreso',
+              categoria: 'Compra',
+              importe: vehicle.precioCompra,
+              fecha: vehicle.fechaCompra || now.toISOString().split('T')[0],
+              vehiculoId: change.vehicleId,
+            }).catch((err) => console.error('Auto-create finanza egreso failed:', err))
+          }
         }
       }
 

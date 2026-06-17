@@ -1,4 +1,4 @@
-import { notionPost, getDatabaseId } from './client'
+import { notionPost, getDatabaseId, notionPatch } from './client'
 
 export interface FinanzaRecord {
   id: string
@@ -81,4 +81,49 @@ export function computeFinanzasKPIs(records: FinanzaRecord[], totalSales: number
 
   kpis.balanceNeto = kpis.totalIngresos - kpis.totalEgresos
   return kpis
+}
+
+export async function getFinanzasByVehicle(vehicleId: string): Promise<FinanzaRecord[]> {
+  const dbId = getDatabaseId('finanzas')
+  const data: any = await notionPost(`/databases/${dbId}/query`, {
+    filter: {
+      property: 'Vehículo relacionado',
+      relation: { contains: vehicleId },
+    },
+  })
+  return (data.results || []).map((r: any) => parseFinanzaProps(r.id, r.properties))
+}
+
+export async function createFinanzaRecord(data: {
+  concepto: string
+  tipo: string
+  categoria: string
+  importe: number
+  fecha: string
+  vehiculoId?: string
+  lineaNegocio?: string
+  notas?: string
+}) {
+  const dbId = getDatabaseId('finanzas')
+  const props: Record<string, any> = {
+    Concepto: { title: [{ text: { content: data.concepto } }] },
+    Tipo: { select: { name: data.tipo } },
+    Categoría: { select: { name: data.categoria } },
+    'Importe (€)': { number: data.importe },
+    Fecha: { date: { start: data.fecha } },
+  }
+  if (data.vehiculoId) {
+    props['Vehículo relacionado'] = { relation: [{ id: data.vehiculoId }] }
+  }
+  if (data.lineaNegocio) {
+    props['Línea de negocio'] = { select: { name: data.lineaNegocio } }
+  }
+  if (data.notas) {
+    props.Notas = { rich_text: [{ text: { content: data.notas } }] }
+  }
+
+  await notionPost('/pages', {
+    parent: { database_id: dbId },
+    properties: props,
+  })
 }
