@@ -197,6 +197,42 @@ function FinanzasInner() {
           )}
         </div>
 
+        {/* Pie chart - ingresos por categoría */}
+        {ingresosCat.length > 0 && (
+          <section className="mb-6 animate-fade-up" style={{ animationDelay: '105ms' }}>
+            <h2 className="text-[11px] font-semibold uppercase tracking-wider mb-3" style={{ color: 'var(--accent-green, #22c55e)' }}>
+              Distribución de ingresos
+            </h2>
+            <div className="card p-4">
+              <ResponsiveContainer width="100%" height={260}>
+                <PieChart>
+                  <Pie
+                    data={ingresosCat.map(([name, value]) => ({ name, value }))}
+                    cx="50%" cy="50%" innerRadius={50} outerRadius={90} paddingAngle={3} dataKey="value"
+                  >
+                    {ingresosCat.map(([name]) => (
+                      <Cell key={name} fill={COLORS[name] || '#22c55e'} />
+                    ))}
+                  </Pie>
+                  <Tooltip
+                    formatter={(value: any) => (typeof value === 'number' ? value.toLocaleString('es-ES', { style: 'currency', currency: 'EUR' }) : value)}
+                    contentStyle={{ background: 'var(--card-bg)', border: '1px solid var(--border)', borderRadius: 8, fontSize: 12 }}
+                  />
+                </PieChart>
+              </ResponsiveContainer>
+              <div className="flex flex-wrap gap-2 mt-2 justify-center">
+                {ingresosCat.map(([name, value]) => (
+                  <div key={name} className="flex items-center gap-1.5 text-xs">
+                    <span style={{ width: 10, height: 10, borderRadius: 2, background: COLORS[name] || '#22c55e', display: 'inline-block' }} />
+                    <span style={{ color: 'var(--text)' }}>{name}</span>
+                    <span style={{ color: 'var(--text-muted)' }}>{fmtEur(value)}</span>
+                  </div>
+                ))}
+              </div>
+            </div>
+          </section>
+        )}
+
         {/* Pie chart - gastos por categoría */}
         {egresosCat.length > 0 && (
           <section className="mb-6 animate-fade-up" style={{ animationDelay: '110ms' }}>
@@ -208,12 +244,7 @@ function FinanzasInner() {
                 <PieChart>
                   <Pie
                     data={egresosCat.map(([name, value]) => ({ name, value }))}
-                    cx="50%"
-                    cy="50%"
-                    innerRadius={50}
-                    outerRadius={90}
-                    paddingAngle={3}
-                    dataKey="value"
+                    cx="50%" cy="50%" innerRadius={50} outerRadius={90} paddingAngle={3} dataKey="value"
                   >
                     {egresosCat.map(([name]) => (
                       <Cell key={name} fill={COLORS[name] || '#666'} />
@@ -226,7 +257,7 @@ function FinanzasInner() {
                 </PieChart>
               </ResponsiveContainer>
               <div className="flex flex-wrap gap-2 mt-2 justify-center">
-                {egresosCat.map(([name, value], i) => (
+                {egresosCat.map(([name, value]) => (
                   <div key={name} className="flex items-center gap-1.5 text-xs">
                     <span style={{ width: 10, height: 10, borderRadius: 2, background: COLORS[name] || '#666', display: 'inline-block' }} />
                     <span style={{ color: 'var(--text)' }}>{name}</span>
