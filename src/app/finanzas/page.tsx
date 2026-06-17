@@ -4,6 +4,7 @@ import { useState, useEffect, useCallback } from 'react'
 import { ThemeProvider, useTheme } from '../dashboard/theme-context'
 import { DarkModeToggle } from '../dashboard/dark-mode'
 import { Skeleton } from '@/components/skeleton'
+import { PieChart, Pie, Cell, ResponsiveContainer, Tooltip } from 'recharts'
 
 interface FinanzaRecord {
   id: string
@@ -35,6 +36,19 @@ interface FinanzasData {
 function fmtEur(n: number | null | undefined): string {
   if (n == null) return '-'
   return n.toLocaleString('es-ES', { style: 'currency', currency: 'EUR', minimumFractionDigits: 0, maximumFractionDigits: 0 })
+}
+
+const COLORS: Record<string, string> = {
+  Compra: '#ef4444',
+  Nóminas: '#f97316',
+  Marketing: '#eab308',
+  Suministros: '#22c55e',
+  'Servicio taller': '#3b82f6',
+  Chapa: '#8b5cf6',
+  Venta: '#22c55e',
+  'Venta Renting': '#06b6d4',
+  'V.O': '#14b8a6',
+  Otro: '#6b7280',
 }
 
 function monthLabel(m: string): string {
@@ -182,6 +196,47 @@ function FinanzasInner() {
             </div>
           )}
         </div>
+
+        {/* Pie chart - gastos por categoría */}
+        {egresosCat.length > 0 && (
+          <section className="mb-6 animate-fade-up" style={{ animationDelay: '110ms' }}>
+            <h2 className="text-[11px] font-semibold uppercase tracking-wider mb-3" style={{ color: 'var(--accent-red)' }}>
+              Distribución de gastos
+            </h2>
+            <div className="card p-4">
+              <ResponsiveContainer width="100%" height={260}>
+                <PieChart>
+                  <Pie
+                    data={egresosCat.map(([name, value]) => ({ name, value }))}
+                    cx="50%"
+                    cy="50%"
+                    innerRadius={50}
+                    outerRadius={90}
+                    paddingAngle={3}
+                    dataKey="value"
+                  >
+                    {egresosCat.map(([name]) => (
+                      <Cell key={name} fill={COLORS[name] || '#666'} />
+                    ))}
+                  </Pie>
+                  <Tooltip
+                    formatter={(value: number) => value.toLocaleString('es-ES', { style: 'currency', currency: 'EUR' })}
+                    contentStyle={{ background: 'var(--card-bg)', border: '1px solid var(--border)', borderRadius: 8, fontSize: 12 }}
+                  />
+                </PieChart>
+              </ResponsiveContainer>
+              <div className="flex flex-wrap gap-2 mt-2 justify-center">
+                {egresosCat.map(([name, value], i) => (
+                  <div key={name} className="flex items-center gap-1.5 text-xs">
+                    <span style={{ width: 10, height: 10, borderRadius: 2, background: COLORS[name] || '#666', display: 'inline-block' }} />
+                    <span style={{ color: 'var(--text)' }}>{name}</span>
+                    <span style={{ color: 'var(--text-muted)' }}>{fmtEur(value)}</span>
+                  </div>
+                ))}
+              </div>
+            </div>
+          </section>
+        )}
 
         {/* Records table */}
         <section className="animate-fade-up" style={{ animationDelay: '125ms' }}>
