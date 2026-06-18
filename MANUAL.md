@@ -386,6 +386,17 @@ Intranet del equipo:
 - Crear noticia con selector de autor + link opcional
 - Notifica 🔔 a todos los empleados activos al publicar
 
+### `/reviews` — Reseñas de Google → https://upcars.pixelarch.dev/reviews
+Panel de reseñas sincronizadas desde Google My Business:
+
+| Sección | Contenido |
+|---|---|
+| **KPIs** | Total reseñas, promedio ⭐, pendientes de respuesta, respondidas |
+| **Filtros** | Por cantidad de estrellas (1⭐ a 5⭐) |
+| **Cards** | Autor, estrellas, comentario, fecha, estado, texto de respuesta, enlace a Google |
+
+Actualmente sin datos en producción (pendiente integración GMB).
+
 ### `/databases` — Bases de Datos → https://upcars.pixelarch.dev/databases
 Listado de las 19 bases de datos de Notion agrupadas por categoría (Operaciones, Movimiento, Gestión).
 
