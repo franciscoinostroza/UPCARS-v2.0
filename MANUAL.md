@@ -291,13 +291,13 @@ Sincroniza reseñas de Google My Business a una base de datos de Notion cada **1
 
 ## 9. Páginas del Frontend
 
-### `/` — Home
+### `/` — Home → https://upcars.pixelarch.dev
 Pantalla de inicio con estado del sistema:
 - Conexión Notion / Supabase
 - Total vehículos
 - Enlaces a todas las secciones: Dashboard, Ventas, Tareas, Noticias, Botones, Bases de datos, Health
 
-### `/dashboard` — Dashboard Operativo
+### `/dashboard` — Dashboard Operativo → https://upcars.pixelarch.dev/dashboard
 Panel principal con auto-refresh cada 30 segundos:
 
 | Sección | Contenido |
@@ -311,7 +311,7 @@ Panel principal con auto-refresh cada 30 segundos:
 | **Alertas activas** | Lista de alertas con botón de resolver |
 | **Rendimiento empleados** | Tarjetas por empleado: nombre, rol, eficiencia, tareas completadas/total |
 
-### `/tareas` — Tareas del Equipo
+### `/tareas` — Tareas del Equipo → https://upcars.pixelarch.dev/tareas
 Panel de gestión de tareas con dos vistas:
 
 | Vista | Descripción |
@@ -320,7 +320,7 @@ Panel de gestión de tareas con dos vistas:
 | **Gantt** | Vista horizontal con barras por tarea en su fecha límite. Colores por prioridad. Línea roja = hoy |
 | **Filtros** | Por departamento, prioridad, responsable. Nombre propio para ver tus tareas |
 
-### `/calendario` — Calendario Mensual
+### `/calendario` — Calendario Mensual → https://upcars.pixelarch.dev/calendario
 Vista unificada en grilla mensual:
 
 | Fuente | Indicador |
@@ -331,7 +331,7 @@ Vista unificada en grilla mensual:
 
 Navegación entre meses, botón "Hoy", filtros por tipo, click en día → detalle.
 
-### `/vehiculos/[id]` — Detalle de Vehículo
+### `/vehiculos/[id]` — Detalle de Vehículo → https://upcars.pixelarch.dev/vehiculos/[id] (reemplazar [id])
 Página individual de cada vehículo con:
 
 | Sección | Contenido |
@@ -345,7 +345,7 @@ Página individual de cada vehículo con:
 | **Tareas** | Tabla con prioridad coloreada, estado, responsable, fecha límite |
 | **Órdenes de taller** | Tabla con tipo, estado, responsable, fechas |
 
-### `/ventas` — Rendimiento de Ventas
+### `/ventas` — Rendimiento de Ventas → https://upcars.pixelarch.dev/ventas
 Panel de métricas comerciales:
 
 | Sección | Contenido |
@@ -358,7 +358,7 @@ Panel de métricas comerciales:
 
 Los KPIs se calculan desde la DB Vehículos (estado `Vendido` + `fechaVendido`) y la DB Ventas (registros de venta con cliente, vendedor, forma de pago).
 
-### `/finanzas` — Dashboard Financiero
+### `/finanzas` — Dashboard Financiero → https://upcars.pixelarch.dev/finanzas
 Panel de métricas financieras con datos desde la DB Finanzas + Vehículos:
 
 | Sección | Contenido |
@@ -371,7 +371,7 @@ Panel de métricas financieras con datos desde la DB Finanzas + Vehículos:
 
 **Auto-creación:** cuando un vehículo se compra se crea un `Egreso - Compra` automático, y cuando se vende un `Ingreso - Venta`.
 
-### `/botones` — Acciones rápidas (touch-friendly)
+### `/botones` — Acciones rápidas (touch-friendly) → https://upcars.pixelarch.dev/botones
 Formularios modales para operaciones comunes:
 - **Nuevo vehículo** — todos los campos del vehículo
 - **Mover vehículo** — seleccionar vehículo y destino
@@ -379,7 +379,17 @@ Formularios modales para operaciones comunes:
 - **Nueva orden taller** — tipo y vehículo
 - Botones: "Forzar sync", "Resolver alertas"
 
-### `/health` — Health Check
+### `/noticias` — Tablón de Noticias → https://upcars.pixelarch.dev/noticias
+Intranet del equipo:
+- Lista de cards con opacidad para leídas (localStorage)
+- Modal de detalle con link preview (dominio + favicon)
+- Crear noticia con selector de autor + link opcional
+- Notifica 🔔 a todos los empleados activos al publicar
+
+### `/databases` — Bases de Datos → https://upcars.pixelarch.dev/databases
+Listado de las 19 bases de datos de Notion agrupadas por categoría (Operaciones, Movimiento, Gestión).
+
+### `/health` — Health Check → https://upcars.pixelarch.dev/health
 Detalle de estado del sistema:
 - Servicios (Notion, Supabase)
 - Uptime, vehículos sincronizados, alertas activas
