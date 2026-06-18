@@ -31,6 +31,8 @@ Comprado → Pendiente autorización → Autorizado → Entregado al concesionar
                         Cedido ←─────────────────────────────────────────────────── Cedido
 ```
 
+(Nuevos estados: `Pendiente autorización`, `Autorizado`, `Entregado al concesionario`)
+
 ### Transiciones válidas
 
 | Desde | Hacia |
@@ -76,6 +78,13 @@ Cuando un vehículo cambia de estado (manualmente en Notion o desde el Dashboard
 - Inicia **SLA** de Preparación (24h / 1 día)
 - Notifica al Preparador (Víctor)
 
+### → Entregado al concesionario
+- **Fija automáticamente** la fecha en el campo "Fecha entrada preparación"
+- Crea **orden de taller** tipo Preparación con notas "Vehículo recibido en concesionario"
+- Crea **tarea** "Recibir y preparar" (prioridad Alta, departamento Taller)
+- Inicia **SLA** de Preparación (24h / 1 día)
+- Notifica 🔔 al Preparador (Víctor)
+
 ### → En preparación
 - Crea **orden de taller** tipo Preparación con preparador asignado (estado "En proceso")
 - Crea **tarea** "Checklist limpieza" (prioridad Alta, departamento Taller)
@@ -87,6 +96,13 @@ Cuando un vehículo cambia de estado (manualmente en Notion o desde el Dashboard
 - Crea **tarea** "Publicar vehículo" (prioridad Media, departamento Marketing)
 - Crea **tarea** "Gestionar venta" (prioridad Alta, departamento Ventas)
 - Cierra SLA de Preparación (si venía de ahí)
+
+### → Vendido
+- Crea automáticamente un **registro en Ventas** (DB Ventas) con los datos disponibles
+- Crea automáticamente un **registro en Finanzas** como `Ingreso - Venta` por el precio de venta
+
+### → Comprado (vehículo nuevo)
+- Crea automáticamente un **registro en Finanzas** como `Egreso - Compra` por el precio de compra
 
 ### Transiciones que cierran SLA automáticamente
 Al salir de cualquier área con SLA (Logística, Taller, Chapa, Preparación), el sistema cierra el registro SLA y calcula si se cumplió el threshold.
@@ -249,12 +265,19 @@ Sincroniza reseñas de Google My Business a una base de datos de Notion cada **1
 | PATCH | `/api/alerts/{id}` | Resolver una alerta |
 | GET | `/api/ventas` | Listar ventas + KPIs de rendimiento (total vendidos, precio prom., margen, por mes, por empleado) |
 | POST | `/api/ventas` | Crear un registro de venta manual |
+| GET | `/api/finanzas` | KPIs financieros + registros contables |
+| GET | `/api/finanzas/migrate` | Migrar vehículos históricos a la DB Finanzas |
+| GET | `/api/calendario` | Datos unificados de calendario (tareas + taller + eventos) |
+| GET | `/api/vehicles/{id}/detail` | Detalle completo del vehículo (info + timeline + tareas + taller) |
+| GET | `/api/noticias` | Listar noticias del tablón |
+| POST | `/api/noticias` | Crear noticia + notificar empleados 🔔 |
+| DELETE | `/api/noticias/{id}` | Archivar noticia |
 
 ### Rutas de Cron (protegidas con `CRON_SECRET`)
 
 | Método | Ruta | Frecuencia | Descripción |
 |---|---|---|---|
-| GET | `/api/cron/sync` | Cada 5 min | Sincronización principal: detecta cambios en Notion, ejecuta automatizaciones, logea eventos + **notifica cambios de estado** + **auto-crea ventas** cuando un vehículo se vende |
+| GET | `/api/cron/sync` | Cada 5 min | Sincronización principal: detecta cambios, ejecuta automatizaciones, logea eventos + **notifica 🔔 cambios de estado** + **auto-crea ventas** al vender + **auto-crea ingresos/egresos en Finanzas** al comprar/vender |
 | GET | `/api/cron/sla` | Cada hora | Revisa SLA abiertos y reporta violaciones |
 | GET | `/api/cron/alerts` | Cada hora | Genera alertas (SLA, atascados, tareas vencidas) + **notifica 🔔** a los responsables |
 | GET | `/api/cron/reviews` | Cada 15 min | Sincroniza reseñas de Google My Business + **notifica 🔔** a todos los empleados activos |
@@ -280,11 +303,47 @@ Panel principal con auto-refresh cada 30 segundos:
 | Sección | Contenido |
 |---|---|
 | **Stats chips** | Eventos totales, vehículos en pipeline, alertas activas, ratio SLA cumplido |
+| **Filtros** | Selector de responsable e input de marca para filtrar el pipeline |
 | **Pipeline Kanban** | Columnas por estado. Botones para mover vehículos al siguiente estado |
+| **Detalle de vehículo** | 🔍 Lupa en cada tarjeta → `/vehiculos/{id}` con timeline completo |
 | **Cumplimiento SLA** | Barras por área con promedio de horas y % de cumplimiento |
 | **Cuellos de botella** | Áreas ordenadas por mayor tiempo promedio, con colores |
 | **Alertas activas** | Lista de alertas con botón de resolver |
 | **Rendimiento empleados** | Tarjetas por empleado: nombre, rol, eficiencia, tareas completadas/total |
+
+### `/tareas` — Tareas del Equipo
+Panel de gestión de tareas con dos vistas:
+
+| Vista | Descripción |
+|---|---|
+| **Kanban** | Columnas por estado (Sin empezar, En progreso, Bloqueada, Completada, Cancelada). Arrastrar o botones para mover |
+| **Gantt** | Vista horizontal con barras por tarea en su fecha límite. Colores por prioridad. Línea roja = hoy |
+| **Filtros** | Por departamento, prioridad, responsable. Nombre propio para ver tus tareas |
+
+### `/calendario` — Calendario Mensual
+Vista unificada en grilla mensual:
+
+| Fuente | Indicador |
+|---|---|
+| **Tareas** | Punto azul 🔵 por deadline |
+| **Órdenes de taller** | Punto naranja 🟠 por fecha de entrada |
+| **Eventos operativos** | Punto púrpura 🟣 por fecha del evento |
+
+Navegación entre meses, botón "Hoy", filtros por tipo, click en día → detalle.
+
+### `/vehiculos/[id]` — Detalle de Vehículo
+Página individual de cada vehículo con:
+
+| Sección | Contenido |
+|---|---|
+| **Header** | Nombre, matrícula, marca, modelo, año, línea de negocio |
+| **Estado** | Badge coloreado + días en el sistema |
+| **Información** | Combustible, color, km, tipo, notas |
+| **Finanzas** | Precios compra/venta, margen, fechas |
+| **Resumen** | Contadores de tareas, órdenes, eventos |
+| **Timeline** | Línea de tiempo vertical con círculos de colores y transiciones |
+| **Tareas** | Tabla con prioridad coloreada, estado, responsable, fecha límite |
+| **Órdenes de taller** | Tabla con tipo, estado, responsable, fechas |
 
 ### `/ventas` — Rendimiento de Ventas
 Panel de métricas comerciales:
@@ -295,8 +354,22 @@ Panel de métricas comerciales:
 | **Gráfico mensual** | Barras de cantidad de ventas por mes |
 | **Rendimiento por empleado** | Tabla: empleado, cantidad vendida, ingresos, margen generado |
 | **Ventas registradas** | Tabla con detalle de cada venta (cliente, precio, margen, fecha, forma de pago) |
+| **Exportar PDF** | Botón 📄 para descargar reporte completo de ventas |
 
 Los KPIs se calculan desde la DB Vehículos (estado `Vendido` + `fechaVendido`) y la DB Ventas (registros de venta con cliente, vendedor, forma de pago).
+
+### `/finanzas` — Dashboard Financiero
+Panel de métricas financieras con datos desde la DB Finanzas + Vehículos:
+
+| Sección | Contenido |
+|---|---|
+| **KPIs** | Ingresos totales, egresos totales, balance neto, ventas + margen |
+| **Gráfico combinado** | Barras horizontales: ingresos (verde →) y egresos (rojo ←) por categoría |
+| **Por categoría** | Desglose de ingresos y egresos agrupados |
+| **Tabla de registros** | Todos los registros con filtro rápido (Todos / Ingreso / Egreso) |
+| **Exportar PDF** | Botón 📄 para descargar reporte financiero |
+
+**Auto-creación:** cuando un vehículo se compra se crea un `Egreso - Compra` automático, y cuando se vende un `Ingreso - Venta`.
 
 ### `/botones` — Acciones rápidas (touch-friendly)
 Formularios modales para operaciones comunes:
@@ -657,7 +730,7 @@ GitHub Actions (Cron) ──► Vercel (Next.js App)
 
 - **Source of Truth:** Notion (todo el dato operativo vive aquí, incluyendo notificaciones)
 - **Estado transicional:** Supabase (eventos, SLA, alertas)
-- **UI:** Next.js en Vercel (dashboard + botones + ventas + health)
+- **UI:** Next.js en Vercel (dashboard + ventas + finanzas + tareas + calendario + noticias + botones + detalle vehículo + health)
 - **Cron:** GitHub Actions (gatillan los workers serverless)
 - **Email:** Resend (notificaciones de alertas y reviews)
 - **Notificaciones 🔔:** Notion People column (campanita 🔔 interna)
