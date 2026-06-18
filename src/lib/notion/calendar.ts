@@ -1,5 +1,35 @@
-import { notionPost, getDatabaseId } from './client'
+import { notionPost, notionGet, getDatabaseId } from './client'
 import { getDbSchema, findPropertyByType, findPropertiesByType } from './schema'
+
+export interface CalendarEventItem {
+  id: string
+  nombre: string
+  fechaInicio: string | null
+  fechaFin: string | null
+  estado: string
+  area: string
+  responsableId: string | null
+  vehicleId: string | null
+}
+
+function parseCalendarProps(id: string, p: Record<string, any>): CalendarEventItem {
+  return {
+    id,
+    nombre: p['Nombre del evento']?.title?.[0]?.plain_text ?? '',
+    fechaInicio: p['Fecha inicio']?.date?.start ?? null,
+    fechaFin: p['Fecha fin']?.date?.start ?? null,
+    estado: p['Estado']?.select?.name ?? '',
+    area: p['Área']?.select?.name ?? '',
+    responsableId: p['Responsable']?.relation?.[0]?.id ?? null,
+    vehicleId: p['Vehículo']?.relation?.[0]?.id ?? null,
+  }
+}
+
+export async function getCalendarEvents(): Promise<CalendarEventItem[]> {
+  const dbId = getDatabaseId('calendario_operativo')
+  const data: any = await notionPost(`/databases/${dbId}/query`)
+  return (data.results || []).map((r: any) => parseCalendarProps(r.id, r.properties))
+}
 
 export async function createCalendarEvent(
   vehicleName: string,

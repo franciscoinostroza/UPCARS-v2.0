@@ -1,5 +1,41 @@
-import { notionPost, getDatabaseId } from './client'
-import { getDbSchema, findPropertyByType, findPropertiesByType } from './schema'
+import { notionPost, notionGet, getDatabaseId } from './client'
+
+export interface WorkshopOrderItem {
+  id: string
+  nombre: string
+  vehicleId: string | null
+  responsableId: string | null
+  tipo: string
+  estado: string
+  fechaEntrada: string | null
+  fechaSalida: string | null
+  observaciones: string
+}
+
+function parseWorkshopProps(id: string, p: Record<string, any>): WorkshopOrderItem {
+  const allKeys = Object.keys(p)
+  const dateKeys = allKeys.filter(k => p[k]?.type === 'date')
+  const entradaKey = dateKeys.find(k => k.includes('entrada')) || dateKeys[0]
+  const salidaKey = dateKeys.find(k => k.includes('salida')) || dateKeys[1]
+
+  return {
+    id,
+    nombre: p['Nombre /ID orden']?.title?.[0]?.plain_text ?? '',
+    vehicleId: p['Vehículo']?.relation?.[0]?.id ?? null,
+    responsableId: p['Mecánico asignado']?.relation?.[0]?.id ?? p['Responsable']?.relation?.[0]?.id ?? null,
+    tipo: p['Tipo de trabajo']?.select?.name ?? '',
+    estado: p['Estado']?.select?.name ?? '',
+    fechaEntrada: entradaKey ? (p[entradaKey]?.date?.start ?? null) : null,
+    fechaSalida: salidaKey ? (p[salidaKey]?.date?.start ?? null) : null,
+    observaciones: p['Observaciones']?.rich_text?.[0]?.plain_text ?? '',
+  }
+}
+
+export async function getWorkshopOrders(): Promise<WorkshopOrderItem[]> {
+  const dbId = getDatabaseId('workshop')
+  const data: any = await notionPost(`/databases/${dbId}/query`)
+  return (data.results || []).map((r: any) => parseWorkshopProps(r.id, r.properties))
+}
 
 type OrderType = 'Taller' | 'Chapa' | 'Preparacion' | 'Logistica'
 const PREFIXES: Record<OrderType, string> = {
@@ -11,17 +47,8 @@ const PREFIXES: Record<OrderType, string> = {
 
 async function getVehicleName(vehicleId: string): Promise<string> {
   try {
-    const schema = await getDbSchema('vehicles')
-    const titleKey = findPropertyByType(schema, 'title') || 'Name'
-
-    const res = await fetch(`https://api.notion.com/v1/pages/${vehicleId}`, {
-      headers: {
-        'Authorization': `Bearer ${process.env.NOTION_TOKEN}`,
-        'Notion-Version': '2022-06-28',
-      },
-    })
-    if (!res.ok) return 'Vehículo'
-    const data: any = await res.json()
+    const data: any = await notionGet(`/pages/${vehicleId}`)
+    const titleKey = Object.keys(data.properties).find(k => data.properties[k]?.type === 'title')
     return data.properties?.[titleKey]?.title?.[0]?.plain_text || 'Vehículo'
   } catch {
     return 'Vehículo'

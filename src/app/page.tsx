@@ -92,6 +92,7 @@ export default function Home() {
           <Link href="/dashboard" className="card text-center font-medium px-3 py-2.5 sm:py-2 text-xs sm:text-sm min-h-[44px] flex items-center justify-center" style={{ color: 'var(--text)' }}>📊 Dashboard →</Link>
           <Link href="/ventas" className="card text-center font-medium px-3 py-2.5 sm:py-2 text-xs sm:text-sm min-h-[44px] flex items-center justify-center" style={{ color: 'var(--text)' }}>💰 Ventas →</Link>
           <Link href="/finanzas" className="card text-center font-medium px-3 py-2.5 sm:py-2 text-xs sm:text-sm min-h-[44px] flex items-center justify-center" style={{ color: 'var(--text)' }}>💶 Finanzas →</Link>
+          <Link href="/calendario" className="card text-center font-medium px-3 py-2.5 sm:py-2 text-xs sm:text-sm min-h-[44px] flex items-center justify-center" style={{ color: 'var(--text)' }}>📅 Calendario →</Link>
           <Link href="/tareas" className="card text-center font-medium px-3 py-2.5 sm:py-2 text-xs sm:text-sm min-h-[44px] flex items-center justify-center" style={{ color: 'var(--text)' }}>📋 Tareas →</Link>
           <Link href="/noticias" className="card text-center font-medium px-3 py-2.5 sm:py-2 text-xs sm:text-sm min-h-[44px] flex items-center justify-center" style={{ color: 'var(--text)' }}>📰 Noticias →</Link>
           <Link href="/botones" className="card text-center font-medium px-3 py-2.5 sm:py-2 text-xs sm:text-sm min-h-[44px] flex items-center justify-center" style={{ color: 'var(--text)' }}>🔘 Botones →</Link>
