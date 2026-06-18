@@ -12,40 +12,33 @@ export async function GET() {
     for (const v of vehicles) {
       const existing = await getFinanzasByVehicle(v.id)
 
-      const compraExiste = existing.some(r => r.tipo === 'Egreso' && r.categoria === 'Compra')
-      if (v.precioCompra && !compraExiste) {
-        try {
-          await createFinanzaRecord({
-            concepto: `Compra - ${v.name}`,
-            tipo: 'Egreso',
-            categoria: 'Compra',
-            importe: v.precioCompra,
-            fecha: v.fechaCompra || new Date().toISOString().split('T')[0],
-            vehiculoId: v.id,
-          })
-          results.creados++
-        } catch {
-          results.errores++
+      if (existing.length > 0) {
+        results.saltados++
+        continue
+      }
+
+      if (v.state === 'Vendido') {
+        const margen = (v.margenBruto ?? 0)
+        if (margen !== 0) {
+          try {
+            await createFinanzaRecord({
+              concepto: v.name,
+              tipo: margen > 0 ? 'Ingreso' : 'Egreso',
+              categoria: 'Venta',
+              importe: Math.abs(margen),
+              fecha: v.fechaVendido || new Date().toISOString().split('T')[0],
+              vehiculoId: v.id,
+              notas: `Compra: ${v.precioCompra ?? '?'}€ · Venta: ${v.precioVenta ?? '?'}€ · Margen: ${margen}€`,
+            })
+            results.creados++
+          } catch {
+            results.errores++
+          }
+        } else {
+          results.saltados++
         }
       } else {
         results.saltados++
-      }
-
-      const ventaExiste = existing.some(r => r.tipo === 'Ingreso' && r.categoria === 'Venta')
-      if (v.state === 'Vendido' && v.precioVenta && !ventaExiste) {
-        try {
-          await createFinanzaRecord({
-            concepto: `Venta - ${v.name}`,
-            tipo: 'Ingreso',
-            categoria: 'Venta',
-            importe: v.precioVenta,
-            fecha: v.fechaVendido || new Date().toISOString().split('T')[0],
-            vehiculoId: v.id,
-          })
-          results.creados++
-        } catch {
-          results.errores++
-        }
       }
     }
 

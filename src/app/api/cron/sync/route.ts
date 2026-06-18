@@ -121,32 +121,19 @@ export async function GET(req: NextRequest) {
         }
 
         const existingFin = await getFinanzasByVehicle(change.vehicleId)
-        if (existingFin.length === 0 && vehicle?.precioVenta) {
-          await createFinanzaRecord({
-            concepto: `Venta - ${change.vehicleName}`,
-            tipo: 'Ingreso',
-            categoria: 'Venta',
-            importe: vehicle.precioVenta,
-            fecha: vehicle?.fechaVendido || today,
-            vehiculoId: change.vehicleId,
-            lineaNegocio: vehicle?.lineaNegocio || undefined,
-          }).catch((err) => console.error('Auto-create finanza ingreso failed:', err))
-        }
-      }
-
-      if (from === null && to === 'Comprado') {
-        const vehicle = vehicleMap.get(change.vehicleId)
-        if (vehicle?.precioCompra) {
-          const existingFin = await getFinanzasByVehicle(change.vehicleId)
-          if (existingFin.length === 0) {
+        if (existingFin.length === 0) {
+          const margen = (vehicle?.margenBruto ?? 0)
+          if (margen !== 0) {
             await createFinanzaRecord({
-              concepto: `Compra - ${change.vehicleName}`,
-              tipo: 'Egreso',
-              categoria: 'Compra',
-              importe: vehicle.precioCompra,
-              fecha: vehicle.fechaCompra || now.toISOString().split('T')[0],
+              concepto: `${change.vehicleName}`,
+              tipo: margen > 0 ? 'Ingreso' : 'Egreso',
+              categoria: 'Venta',
+              importe: Math.abs(margen),
+              fecha: vehicle?.fechaVendido || today,
               vehiculoId: change.vehicleId,
-            }).catch((err) => console.error('Auto-create finanza egreso failed:', err))
+              lineaNegocio: vehicle?.lineaNegocio || undefined,
+              notas: `Compra: ${vehicle?.precioCompra ?? '?'}€ · Venta: ${vehicle?.precioVenta ?? '?'}€ · Margen: ${margen}€`,
+            }).catch((err) => console.error('Auto-create finanza combinada failed:', err))
           }
         }
       }
