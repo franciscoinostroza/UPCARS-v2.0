@@ -330,10 +330,14 @@ function VehicleDetailInner() {
                     <tr key={t.id} style={{ borderBottom: '1px solid var(--border)' }}>
                       <td className="p-2 sm:p-3 font-medium" style={{ color: 'var(--text)' }}>{t.name}</td>
                       <td className="p-2 sm:p-3">
-                        <span className="text-[10px] px-2 py-0.5 rounded" style={{
-                          background: t.priority === 'Alta' ? 'rgba(239,68,68,0.15)' : t.priority === 'Media' ? 'rgba(234,179,8,0.15)' : 'rgba(107,114,128,0.15)',
-                          color: t.priority === 'Alta' ? '#ef4444' : t.priority === 'Media' ? '#eab308' : '#6b7280',
-                        }}>{t.priority}</td>
+                        <span className="text-[10px] px-2 py-0.5 rounded font-medium"
+                          style={{
+                            background: t.priority === 'Alta' ? 'rgba(239,68,68,0.15)' : t.priority === 'Media' ? 'rgba(234,179,8,0.15)' : 'rgba(107,114,128,0.15)',
+                            color: t.priority === 'Alta' ? '#ef4444' : t.priority === 'Media' ? '#eab308' : '#6b7280',
+                          }}>
+                          {t.priority}
+                        </span>
+                      </td>
                       <td className="p-2 sm:p-3" style={{ color: 'var(--text-secondary)' }}>{t.state}</td>
                       <td className="p-2 sm:p-3" style={{ color: 'var(--text-secondary)' }}>{t.responsableNombre || '-'}</td>
                       <td className="text-right p-2 sm:p-3" style={{ color: t.deadline && new Date(t.deadline) < new Date() ? '#ef4444' : 'var(--text-secondary)' }}>{t.deadline || '-'}</td>
