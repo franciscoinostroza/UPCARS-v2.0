@@ -48,7 +48,7 @@ const PREFIXES: Record<OrderType, string> = {
 async function getVehicleName(vehicleId: string): Promise<string> {
   try {
     const data: any = await notionGet(`/pages/${vehicleId}`)
-    const titleKey = Object.keys(data.properties).find(k => data.properties[k]?.type === 'title')
+    const titleKey = Object.keys(data.properties).find(k => data.properties[k]?.type === 'title') || ''
     return data.properties?.[titleKey]?.title?.[0]?.plain_text || 'Vehículo'
   } catch {
     return 'Vehículo'
