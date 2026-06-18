@@ -2,6 +2,7 @@
 
 import { useState, useEffect, useCallback } from 'react'
 import { Skeleton } from '@/components/skeleton'
+import Link from 'next/link'
 
 const STATE_LABELS: Record<string, string> = {
   Comprado: 'Comprado',
@@ -357,6 +358,14 @@ export default function Pipeline({
                         <p className="text-xs sm:text-sm font-medium truncate min-w-0" style={{ color: 'var(--text)' }}>
                           {v.name || 'Sin nombre'}
                         </p>
+                        <Link
+                          href={`/vehiculos/${v.id}`}
+                          onClick={(e) => e.stopPropagation()}
+                          className="text-[10px] hover:opacity-70 shrink-0 ml-1"
+                          title="Ver detalle"
+                        >
+                          🔍
+                        </Link>
                         {nextStates.length > 0 && (
                           <div className="flex gap-0.5 shrink-0">
                             {nextStates.map((ns) => (
