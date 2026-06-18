@@ -82,6 +82,7 @@ function TareasInner() {
   const [filterPriority, setFilterPriority] = useState('')
   const [filterEmployee, setFilterEmployee] = useState('')
   const [myName, setMyName] = useState('')
+  const [vista, setVista] = useState<'kanban' | 'gantt'>('kanban')
 
   useEffect(() => {
     const saved = localStorage.getItem(LS_KEY)
@@ -182,6 +183,13 @@ function TareasInner() {
         </div>
 
         {!loading && (
+          <div className="flex items-center gap-2 mb-2 animate-fade-up" style={{ animationDelay: '40ms' }}>
+            <button onClick={() => setVista('kanban')} className="px-2.5 py-1 text-[10px] sm:text-xs rounded font-medium transition-all" style={{ background: vista === 'kanban' ? 'var(--bg-pill)' : 'transparent', color: vista === 'kanban' ? 'var(--text)' : 'var(--text-muted)', border: '1px solid var(--border)' }}>📋 Kanban</button>
+            <button onClick={() => setVista('gantt')} className="px-2.5 py-1 text-[10px] sm:text-xs rounded font-medium transition-all" style={{ background: vista === 'gantt' ? 'var(--bg-pill)' : 'transparent', color: vista === 'gantt' ? 'var(--text)' : 'var(--text-muted)', border: '1px solid var(--border)' }}>📊 Gantt</button>
+          </div>
+        )}
+
+        {!loading && (
           <div className="flex flex-wrap items-center gap-1.5 mb-3 animate-fade-up" style={{ animationDelay: '50ms' }}>
             <FilterSelect
               label="Departamento"
@@ -259,6 +267,62 @@ function TareasInner() {
               </div>
             )}
 
+            {vista === 'gantt' ? (
+              <div className="card p-3 sm:p-4" style={{ overflowX: 'auto' }}>
+                {(() => {
+                  const now = new Date()
+                  const tasksWithDeadline = filteredTasks.filter(t => t.deadline)
+                  if (tasksWithDeadline.length === 0) return <p className="text-sm text-center py-8" style={{ color: 'var(--text-muted)' }}>No hay tareas con fecha límite para mostrar en Gantt</p>
+
+                  const dates = tasksWithDeadline.map(t => new Date(t.deadline!))
+                  const minDate = new Date(Math.min(...dates.map(d => d.getTime()), now.getTime()))
+                  const maxDate = new Date(Math.max(...dates.map(d => d.getTime()), now.getTime()))
+                  const totalDays = Math.max(Math.ceil((maxDate.getTime() - minDate.getTime()) / (1000 * 60 * 60 * 24)), 1) + 1
+                  const dayWidth = Math.max(30, Math.min(60, 600 / totalDays))
+
+                  const days = Array.from({ length: totalDays }, (_, i) => {
+                    const d = new Date(minDate)
+                    d.setDate(d.getDate() + i)
+                    return d
+                  })
+
+                  return (
+                    <div>
+                      <div className="flex items-end mb-1" style={{ marginLeft: 160 }}>
+                        {days.filter((_, i) => i % Math.max(1, Math.floor(totalDays / 15)) === 0).map(d => (
+                          <span key={d.toISOString()} className="text-[9px] font-medium text-center" style={{ width: dayWidth * (totalDays / 15), color: 'var(--text-muted)', flexShrink: 0 }}>
+                            {d.toLocaleDateString('es-ES', { day: '2-digit', month: 'short' })}
+                          </span>
+                        ))}
+                      </div>
+                      {tasksWithDeadline.map(t => {
+                        const start = new Date(t.deadline!)
+                        const startOffset = Math.max(0, Math.round((start.getTime() - minDate.getTime()) / (1000 * 60 * 60 * 24)))
+                        const barWidth = 1
+                        const barLeft = startOffset * dayWidth
+                        return (
+                          <div key={t.id} className="flex items-center gap-2 py-1" style={{ minHeight: 24 }}>
+                            <span className="text-[10px] sm:text-xs truncate font-medium" style={{ width: 155, flexShrink: 0, color: 'var(--text)' }} title={t.name}>
+                              {t.name}
+                            </span>
+                            <div style={{ position: 'relative', height: 18, flex: 1, minWidth: 200 }}>
+                              <div style={{ position: 'absolute', left: barLeft, width: dayWidth, height: 14, borderRadius: 3, opacity: 0.85, background: t.priority === 'Alta' ? '#ef4444' : t.priority === 'Media' ? '#eab308' : '#22c55e' }} title={`${t.name} - Vence: ${t.deadline}`} />
+                              {(() => {
+                                const todayLeft = Math.round((now.getTime() - minDate.getTime()) / (1000 * 60 * 60 * 24)) * dayWidth
+                                if (todayLeft > 0 && todayLeft < totalDays * dayWidth) {
+                                  return <div style={{ position: 'absolute', left: todayLeft, top: 0, width: 1.5, height: '100%', background: 'var(--accent-red)', opacity: 0.4 }} />
+                                }
+                                return null
+                              })()}
+                            </div>
+                          </div>
+                        )
+                      })}
+                    </div>
+                  )
+                })()}
+              </div>
+            ) : (
             <div className="flex gap-1.5 sm:gap-2 overflow-x-auto pb-1">
               {columns.map((col) => (
                 <div key={col.state} className="pipeline-column p-2 sm:p-3" style={{ minWidth: 180, flex: 1 }}>
@@ -308,6 +372,7 @@ function TareasInner() {
                 </div>
               ))}
             </div>
+            )}
           </>
         )}
 
