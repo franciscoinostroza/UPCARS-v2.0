@@ -46,13 +46,24 @@ function DashboardInner() {
   const [pipelineTotal, setPipelineTotal] = useState(0)
   const [loading, setLoading] = useState(true)
   const [resolvingId, setResolvingId] = useState<string | null>(null)
+  const [employees, setEmployees] = useState<{ id: string; name: string }[]>([])
+  const [filterResponsable, setFilterResponsable] = useState('')
+  const [filterMarca, setFilterMarca] = useState('')
 
   const fetchAll = useCallback(async () => {
     try {
-      const [kpiRes, pipeRes] = await Promise.all([
+      const params = new URLSearchParams()
+      if (filterResponsable) params.set('responsable', filterResponsable)
+      if (filterMarca) params.set('marca', filterMarca)
+      const qs = params.toString()
+
+      const [kpiRes, pipeRes, empRes] = await Promise.all([
         fetch('/api/kpis'),
-        fetch('/api/vehicles'),
+        fetch(`/api/vehicles${qs ? '?' + qs : ''}`),
+        fetch('/api/employees'),
       ])
+      const empData = await empRes.json()
+      if (empData.success) setEmployees(empData.data)
       const kpiData = await kpiRes.json()
       const pipeData = await pipeRes.json()
 
@@ -66,7 +77,7 @@ function DashboardInner() {
     } finally {
       setLoading(false)
     }
-  }, [])
+  }, [filterResponsable, filterMarca])
 
   useEffect(() => {
     fetchAll()
@@ -172,6 +183,38 @@ function DashboardInner() {
               </div>
             </div>
           ))}
+        </div>
+
+        {/* Filters */}
+        <div className="flex flex-wrap gap-2 mb-3 animate-fade-up" style={{ animationDelay: '125ms' }}>
+          <select
+            value={filterResponsable}
+            onChange={(e) => setFilterResponsable(e.target.value)}
+            className="text-[11px] px-2 py-1.5 rounded outline-none"
+            style={{ background: 'var(--bg-card)', color: 'var(--text)', border: '1px solid var(--border)' }}
+          >
+            <option value="">👤 Todos los responsables</option>
+            {employees.map((e) => (
+              <option key={e.id} value={e.id}>{e.name}</option>
+            ))}
+          </select>
+          <input
+            type="text"
+            placeholder="🔍 Filtrar por marca..."
+            value={filterMarca}
+            onChange={(e) => setFilterMarca(e.target.value)}
+            className="text-[11px] px-2 py-1.5 rounded outline-none"
+            style={{ background: 'var(--bg-card)', color: 'var(--text)', border: '1px solid var(--border)', width: 160 }}
+          />
+          {(filterResponsable || filterMarca) && (
+            <button
+              onClick={() => { setFilterResponsable(''); setFilterMarca('') }}
+              className="text-[11px] px-2 py-1.5 rounded font-medium"
+              style={{ background: 'var(--bg-pill)', color: 'var(--text-muted)', border: '1px solid var(--border)' }}
+            >
+              ✕ Limpiar
+            </button>
+          )}
         </div>
 
         {/* Pipeline */}

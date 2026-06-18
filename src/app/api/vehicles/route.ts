@@ -40,13 +40,25 @@ export async function GET(request: NextRequest) {
 
     const { searchParams } = new URL(request.url)
     const list = searchParams.get('list')
+    const filterResponsable = searchParams.get('responsable')
+    const filterBrand = searchParams.get('marca')
+    const filterLinea = searchParams.get('linea')
 
-    if (list === 'true') {
-      const active = vehicles.filter((v) => activeStates.includes(v.state))
-      return NextResponse.json({ success: true, data: active })
+    let activeVehicles = vehicles.filter((v) => activeStates.includes(v.state))
+
+    if (filterResponsable) {
+      activeVehicles = activeVehicles.filter(v => v.responsable === filterResponsable)
+    }
+    if (filterBrand) {
+      activeVehicles = activeVehicles.filter(v => v.brand.toLowerCase().includes(filterBrand.toLowerCase()))
+    }
+    if (filterLinea) {
+      activeVehicles = activeVehicles.filter(v => v.lineaNegocio === filterLinea)
     }
 
-    const activeVehicles = vehicles.filter((v) => activeStates.includes(v.state))
+    if (list === 'true') {
+      return NextResponse.json({ success: true, data: activeVehicles })
+    }
 
     function calcDaysInState(v: (typeof activeVehicles)[number]): number {
       const refDate =
