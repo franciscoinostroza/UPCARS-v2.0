@@ -160,8 +160,7 @@ function DashboardInner() {
       <div className="max-w-7xl mx-auto p-3 sm:p-6 lg:p-8">
 
         {/* Header */}
-        <div className="flex items-center justify-between mb-4 sm:mb-6 animate-fade-up">
-          <h1 className="text-lg sm:text-xl font-bold" style={{ color: 'var(--text)' }}>📊 Resumen y KPIs</h1>
+        <div className="flex justify-end mb-4 sm:mb-6 animate-fade-up">
           <DarkModeToggle />
         </div>
 
