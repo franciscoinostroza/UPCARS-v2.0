@@ -295,7 +295,7 @@ Sincroniza reseñas de Google My Business a una base de datos de Notion cada **1
 Pantalla de inicio con estado del sistema:
 - Conexión Notion / Supabase
 - Total vehículos
-- Enlaces a todas las secciones: Dashboard, Ventas, Tareas, Noticias, Botones, Bases de datos, Health
+- Enlaces a todas las secciones: Dashboard, Ventas, Finanzas, Panel Gerencia, Calendario, Tareas, Noticias, Reseñas, Botones, Bases de datos, Health
 
 ### `/dashboard` — Dashboard Operativo → https://upcars.pixelarch.dev/dashboard
 Panel principal con auto-refresh cada 30 segundos:
@@ -385,6 +385,18 @@ Intranet del equipo:
 - Modal de detalle con link preview (dominio + favicon)
 - Crear noticia con selector de autor + link opcional
 - Notifica 🔔 a todos los empleados activos al publicar
+
+### `/panelgerencia` — Panel de Gerencia → https://upcars.pixelarch.dev/panelgerencia
+Página tipo lanzador para gerentes:
+
+| Card | Abre página de Notion |
+|---|---|
+| 📊 KPIs Operativos | Notion KPI (embed `/dashboard`) |
+| 💰 Ventas | Notion Ventas (embed `/ventas`) |
+| 💶 Finanzas | Notion Finanzas (embed `/finanzas`) |
+| 📅 Calendario | Notion Calendario (embed `/calendario`) |
+
+Deep links automáticos: **mobile** abre la app Notion, **desktop** abre en el navegador.
 
 ### `/reviews` — Reseñas de Google → https://upcars.pixelarch.dev/reviews
 Panel de reseñas sincronizadas desde Google My Business:
