@@ -1,11 +1,9 @@
 'use client'
 
-import { useState, useEffect, useCallback, useRef } from 'react'
+import { useState, useEffect, useCallback } from 'react'
 import { ThemeProvider, useTheme } from '../dashboard/theme-context'
 import { DarkModeToggle } from '../dashboard/dark-mode'
 import { Skeleton } from '@/components/skeleton'
-import html2canvas from 'html2canvas'
-import { jsPDF } from 'jspdf'
 
 interface SalesKpis {
   totalSold: number
@@ -83,27 +81,6 @@ function VentasInner() {
   const { dark } = useTheme()
   const [data, setData] = useState<VentasData | null>(null)
   const [loading, setLoading] = useState(true)
-  const [exporting, setExporting] = useState(false)
-  const ref = useRef<HTMLDivElement>(null)
-
-  async function exportPdf() {
-    if (!ref.current) return
-    setExporting(true)
-    try {
-      const canvas = await html2canvas(ref.current, { backgroundColor: '#0a0a0f', scale: 2 })
-      const imgData = canvas.toDataURL('image/png')
-      const pdf = new jsPDF('p', 'mm', 'a4')
-      const pdfW = pdf.internal.pageSize.getWidth()
-      const pdfH = (canvas.height * pdfW) / canvas.width
-      pdf.addImage(imgData, 'PNG', 0, 0, pdfW, pdfH)
-      pdf.save('ventas-upcars.pdf')
-    } catch {
-      // silent
-    } finally {
-      setExporting(false)
-    }
-  }
-
   const fetchData = useCallback(async () => {
     try {
       const res = await fetch('/api/ventas')
@@ -147,14 +124,14 @@ function VentasInner() {
 
   return (
     <div style={{ background: 'var(--bg)', minHeight: '100vh' }}>
-      <div className="max-w-7xl mx-auto p-3 sm:p-6 lg:p-8" ref={ref}>
+      <div className="max-w-7xl mx-auto p-3 sm:p-6 lg:p-8">
 
         <div className="flex items-center justify-between mb-4 sm:mb-6 animate-fade-up">
           <h1 className="text-lg sm:text-xl font-bold" style={{ color: 'var(--text)' }}>💰 Rendimiento de Ventas</h1>
           <div className="flex items-center gap-2">
-            <button onClick={exportPdf} disabled={exporting} className="text-[10px] sm:text-xs px-2 py-1.5 rounded font-medium transition-opacity hover:opacity-70 disabled:opacity-40" style={{ background: 'var(--bg-pill)', color: 'var(--text-secondary)', border: '1px solid var(--border)' }}>
-              {exporting ? '⋯' : '📄 PDF'}
-            </button>
+            <a href="/api/ventas/pdf" target="_blank" rel="noopener noreferrer" className="text-[10px] sm:text-xs px-2 py-1.5 rounded font-medium transition-opacity hover:opacity-70" style={{ background: 'var(--bg-pill)', color: 'var(--text-secondary)', border: '1px solid var(--border)', textDecoration: 'none' }}>
+              📄 PDF
+            </a>
             <DarkModeToggle />
           </div>
         </div>
