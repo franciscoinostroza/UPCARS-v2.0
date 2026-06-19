@@ -65,12 +65,12 @@ export async function GET() {
       </table>`
     }
 
-    html += `<div class="footer">Generado por UPCARS - upcars.pixelarch.dev</div></body></html>`
+    html += `<div class="footer">Generado por UPCARS - upcars.pixelarch.dev</div>
+<script>window.print()</script></body></html>`
 
     return new NextResponse(html, {
       headers: {
         'Content-Type': 'text/html; charset=utf-8',
-        'Content-Disposition': 'attachment; filename="finanzas-upcars.html"',
       },
     })
   } catch (error: any) {
