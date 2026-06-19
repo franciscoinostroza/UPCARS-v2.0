@@ -117,8 +117,7 @@ function FinanzasInner() {
     <div style={{ background: 'var(--bg)', minHeight: '100vh' }}>
       <div className="max-w-6xl mx-auto p-3 sm:p-6 lg:p-8" ref={ref}>
 
-        <div className="flex items-center justify-between mb-4 animate-fade-up">
-          <h1 className="text-lg sm:text-xl font-bold" style={{ color: 'var(--text)' }}>💰 Finanzas</h1>
+        <div className="flex justify-end mb-4 animate-fade-up">
           <div className="flex items-center gap-2">
             <button onClick={exportPdf} disabled={exporting} className="text-[10px] sm:text-xs px-2 py-1.5 rounded font-medium transition-opacity hover:opacity-70 disabled:opacity-40" style={{ background: 'var(--bg-pill)', color: 'var(--text-secondary)', border: '1px solid var(--border)' }}>
               {exporting ? '⋯' : '📄 PDF'}
