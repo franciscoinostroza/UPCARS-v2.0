@@ -19,8 +19,11 @@ export async function GET() {
     const margenPositivo = sold.filter(v => (v.margenBruto ?? 0) > 0).reduce((s, v) => s + (v.margenBruto ?? 0), 0)
     const margenNegativo = Math.abs(sold.filter(v => (v.margenBruto ?? 0) < 0).reduce((s, v) => s + (v.margenBruto ?? 0), 0))
 
-    let html = `<!DOCTYPE html><html><head><meta charset="utf-8"><title>Finanzas - UPCARS</title>
+    let html = `<!DOCTYPE html><html><head><meta charset="utf-8">
+<title>Reporte Financiero - UPCARS</title>
 <style>
+  @page { size: auto; margin: 10mm; }
+  @media print { body { -webkit-print-color-adjust: exact; print-color-adjust: exact; } }
   body { font-family: Arial, sans-serif; font-size: 12px; color: #333; padding: 30px; }
   h1 { font-size: 20px; margin-bottom: 5px; }
   h2 { font-size: 14px; margin-top: 20px; margin-bottom: 8px; color: #555; }
