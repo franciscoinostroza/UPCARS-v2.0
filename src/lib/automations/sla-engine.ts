@@ -16,25 +16,23 @@ export async function handleSLAChange(
   newUbicacion: string,
   now: Date
 ) {
-  const area = AREA_MAP[newUbicacion]
-  if (area) {
-    await openSLARecord(vehicleId, area, now)
-  }
-
   if (oldUbicacion) {
     const oldArea = AREA_MAP[oldUbicacion]
     if (oldArea) {
-      await closeSLARecord(vehicleId, oldArea, timestamp)
+      await closeSLARecord(vehicleId, oldArea, now)
     }
   }
 
-  await db().from('sla_records').insert({
-    vehicle_id: vehicleId,
-    area,
-    start_time: timestamp.toISOString(),
-    threshold,
-    met: null,
-  } as never)
+  const area = AREA_MAP[newUbicacion]
+  if (area) {
+    await db().from('sla_records').insert({
+      vehicle_id: vehicleId,
+      area,
+      start_time: now.toISOString(),
+      threshold: SLA_THRESHOLDS[area] || 72,
+      met: null,
+    } as never)
+  }
 }
 
 async function closeSLARecord(vehicleId: string, area: string, endTime: Date): Promise<void> {
