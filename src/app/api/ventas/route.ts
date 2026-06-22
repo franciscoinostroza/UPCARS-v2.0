@@ -22,7 +22,7 @@ export async function GET() {
       getEmployees(),
     ])
 
-    const sold = vehicles.filter(v => v.state === 'Vendido')
+    const sold = vehicles.filter(v => v.situacion === 'Vendido')
     const soldWithDate = sold.filter(v => v.fechaVendido)
 
     const salesKpis = {

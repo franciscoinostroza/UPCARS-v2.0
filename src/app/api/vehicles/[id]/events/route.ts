@@ -73,7 +73,8 @@ export async function GET(
         vehicle: {
           id: vehicle.id,
           name: vehicle.name,
-          state: vehicle.state as string,
+          situacion: vehicle.situacion,
+          ubicacion: vehicle.ubicacion,
           responsable: vehicle.responsable || null,
           fechaCompra: vehicle.fechaCompra || null,
           fechaListo: vehicle.fechaListo || null,

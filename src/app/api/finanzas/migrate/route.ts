@@ -17,7 +17,7 @@ export async function GET() {
         continue
       }
 
-      if (v.state === 'Vendido') {
+      if (v.situacion === 'Vendido') {
         const margen = (v.margenBruto ?? 0)
         if (margen !== 0) {
           try {

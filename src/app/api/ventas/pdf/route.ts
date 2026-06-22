@@ -11,7 +11,7 @@ export async function GET() {
       getVehicles(),
     ])
 
-    const sold = vehicles.filter(v => v.state === 'Vendido')
+    const sold = vehicles.filter(v => v.situacion === 'Vendido')
     const totalRevenue = sold.reduce((s, v) => s + (v.precioVenta ?? 0), 0)
     const totalMargin = sold.reduce((s, v) => s + (v.margenBruto ?? 0), 0)
 

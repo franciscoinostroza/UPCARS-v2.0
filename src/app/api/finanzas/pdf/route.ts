@@ -15,7 +15,7 @@ export async function GET() {
       getVehicles(),
     ])
 
-    const sold = vehicles.filter(v => v.state === 'Vendido')
+    const sold = vehicles.filter(v => v.situacion === 'Vendido')
     const margenPositivo = sold.filter(v => (v.margenBruto ?? 0) > 0).reduce((s, v) => s + (v.margenBruto ?? 0), 0)
     const margenNegativo = Math.abs(sold.filter(v => (v.margenBruto ?? 0) < 0).reduce((s, v) => s + (v.margenBruto ?? 0), 0))
 

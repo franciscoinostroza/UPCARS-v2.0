@@ -77,7 +77,7 @@ export async function GET() {
     const employeeKPIs = await getEmployeeKPIs()
 
     const allVehicles = await getVehicles()
-    const sold = allVehicles.filter(v => v.state === 'Vendido')
+    const sold = allVehicles.filter(v => v.situacion === 'Vendido')
     const soldWithDate = sold.filter(v => v.fechaVendido)
 
     const sales = {
