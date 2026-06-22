@@ -69,6 +69,8 @@ interface ModalData {
     id: string
     name: string
     state: string
+    situacion?: string
+    ubicacion?: string
     responsable: string | null
     fechaCompra: string | null
     fechaListo: string | null
@@ -250,7 +252,7 @@ function VehicleModal({
             <div className="flex gap-2 pt-2 border-t" style={{ borderColor: 'var(--border)' }}>
               {VALID_NEXT[data.vehicle.situacion || data.vehicle.state]?.length > 0 && (
                 <div className="flex flex-col gap-1.5 mt-2">
-                  {VALID_NEXT[data.vehicle.situacion || data.vehicle.state].map((ns) => (
+                  {VALID_NEXT[data.vehicle.situacion || data.vehicle.state].map((ns: string) => (
                     <button
                       key={ns}
                       onClick={() => handleMove(ns)}
