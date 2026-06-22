@@ -1,18 +1,15 @@
-import { VehicleState, VALID_TRANSITIONS } from '@/lib/types'
+import { SituacionComercial, VALID_SITUACION_TRANSITIONS } from '@/lib/types'
 
-export function isValidTransition(from: VehicleState | null, to: VehicleState): boolean {
+export function isValidSituacionTransition(from: SituacionComercial | null, to: SituacionComercial): boolean {
   if (!from) return true
-  const allowed = VALID_TRANSITIONS[from]
-  return allowed.includes(to)
+  const allowed = VALID_SITUACION_TRANSITIONS[from]
+  return allowed?.includes(to) ?? false
 }
 
-export function getNextExpectedState(current: VehicleState): VehicleState | null {
-  const flow: VehicleState[] = ['Comprado', 'En logística', 'En taller', 'En chapa', 'En preparación', 'Listo para venta', 'Vendido', 'Cedido']
-  const idx = flow.indexOf(current)
-  if (idx === -1 || idx === flow.length - 1) return null
-  return flow[idx + 1]
+export function isSituacionVendida(situacion: SituacionComercial): boolean {
+  return situacion === 'Vendido'
 }
 
-export function isTerminalState(state: VehicleState): boolean {
-  return state === 'Vendido'
+export function isSituacionFinal(situacion: SituacionComercial): boolean {
+  return situacion === 'Vendido' || situacion === 'Cedido'
 }

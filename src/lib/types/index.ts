@@ -1,15 +1,12 @@
-export type VehicleState =
-  | 'Comprado'
-  | 'Pendiente autorización'
-  | 'Autorizado'
-  | 'Entregado al concesionario'
-  | 'En logística'
-  | 'En taller'
-  | 'En chapa'
-  | 'En preparación'
-  | 'Listo para venta'
-  | 'Vendido'
-  | 'Cedido'
+export type SituacionComercial = 'Stock' | 'Exposición' | 'Vendido' | 'Cedido'
+
+export type Ubicacion =
+  | 'Sede Central'
+  | 'En tránsito'
+  | 'Taller Mecánica'
+  | 'Taller Chapa'
+  | 'Taller Preparación'
+  | (string & {})
 
 export interface Vehicle {
   id: string
@@ -20,7 +17,8 @@ export interface Vehicle {
   year: number
   lineaNegocio: string
   tipo: string
-  state: VehicleState
+  situacion: SituacionComercial
+  ubicacion: string
   fechaCompra: string
   fechaListo: string | null
   fechaVendido: string | null
@@ -46,8 +44,10 @@ export interface NotionVehiclePage {
 export interface StateChangeEvent {
   vehicleId: string
   vehicleName: string
-  oldState: VehicleState | null
-  newState: VehicleState
+  oldSituacion: SituacionComercial | null
+  newSituacion: SituacionComercial
+  oldUbicacion: string | null
+  newUbicacion: string
   timestamp: Date
 }
 
@@ -139,32 +139,23 @@ export const SLA_THRESHOLDS: Record<string, number> = {
   Taller: envHours('SLA_TALLER', 72),
   Chapa: envHours('SLA_CHAPA', 120),
   Preparacion: envHours('SLA_PREPARACION', 24),
-  Logistica: envHours('SLA_LOGISTICA', 24),
 }
 
-export const STUCK_THRESHOLDS: Partial<Record<VehicleState, number>> = {
-  Comprado: 7,
-  'Pendiente autorización': 7,
-  'Autorizado': 7,
-  'Entregado al concesionario': 7,
-  'En logística': 3,
-  'En taller': 5,
-  'En chapa': 7,
-  'En preparación': 2,
-  'Listo para venta': 14,
-  Cedido: 30,
+export const STUCK_THRESHOLDS: Record<string, number> = {
+  'Sede Central': 14,
+  'En tránsito': 3,
+  'Taller Mecánica': 5,
+  'Taller Chapa': 7,
+  'Taller Preparación': 2,
 }
 
-export const VALID_TRANSITIONS: Record<VehicleState, VehicleState[]> = {
-  Comprado: ['Pendiente autorización', 'En logística'],
-  'Pendiente autorización': ['Autorizado'],
-  'Autorizado': ['Entregado al concesionario'],
-  'Entregado al concesionario': ['En preparación'],
-  'En logística': ['En taller', 'En chapa', 'Cedido'],
-  'En taller': ['En chapa', 'En preparación'],
-  'En chapa': ['En taller', 'En preparación'],
-  'En preparación': ['Listo para venta'],
-  'Listo para venta': ['Vendido', 'Cedido'],
+export const CONCESIONARIO_STUCK_DAYS = 48
+
+export const VALID_SITUACION_TRANSITIONS: Record<SituacionComercial, SituacionComercial[]> = {
+  Stock: ['Exposición', 'Vendido', 'Cedido'],
+  Exposición: ['Stock', 'Vendido'],
   Vendido: [],
-  Cedido: ['En logística', 'En taller'],
+  Cedido: [],
 }
+
+export const UBICACIONES_TALLER = ['Taller Mecánica', 'Taller Chapa', 'Taller Preparación'] as const

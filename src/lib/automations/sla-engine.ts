@@ -1,12 +1,10 @@
 import { getSupabase } from '@/lib/supabase/client'
-import { VehicleState, SLA_THRESHOLDS } from '@/lib/types'
+import { SLA_THRESHOLDS } from '@/lib/types'
 
 const AREA_MAP: Record<string, string> = {
-  'En logística': 'Logistica',
-  'En taller': 'Taller',
-  'En chapa': 'Chapa',
-  'En preparación': 'Preparacion',
-  'Entregado al concesionario': 'Preparacion',
+  'Taller Mecánica': 'Taller',
+  'Taller Chapa': 'Chapa',
+  'Taller Preparación': 'Preparacion',
 }
 
 const db = () => getSupabase()
@@ -14,18 +12,17 @@ const db = () => getSupabase()
 export async function handleSLAChange(
   vehicleId: string,
   vehicleName: string,
-  oldState: VehicleState | null,
-  newState: VehicleState,
-  timestamp: Date
-): Promise<void> {
-  const area = AREA_MAP[newState]
-  if (!area) return
+  oldUbicacion: string | null,
+  newUbicacion: string,
+  now: Date
+) {
+  const area = AREA_MAP[newUbicacion]
+  if (area) {
+    await openSLARecord(vehicleId, area, now)
+  }
 
-  const threshold = SLA_THRESHOLDS[area]
-  if (!threshold) return
-
-  if (oldState) {
-    const oldArea = AREA_MAP[oldState]
+  if (oldUbicacion) {
+    const oldArea = AREA_MAP[oldUbicacion]
     if (oldArea) {
       await closeSLARecord(vehicleId, oldArea, timestamp)
     }

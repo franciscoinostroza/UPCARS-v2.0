@@ -1,33 +1,23 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { getVehicles, createVehicle } from '@/lib/notion/vehicles'
-import { SLA_THRESHOLDS } from '@/lib/types'
+import { SLA_THRESHOLDS, STUCK_THRESHOLDS } from '@/lib/types'
 
 export const dynamic = 'force-dynamic'
 
-const SLA_MAP: Record<string, string> = {
-  'En logística': 'Logistica',
-  'En taller': 'Taller',
-  'En chapa': 'Chapa',
-  'En preparación': 'Preparacion',
-  'Entregado al concesionario': 'Preparacion',
+const SLA_UBICACION_MAP: Record<string, string> = {
+  'Taller Mecánica': 'Taller',
+  'Taller Chapa': 'Chapa',
+  'Taller Preparación': 'Preparacion',
 }
 
-const COMPRADO_THRESHOLD_HOURS = 168
+const SITUACIONES_ACTIVAS = ['Stock', 'Exposición']
 
-function calcSlaStatus(state: string, daysInState: number): 'green' | 'yellow' | 'red' | null {
-  const hours = daysInState * 24
-  let threshold: number | undefined
-
-  if (state === 'Comprado') {
-    threshold = COMPRADO_THRESHOLD_HOURS
-  } else {
-    const area = SLA_MAP[state]
-    threshold = area ? SLA_THRESHOLDS[area] : undefined
-  }
-
+function calcSlaStatus(ubicacion: string, daysInUbicacion: number): 'green' | 'yellow' | 'red' | null {
+  const hours = daysInUbicacion * 24
+  const area = SLA_UBICACION_MAP[ubicacion]
+  const threshold = area ? SLA_THRESHOLDS[area] : STUCK_THRESHOLDS[ubicacion]
   if (!threshold) return null
-
-  const pct = (hours / threshold) * 100
+  const pct = (hours / (threshold * 24)) * 100
   if (pct < 50) return 'green'
   if (pct <= 80) return 'yellow'
   return 'red'
@@ -36,45 +26,36 @@ function calcSlaStatus(state: string, daysInState: number): 'green' | 'yellow' |
 export async function GET(request: NextRequest) {
   try {
     const vehicles = await getVehicles()
-    const activeStates = ['Comprado', 'Pendiente autorización', 'Autorizado', 'Entregado al concesionario', 'En logística', 'En taller', 'En chapa', 'En preparación', 'Listo para venta']
-
     const { searchParams } = new URL(request.url)
     const list = searchParams.get('list')
     const filterResponsable = searchParams.get('responsable')
     const filterBrand = searchParams.get('marca')
     const filterLinea = searchParams.get('linea')
+    const filterUbicacion = searchParams.get('ubicacion')
 
-    let activeVehicles = vehicles.filter((v) => activeStates.includes(v.state))
+    let activeVehicles = vehicles.filter((v) => SITUACIONES_ACTIVAS.includes(v.situacion))
 
-    if (filterResponsable) {
-      activeVehicles = activeVehicles.filter(v => v.responsable === filterResponsable)
-    }
-    if (filterBrand) {
-      activeVehicles = activeVehicles.filter(v => v.brand.toLowerCase().includes(filterBrand.toLowerCase()))
-    }
-    if (filterLinea) {
-      activeVehicles = activeVehicles.filter(v => v.lineaNegocio === filterLinea)
-    }
+    if (filterResponsable) activeVehicles = activeVehicles.filter(v => v.responsable === filterResponsable)
+    if (filterBrand) activeVehicles = activeVehicles.filter(v => v.brand.toLowerCase().includes(filterBrand.toLowerCase()))
+    if (filterLinea) activeVehicles = activeVehicles.filter(v => v.lineaNegocio === filterLinea)
+    if (filterUbicacion) activeVehicles = activeVehicles.filter(v => v.ubicacion === filterUbicacion)
 
-    if (list === 'true') {
-      return NextResponse.json({ success: true, data: activeVehicles })
-    }
+    if (list === 'true') return NextResponse.json({ success: true, data: activeVehicles })
 
-    function calcDaysInState(v: (typeof activeVehicles)[number]): number {
-      const refDate =
-        v.state === 'En taller' ? v.fechaEntradaTaller
-        : v.state === 'En preparación' ? v.fechaEntradaPreparacion
+    function calcDaysInUbicacion(v: typeof activeVehicles[number]): number {
+      const refDate = v.ubicacion === 'Taller Mecánica' ? v.fechaEntradaTaller
+        : v.ubicacion === 'Taller Preparación' ? v.fechaEntradaPreparacion
         : v.fechaCompra
       if (!refDate) return 0
       return Math.floor((Date.now() - new Date(refDate).getTime()) / (1000 * 60 * 60 * 24))
     }
 
-    const pipeline = activeStates.map((state) => ({
-      state,
+    const pipeline = SITUACIONES_ACTIVAS.map((situacion) => ({
+      state: situacion,
       vehicles: activeVehicles
-        .filter((v) => v.state === state)
+        .filter((v) => v.situacion === situacion)
         .map((v) => {
-          const daysInState = calcDaysInState(v)
+          const daysInUbicacion = calcDaysInUbicacion(v)
           return {
             id: v.id,
             name: v.name,
@@ -83,8 +64,10 @@ export async function GET(request: NextRequest) {
             model: v.model,
             year: v.year,
             combustible: v.combustible,
-            daysInState,
-            slaStatus: calcSlaStatus(v.state, daysInState),
+            ubicacion: v.ubicacion,
+            daysInUbicacion,
+            daysInState: daysInUbicacion,
+            slaStatus: calcSlaStatus(v.ubicacion, daysInUbicacion),
           }
         }),
     }))

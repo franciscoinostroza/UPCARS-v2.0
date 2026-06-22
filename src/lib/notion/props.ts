@@ -1,4 +1,4 @@
-import { VehicleState } from '@/lib/types'
+import { SituacionComercial } from '@/lib/types'
 
 type NotionProp = Record<string, unknown>
 
@@ -63,7 +63,8 @@ export function parseVehicleProps(id: string, p: Record<string, NotionProp>) {
   const nameKey = idx.title[0]
 
   const selectKeys = idx.select
-  const statusKey = matchKey(selectKeys, ['Estado Actual', 'Estado']) ?? selectKeys[0]
+  const situacionKey = matchKey(selectKeys, ['Situación', 'Situacion', 'Estado']) ?? selectKeys[0]
+  const ubicacionKey = matchKey(selectKeys, ['Ubicación', 'Ubicacion']) ?? selectKeys[1]
 
   const richTextKeys = idx.rich_text
   const matriculaKey = matchKey(richTextKeys, ['Matricula / VIN', 'Matrícula', 'Matricula']) ?? richTextKeys[0]
@@ -72,9 +73,9 @@ export function parseVehicleProps(id: string, p: Record<string, NotionProp>) {
   const colorKey = matchKey(richTextKeys, ['Color']) ?? richTextKeys[3]
   const notasKey = matchKey(richTextKeys, ['Notas']) ?? richTextKeys[richTextKeys.length - 1]
 
-  const combustibleKey = matchKey(selectKeys, ['Combustible']) ?? selectKeys[0]
-  const lineaNegocioKey = matchKey(selectKeys, ['Línea de Negocio', 'Línea de negocio', 'Linea de negocio']) ?? selectKeys[1]
-  const tipoKey = matchKey(selectKeys, ['Tipo de vehículos', 'Tipo de vehículo', 'Tipo', 'Tipo de vehiculo']) ?? selectKeys[2]
+  const combustibleKey = matchKey(selectKeys, ['Combustible']) ?? selectKeys[2]
+  const lineaNegocioKey = matchKey(selectKeys, ['Línea de Negocio', 'Línea de negocio', 'Linea de negocio']) ?? selectKeys[3]
+  const tipoKey = matchKey(selectKeys, ['Tipo de vehículos', 'Tipo de vehículo', 'Tipo', 'Tipo de vehiculo']) ?? selectKeys[4]
 
   const dateKeys = idx.date
   const fechaCompraKey = matchKey(dateKeys, ['Fecha de compra', 'Fecha compra']) ?? dateKeys[0]
@@ -106,7 +107,8 @@ export function parseVehicleProps(id: string, p: Record<string, NotionProp>) {
     year: num(yearKey ? p[yearKey] : undefined, 0)!,
     lineaNegocio: sel(lineaNegocioKey ? p[lineaNegocioKey] : undefined),
     tipo: sel(tipoKey ? p[tipoKey] : undefined),
-    state: sel(statusKey ? p[statusKey] : undefined, 'Comprado') as VehicleState,
+    situacion: sel(situacionKey ? p[situacionKey] : undefined, 'Stock') as SituacionComercial,
+    ubicacion: sel(ubicacionKey ? p[ubicacionKey] : undefined, 'Sede Central'),
     fechaCompra: dateVal(fechaCompraKey ? p[fechaCompraKey] : undefined, '')!,
     fechaListo: dateVal(fechaListoKey ? p[fechaListoKey] : undefined),
     fechaVendido: dateVal(fechaVendidoKey ? p[fechaVendidoKey] : undefined),

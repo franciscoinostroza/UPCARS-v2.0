@@ -1,7 +1,9 @@
 import { NextRequest, NextResponse } from 'next/server'
-import { updateVehicleStatus, getVehicle } from '@/lib/notion/vehicles'
-import { isValidTransition } from '@/lib/automations/state-machine'
-import { VehicleState } from '@/lib/types'
+import { getVehicle } from '@/lib/notion/vehicles'
+import { notionPatch } from '@/lib/notion/client'
+import { isValidSituacionTransition } from '@/lib/automations/state-machine'
+import { SituacionComercial } from '@/lib/types'
+import { getDbSchema, findPropertiesByType } from '@/lib/notion/schema'
 
 export const dynamic = 'force-dynamic'
 
@@ -12,11 +14,11 @@ export async function PATCH(
   try {
     const { id } = await params
     const body = await request.json()
-    const { state: newState } = body
+    const { situacion, ubicacion } = body
 
-    if (!newState) {
+    if (!situacion && !ubicacion) {
       return NextResponse.json(
-        { success: false, error: 'state is required' },
+        { success: false, error: 'situacion or ubicacion required' },
         { status: 400 }
       )
     }
@@ -29,21 +31,29 @@ export async function PATCH(
       )
     }
 
-    if (!isValidTransition(vehicle.state as VehicleState | null, newState as VehicleState)) {
-      return NextResponse.json(
-        {
-          success: false,
-          error: `Cannot transition from ${vehicle.state} to ${newState}`,
-        },
-        { status: 400 }
-      )
+    const schema = await getDbSchema('vehicles')
+    const selects = findPropertiesByType(schema, 'select')
+
+    if (situacion) {
+      if (!isValidSituacionTransition(vehicle.situacion as SituacionComercial | null, situacion as SituacionComercial)) {
+        return NextResponse.json({ success: false, error: `Cannot transition from ${vehicle.situacion} to ${situacion}` }, { status: 400 })
+      }
+      const situacionKey = selects.find(s => s.name === 'Situación')?.name || selects[0]?.name
+      if (situacionKey) {
+        await notionPatch(`/pages/${id}`, { properties: { [situacionKey]: { select: { name: situacion } } } })
+      }
     }
 
-    await updateVehicleStatus(id, newState)
+    if (ubicacion) {
+      const ubicacionKey = selects.find(s => s.name === 'Ubicación')?.name || selects[1]?.name
+      if (ubicacionKey) {
+        await notionPatch(`/pages/${id}`, { properties: { [ubicacionKey]: { select: { name: ubicacion } } } })
+      }
+    }
 
     return NextResponse.json({
       success: true,
-      data: { id, oldState: vehicle.state, newState },
+      data: { id, oldSituacion: vehicle.situacion, newSituacion: situacion || vehicle.situacion, oldUbicacion: vehicle.ubicacion, newUbicacion: ubicacion || vehicle.ubicacion },
     })
   } catch (error: any) {
     console.error('Vehicle PATCH error:', error)
