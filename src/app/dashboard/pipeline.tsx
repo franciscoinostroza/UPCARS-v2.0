@@ -19,12 +19,10 @@ const STATE_ICONS: Record<string, string> = {
 }
 
 const STATE_ICONS: Record<string, string> = {
-  Comprado: '📋',
-  'En logística': '🚛',
-  'En taller': '🔧',
-  'En chapa': '🎨',
-  'En preparación': '✨',
-  'Listo para venta': '✅',
+  Stock: '📦',
+  Exposición: '🏪',
+  Vendido: '💰',
+  Cedido: '↩️',
 }
 
 const VALID_NEXT: Record<string, string[]> = {
@@ -257,9 +255,9 @@ function VehicleModal({
             </div>
 
             <div className="flex gap-2 pt-2 border-t" style={{ borderColor: 'var(--border)' }}>
-              {VALID_NEXT[data.vehicle.state]?.length > 0 && (
-                <div className="flex gap-1.5">
-                  {VALID_NEXT[data.vehicle.state].map((ns) => (
+              {VALID_NEXT[data.vehicle.situacion || data.vehicle.state]?.length > 0 && (
+                <div className="flex flex-col gap-1.5 mt-2">
+                  {VALID_NEXT[data.vehicle.situacion || data.vehicle.state].map((ns) => (
                     <button
                       key={ns}
                       onClick={() => handleMove(ns)}
