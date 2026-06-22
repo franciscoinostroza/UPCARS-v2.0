@@ -5,12 +5,17 @@ import { Skeleton } from '@/components/skeleton'
 import Link from 'next/link'
 
 const STATE_LABELS: Record<string, string> = {
-  Comprado: 'Comprado',
-  'En logística': 'Logística',
-  'En taller': 'Taller',
-  'En chapa': 'Chapa y Pintura',
-  'En preparación': 'Preparación',
-  'Listo para venta': 'Listo para venta',
+  Stock: 'Stock',
+  Exposición: 'Exposición',
+  Vendido: 'Vendido',
+  Cedido: 'Cedido',
+}
+
+const STATE_ICONS: Record<string, string> = {
+  Stock: '📦',
+  Exposición: '🏪',
+  Vendido: '💰',
+  Cedido: '↩️',
 }
 
 const STATE_ICONS: Record<string, string> = {
@@ -23,12 +28,8 @@ const STATE_ICONS: Record<string, string> = {
 }
 
 const VALID_NEXT: Record<string, string[]> = {
-  Comprado: ['En logística'],
-  'En logística': ['En taller', 'En chapa'],
-  'En taller': ['En chapa', 'En preparación'],
-  'En chapa': ['En taller', 'En preparación'],
-  'En preparación': ['Listo para venta'],
-  'Listo para venta': [],
+  Stock: ['Exposición', 'Vendido'],
+  Exposición: ['Stock', 'Vendido'],
 }
 
 const SLA_COLORS: Record<string, string> = {
@@ -42,8 +43,9 @@ interface PipelineVehicle {
   name: string
   matricula: string
   brand: string
+  daysInUbicacion: number
+  ubicacion?: string
   daysInState: number
-  combustible?: string
   slaStatus?: 'green' | 'yellow' | 'red' | null
 }
 
@@ -168,7 +170,7 @@ function VehicleModal({
               <div className="flex items-center gap-2 mb-1">
                 <h2 className="text-lg font-bold">{data.vehicle.name}</h2>
                 <span className="pill text-[10px]" style={{ color: 'var(--text-secondary)' }}>
-                  {STATE_ICONS[data.vehicle.state]} {STATE_LABELS[data.vehicle.state] || data.vehicle.state}
+                  {STATE_ICONS[data.vehicle.situacion || data.vehicle.state]} {STATE_LABELS[data.vehicle.situacion || data.vehicle.state] || data.vehicle.situacion || data.vehicle.state}
                 </span>
               </div>
               <p className="text-xs" style={{ color: 'var(--text-muted)' }}>
@@ -391,11 +393,10 @@ export default function Pipeline({
                       </div>
                       <div className="flex items-center justify-between mt-0.5">
                         <span className="text-[10px] sm:text-xs truncate mr-1" style={{ color: 'var(--text-muted)' }}>
-                          {v.brand} · {v.matricula || '—'}
-                          {v.combustible ? ` · ${v.combustible}` : ''}
+                          {v.ubicacion || v.brand} · {v.matricula || '—'}
                         </span>
-                        <span className="text-[10px] sm:text-[11px] flex-shrink-0" style={{ color: 'var(--text-muted)' }}>
-                          {v.daysInState > 0 ? `${v.daysInState}d` : 'hoy'}
+                        <span className="text-[10px] font-medium shrink-0" style={{ color: 'var(--text-secondary)' }}>
+                          {v.daysInUbicacion > 0 ? `${v.daysInUbicacion}d` : 'hoy'}
                         </span>
                       </div>
                     </div>

@@ -1,13 +1,13 @@
 import { getSupabase } from '@/lib/supabase/client'
 import { checkSLAs } from './sla-engine'
 import { getVehicles } from '@/lib/notion/vehicles'
-import { STUCK_THRESHOLDS } from '@/lib/types'
-import type { VehicleState } from '@/lib/types'
+import { STUCK_THRESHOLDS, CONCESIONARIO_STUCK_DAYS } from '@/lib/types'
 import { sendEmail } from '@/lib/email/send'
 import { notionPost, getDatabaseId } from '@/lib/notion/client'
 import { getDbSchema, findPropertiesByType } from '@/lib/notion/schema'
-import { getEmployees, getEmployeesByNames, getEmployeeByRole } from '@/lib/notion/employees'
+import { getEmployees, getEmployeesByNames, getEmployeeByRole, getEmployeesByDepartment } from '@/lib/notion/employees'
 import { createNotificacion } from '@/lib/notion/notifications'
+import { notionPatch } from '@/lib/notion/client'
 
 const ADMIN_EMAIL = process.env.ADMIN_EMAIL || ''
 const ALERT_STAFF = ['José', 'Luis Miguel', 'David']
@@ -64,22 +64,40 @@ async function checkSLAAlerts() {
 async function checkVehicleAlerts() {
   const vehicles = await getVehicles()
   const now = new Date()
+  const schema = await getDbSchema('vehicles')
+  const selects = findPropertiesByType(schema, 'select')
+  const ubicacionKey = selects.find(s => s.name === 'Ubicación')?.name || selects[1]?.name || 'Ubicación'
 
   for (const v of vehicles) {
-    if (!v.responsable && v.state !== 'Vendido') {
+    if (!v.responsable && v.situacion !== 'Vendido') {
       await createVehicleAlert(v.id, v.name, 'vehicle_no_responsible', `${v.name} sin responsable asignado`)
     }
 
-    const threshold = STUCK_THRESHOLDS[v.state as VehicleState]
+    if (v.situacion === 'Stock' && v.ubicacion !== 'Sede Central') {
+      const refDate = v.fechaCompra ? new Date(v.fechaCompra) : null
+      if (refDate) {
+        const days = (now.getTime() - refDate.getTime()) / (1000 * 60 * 60 * 24)
+        if (days > CONCESIONARIO_STUCK_DAYS) {
+          await createVehicleAlert(v.id, v.name, 'stuck_in_concesionario',
+            `${v.name} lleva ${Math.floor(days)} días en ${v.ubicacion} (límite ${CONCESIONARIO_STUCK_DAYS} días)`
+          )
+          await notionPatch(`/pages/${v.id}`, { properties: { [ubicacionKey]: { select: { name: 'En tránsito' } } } }).catch(() => {})
+          await createNotificacion(`🔄 Rotación: ${v.name} lleva ${Math.floor(days)}d en ${v.ubicacion}. Se devuelve a central.`, null,
+            (await getEmployeesByNames(['José', 'Luis Miguel', 'David'])).map(e => e.email).filter(Boolean)
+          ).catch(() => {})
+        }
+      }
+    }
+
+    const threshold = STUCK_THRESHOLDS[v.ubicacion]
     if (threshold && v.fechaCompra) {
-      const refDate = new Date(v.fechaCompra)
-      if ((now.getTime() - refDate.getTime()) / (1000 * 60 * 60 * 24) > threshold) {
-        const stateKey = v.state.toLowerCase().replace(/\s+/g, '_')
-        await createVehicleAlert(
-          v.id, v.name,
-          `stuck_in_${stateKey}`,
-          `${v.name} detenido en ${v.state} por más de ${threshold} días`
-        )
+      const refDate = v.ubicacion === 'Taller Mecánica' && v.fechaEntradaTaller ? new Date(v.fechaEntradaTaller)
+        : v.ubicacion === 'Taller Preparación' && v.fechaEntradaPreparacion ? new Date(v.fechaEntradaPreparacion)
+        : new Date(v.fechaCompra)
+      const days = (now.getTime() - refDate.getTime()) / (1000 * 60 * 60 * 24)
+      if (days > threshold) {
+        const key = v.ubicacion.toLowerCase().replace(/\s+/g, '_')
+        await createVehicleAlert(v.id, v.name, `stuck_in_${key}`, `${v.name} detenido en ${v.ubicacion} por más de ${threshold} días`)
       }
     }
   }
