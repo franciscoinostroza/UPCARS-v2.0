@@ -18,7 +18,7 @@ interface KPIStats {
 
 interface PipelineData {
   state: string
-  vehicles: { id: string; name: string; matricula: string; brand: string; daysInState: number }[]
+  vehicles: { id: string; name: string; matricula: string; brand: string; ubicacion?: string; daysInUbicacion: number; daysInState: number }[]
 }
 
 const AREA_LABELS: Record<string, string> = {
