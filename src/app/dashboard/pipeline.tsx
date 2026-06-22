@@ -18,13 +18,6 @@ const STATE_ICONS: Record<string, string> = {
   Cedido: '↩️',
 }
 
-const STATE_ICONS: Record<string, string> = {
-  Stock: '📦',
-  Exposición: '🏪',
-  Vendido: '💰',
-  Cedido: '↩️',
-}
-
 const VALID_NEXT: Record<string, string[]> = {
   Stock: ['Exposición', 'Vendido'],
   Exposición: ['Stock', 'Vendido'],
