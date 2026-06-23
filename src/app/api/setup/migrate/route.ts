@@ -1,6 +1,5 @@
 import { NextResponse } from 'next/server'
-import { getVehicles } from '@/lib/notion/vehicles'
-import { notionPatch } from '@/lib/notion/client'
+import { notionPost, notionPatch } from '@/lib/notion/client'
 
 export const dynamic = 'force-dynamic'
 
@@ -20,26 +19,35 @@ const MAP: Record<string, { situacion: string; ubicacion: string }> = {
 
 export async function GET() {
   try {
-    const vehicles = await getVehicles()
+    const allData: any = await notionPost('/databases/36cf70f84701800887daf775e65d57f0/query')
+    const pages = allData.results || []
     let migrados = 0
     let saltados = 0
     let errores = 0
 
-    for (const v of vehicles) {
-      const oldEstado = (v as any).state || ''
-      const mapping = MAP[oldEstado]
+    for (const page of pages) {
+      const props = page.properties || {}
+      const estadoActual = props['Estado Actual']?.select?.name || ''
+      const yaTieneSituacion = props['Situación']?.select?.name
+      const yaTieneUbicacion = props['Ubicación']?.select?.name
+
+      if (yaTieneSituacion && yaTieneUbicacion && yaTieneSituacion !== 'Stock') {
+        saltados++
+        continue
+      }
+      if (yaTieneSituacion === 'Stock' && yaTieneUbicacion && yaTieneUbicacion !== 'Sede Central' && yaTieneUbicacion !== '') {
+        saltados++
+        continue
+      }
+
+      const mapping = MAP[estadoActual]
       if (!mapping) {
         saltados++
         continue
       }
 
-      if (v.situacion && v.ubicacion) {
-        saltados++
-        continue
-      }
-
       try {
-        await notionPatch(`/pages/${v.id}`, {
+        await notionPatch(`/pages/${page.id}`, {
           properties: {
             'Situación': { select: { name: mapping.situacion } },
             'Ubicación': { select: { name: mapping.ubicacion } },
@@ -53,7 +61,7 @@ export async function GET() {
 
     return NextResponse.json({
       success: true,
-      total: vehicles.length,
+      total: pages.length,
       migrados,
       saltados,
       errores,
