@@ -4,15 +4,17 @@ import { notionGet, notionPatch } from '@/lib/notion/client'
 export const dynamic = 'force-dynamic'
 
 const VEHICLE_DATE_MAP: Record<string, string> = {
+  'Fecha programada': 'F. E. Logística',
   'Fecha entrada taller': 'F. E taller',
+  'Fecha salida': 'F. E. Chapista',
   'Fecha inicio': 'F. E. preparación (Limpieza)',
   'Fecha de venta': 'Fecha de venta',
 }
 
 const AREA_DATA: Record<string, { label: string; sourceDateFields: string[] }> = {
-  logistica: { label: 'Logística', sourceDateFields: [] },
+  logistica: { label: 'Logística', sourceDateFields: ['Fecha programada'] },
   taller: { label: 'Taller', sourceDateFields: ['Fecha entrada taller'] },
-  chapa: { label: 'Chapa y Pintura', sourceDateFields: [] },
+  chapa: { label: 'Chapa y Pintura', sourceDateFields: ['Fecha salida'] },
   preparacion: { label: 'Preparación', sourceDateFields: ['Fecha inicio'] },
   ventas: { label: 'Ventas', sourceDateFields: ['Fecha de venta'] },
 }
