@@ -31,43 +31,69 @@ function extractSelect(props: any, key: string): string {
   return props[key]?.select?.name ?? ''
 }
 
+async function getProperties(request: NextRequest, area: string): Promise<{ props: any; recordId: string | null }> {
+  const { searchParams } = new URL(request.url)
+  const recordId = searchParams.get('recordId')
+
+  if (recordId) {
+    // GET mode: read the page directly from Notion
+    const page: any = await notionGet(`/pages/${recordId}`)
+    return { props: page.properties || {}, recordId }
+  }
+
+  // POST mode: extract from request body
+  const body = await request.json()
+
+  // Notion automation webhook format: { source, data: { properties } }
+  if (body?.data?.properties) {
+    return { props: body.data.properties, recordId: body.data.id || null }
+  }
+
+  // Simple format: direct properties
+  return { props: body, recordId: null }
+}
+
 export async function POST(
   request: NextRequest,
   { params }: { params: Promise<{ area: string }> }
 ) {
+  return handleRequest(request, await params)
+}
+
+export async function GET(
+  request: NextRequest,
+  { params }: { params: Promise<{ area: string }> }
+) {
+  return handleRequest(request, await params)
+}
+
+async function handleRequest(request: NextRequest, { area }: { area: string }) {
   try {
-    const { area } = await params
     const config = AREA_DATA[area]
     if (!config) {
       return NextResponse.json({ success: false, error: `Unknown area: ${area}` }, { status: 400 })
     }
 
-    const props = await request.json()
+    const { props } = await getProperties(request, area)
 
-    // Extract vehicleId from the Vehículo relation
     const vehicleId = extractRelation(props, 'Vehículo')
     if (!vehicleId) {
-      return NextResponse.json({ success: false, error: 'No vehicle found in the record' }, { status: 400 })
+      return NextResponse.json({ success: false, error: 'No vehicle linked in this record' }, { status: 400 })
     }
 
-    // Build the update payload for the vehicle
     const updateProps: Record<string, any> = {}
 
-    // Date fields
     for (const dateField of config.dateFields) {
       const dateVal = extractDate(props, dateField)
       if (dateVal) {
-        if (dateField === 'Fecha entrada taller') {
-          updateProps['Fecha entrada taller'] = { date: { start: dateVal } }
-        } else if (dateField === 'Fecha inicio') {
-          updateProps['Fecha entrada preparación'] = { date: { start: dateVal } }
-        } else if (dateField === 'Fecha de venta') {
-          updateProps['Fecha de venta'] = { date: { start: dateVal } }
-        }
+        const targetKey = dateField === 'Fecha entrada taller' ? 'Fecha entrada taller'
+          : dateField === 'Fecha inicio' ? 'Fecha entrada preparación'
+          : dateField === 'Fecha de venta' ? 'Fecha de venta'
+          : dateField
+        updateProps[targetKey] = { date: { start: dateVal } }
       }
     }
 
-    // Responsable / Mecánico asignado / Preparador / Vendedor
     const responsableKeys: Record<string, string> = {
       logistica: 'Responsable',
       taller: 'Mecánico asignado',
@@ -81,34 +107,24 @@ export async function POST(
       }
     }
 
-    // Ubicación (only for logística)
     if (area === 'logistica') {
       const ubicacion = extractText(props, 'UBICACION')
-      if (ubicacion) {
-        updateProps['Ubicación'] = { select: { name: ubicacion } }
-      }
+      if (ubicacion) updateProps['Ubicación'] = { select: { name: ubicacion } }
     }
 
-    // Precio de venta (only for ventas)
     if (area === 'ventas') {
       const precio = extractNumber(props, 'Precio de venta (€)')
-      if (precio != null) {
-        updateProps['Precio venta (€)'] = { number: precio }
-      }
+      if (precio != null) updateProps['Precio venta (€)'] = { number: precio }
     }
 
-    // Append observaciones to Notas
     const observaciones = extractText(props, 'Observaciones')
     if (observaciones) {
-      // Read current vehicle Notas
       let existingNotas = ''
       try {
         const vehicle: any = await notionGet(`/pages/${vehicleId}`)
         existingNotas = vehicle.properties?.Notas?.rich_text?.[0]?.plain_text ?? ''
       } catch {}
-
-      const newEntry = `\n--- ${config.label} ---\n${observaciones}`
-      updateProps['Notas'] = { rich_text: [{ text: { content: existingNotas + newEntry } }] }
+      updateProps['Notas'] = { rich_text: [{ text: { content: existingNotas + `\n--- ${config.label} ---\n${observaciones}` } }] }
     }
 
     if (Object.keys(updateProps).length === 0) {
@@ -116,7 +132,6 @@ export async function POST(
     }
 
     await notionPatch(`/pages/${vehicleId}`, { properties: updateProps })
-
     return NextResponse.json({ success: true, area, updated: Object.keys(updateProps) })
   } catch (error: any) {
     console.error('Sync from-area error:', error)
