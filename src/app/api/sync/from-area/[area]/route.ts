@@ -142,7 +142,14 @@ async function handleRequest(request: NextRequest, { area }: { area: string }) {
         }
       }
       if (observaciones) parts.push(`Observaciones: ${observaciones}`)
-      updateProps['Notas'] = { rich_text: [{ text: { content: existingNotas + `\n--- ${config.label} ---\n${parts.join('\n')}` } }] }
+      const blockHeader = `--- ${config.label} ---`
+      const newBlock = `\n${blockHeader}\n${parts.join('\n')}`
+      const escaped = blockHeader.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')
+      const regex = new RegExp(`\\n${escaped}[\\s\\S]*?(?=\\n---|$)`)
+      const updatedNotas = regex.test(existingNotas)
+        ? existingNotas.replace(regex, newBlock)
+        : existingNotas + newBlock
+      updateProps['Notas'] = { rich_text: [{ text: { content: updatedNotas } }] }
     }
 
     if (Object.keys(updateProps).length === 0) {
