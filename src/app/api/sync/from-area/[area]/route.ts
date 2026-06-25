@@ -3,12 +3,18 @@ import { notionGet, notionPatch } from '@/lib/notion/client'
 
 export const dynamic = 'force-dynamic'
 
-const AREA_DATA: Record<string, { label: string; dateFields: string[] }> = {
-  logistica: { label: 'Logística', dateFields: [] },
-  taller: { label: 'Taller', dateFields: ['Fecha entrada taller'] },
-  chapa: { label: 'Chapa y Pintura', dateFields: [] },
-  preparacion: { label: 'Preparación', dateFields: ['Fecha inicio'] },
-  ventas: { label: 'Ventas', dateFields: ['Fecha de venta'] },
+const VEHICLE_DATE_MAP: Record<string, string> = {
+  'Fecha entrada taller': 'F. E taller',
+  'Fecha inicio': 'F. E. preparación (Limpieza)',
+  'Fecha de venta': 'Fecha de venta',
+}
+
+const AREA_DATA: Record<string, { label: string; sourceDateFields: string[] }> = {
+  logistica: { label: 'Logística', sourceDateFields: [] },
+  taller: { label: 'Taller', sourceDateFields: ['Fecha entrada taller'] },
+  chapa: { label: 'Chapa y Pintura', sourceDateFields: [] },
+  preparacion: { label: 'Preparación', sourceDateFields: ['Fecha inicio'] },
+  ventas: { label: 'Ventas', sourceDateFields: ['Fecha de venta'] },
 }
 
 function extractRelation(props: any, key: string): string | null {
@@ -83,14 +89,13 @@ async function handleRequest(request: NextRequest, { area }: { area: string }) {
 
     const updateProps: Record<string, any> = {}
 
-    for (const dateField of config.dateFields) {
-      const dateVal = extractDate(props, dateField)
+    for (const sourceField of config.sourceDateFields) {
+      const dateVal = extractDate(props, sourceField)
       if (dateVal) {
-        const targetKey = dateField === 'Fecha entrada taller' ? 'Fecha entrada taller'
-          : dateField === 'Fecha inicio' ? 'Fecha entrada preparación'
-          : dateField === 'Fecha de venta' ? 'Fecha de venta'
-          : dateField
-        updateProps[targetKey] = { date: { start: dateVal } }
+        const targetKey = VEHICLE_DATE_MAP[sourceField]
+        if (targetKey) {
+          updateProps[targetKey] = { date: { start: dateVal } }
+        }
       }
     }
 
