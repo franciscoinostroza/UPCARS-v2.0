@@ -126,7 +126,9 @@ async function handleRequest(request: NextRequest, { area }: { area: string }) {
 
     const observaciones = extractText(props, 'Observaciones')
     const trabajos = area === 'chapa' ? extractText(props, 'Trabajos solicitados') : ''
-    if (observaciones || trabajos) {
+    const checkboxes = ['Limpieza exterior', 'Limpieza interior', 'Fotografía para anuncio']
+    const extraNotas = observaciones || trabajos || (area === 'preparacion' && checkboxes.some(c => props[c]?.checkbox))
+    if (extraNotas) {
       let existingNotas = ''
       try {
         const vehicle: any = await notionGet(`/pages/${vehicleId}`)
@@ -134,6 +136,11 @@ async function handleRequest(request: NextRequest, { area }: { area: string }) {
       } catch {}
       const parts: string[] = []
       if (trabajos) parts.push(`Trabajos: ${trabajos}`)
+      if (area === 'preparacion') {
+        for (const cb of checkboxes) {
+          if (props[cb]?.checkbox) parts.push(`${cb}: ✅`)
+        }
+      }
       if (observaciones) parts.push(`Observaciones: ${observaciones}`)
       updateProps['Notas'] = { rich_text: [{ text: { content: existingNotas + `\n--- ${config.label} ---\n${parts.join('\n')}` } }] }
     }
