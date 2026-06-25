@@ -125,13 +125,17 @@ async function handleRequest(request: NextRequest, { area }: { area: string }) {
     }
 
     const observaciones = extractText(props, 'Observaciones')
-    if (observaciones) {
+    const trabajos = area === 'chapa' ? extractText(props, 'Trabajos solicitados') : ''
+    if (observaciones || trabajos) {
       let existingNotas = ''
       try {
         const vehicle: any = await notionGet(`/pages/${vehicleId}`)
         existingNotas = vehicle.properties?.Notas?.rich_text?.[0]?.plain_text ?? ''
       } catch {}
-      updateProps['Notas'] = { rich_text: [{ text: { content: existingNotas + `\n--- ${config.label} ---\n${observaciones}` } }] }
+      const parts: string[] = []
+      if (trabajos) parts.push(`Trabajos: ${trabajos}`)
+      if (observaciones) parts.push(`Observaciones: ${observaciones}`)
+      updateProps['Notas'] = { rich_text: [{ text: { content: existingNotas + `\n--- ${config.label} ---\n${parts.join('\n')}` } }] }
     }
 
     if (Object.keys(updateProps).length === 0) {
