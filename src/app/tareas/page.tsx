@@ -15,6 +15,9 @@ interface TaskItem {
   deadline: string | null
   area: string
   type: string
+  tipoTarea: string
+  areaNegocio: string
+  descripcion: string
 }
 
 interface EmployeeItem {
@@ -364,6 +367,16 @@ function TareasInner() {
                                 {task.area}
                               </span>
                             )}
+                            {task.tipoTarea && (
+                              <span className="text-[9px] px-1.5 py-0.5 rounded" style={{ background: 'rgba(59,130,246,0.12)', color: '#3b82f6' }}>
+                                {task.tipoTarea}
+                              </span>
+                            )}
+                            {task.areaNegocio && (
+                              <span className="text-[9px] px-1.5 py-0.5 rounded" style={{ background: 'rgba(139,92,246,0.12)', color: '#8b5cf6' }}>
+                                {task.areaNegocio}
+                              </span>
+                            )}
                           </div>
                         </button>
                       ))
@@ -407,8 +420,26 @@ function TareasInner() {
                 </div>
                 {selected.area && (
                   <div className="flex items-center gap-2">
-                    <span className="text-[10px] font-medium" style={{ color: 'var(--text-muted)' }}>Área:</span>
+                    <span className="text-[10px] font-medium" style={{ color: 'var(--text-muted)' }}>Departamento:</span>
                     <span className="text-[10px]" style={{ color: 'var(--text-secondary)' }}>{selected.area}</span>
+                  </div>
+                )}
+                {selected.type && (
+                  <div className="flex items-center gap-2">
+                    <span className="text-[10px] font-medium" style={{ color: 'var(--text-muted)' }}>Tipo:</span>
+                    <span className="text-[10px]" style={{ color: 'var(--text-secondary)' }}>{selected.type}</span>
+                  </div>
+                )}
+                {selected.tipoTarea && (
+                  <div className="flex items-center gap-2">
+                    <span className="text-[10px] font-medium" style={{ color: 'var(--text-muted)' }}>Tipo tarea:</span>
+                    <span className="text-[10px]" style={{ color: '#3b82f6' }}>{selected.tipoTarea}</span>
+                  </div>
+                )}
+                {selected.areaNegocio && (
+                  <div className="flex items-center gap-2">
+                    <span className="text-[10px] font-medium" style={{ color: 'var(--text-muted)' }}>Área negocio:</span>
+                    <span className="text-[10px]" style={{ color: '#8b5cf6' }}>{selected.areaNegocio}</span>
                   </div>
                 )}
                 {selected.deadline && (
@@ -417,6 +448,12 @@ function TareasInner() {
                     <span className="text-[10px]" style={{ color: 'var(--text-secondary)' }}>
                       {new Date(selected.deadline).toLocaleDateString('es')}
                     </span>
+                  </div>
+                )}
+                {selected.descripcion && (
+                  <div className="mt-3 pt-3 border-t" style={{ borderColor: 'var(--border)' }}>
+                    <span className="text-[10px] font-medium block mb-1" style={{ color: 'var(--text-muted)' }}>Descripción:</span>
+                    <p className="text-[11px] leading-relaxed" style={{ color: 'var(--text-secondary)', whiteSpace: 'pre-wrap' }}>{selected.descripcion}</p>
                   </div>
                 )}
               </div>

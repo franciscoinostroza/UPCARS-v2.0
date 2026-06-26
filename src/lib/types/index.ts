@@ -71,6 +71,11 @@ export interface Task {
   priority: 'Alta' | 'Media' | 'Baja'
   state: 'Sin empezar' | 'En progreso' | 'Bloqueada' | 'Completada' | 'Cancelada'
   deadline: string | null
+  area: string
+  type: string
+  tipoTarea: string
+  areaNegocio: string
+  descripcion: string
 }
 
 export interface Employee {

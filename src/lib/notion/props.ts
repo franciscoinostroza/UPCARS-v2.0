@@ -157,9 +157,13 @@ export function parseTaskProps(id: string, p: Record<string, NotionProp>) {
   const priorityKey = matchKey(selectKeys, ['Prioridad']) ?? selectKeys[1]
   const deptKey = matchKey(selectKeys, ['Departamento', 'Department']) ?? selectKeys[2]
   const typeKey = matchKey(selectKeys, ['Tipo', 'Type']) ?? selectKeys[3]
+  const tipoTareaKey = matchKey(selectKeys, ['Tipo de tarea', 'Tipo tarea']) ?? selectKeys[4]
+  const areaNegocioKey = matchKey(selectKeys, ['Área de negocio', 'Area de negocio', 'Area negocio']) ?? selectKeys[5]
   const vehicleRelKey = relationKeys.find((k) => k.includes('Vehículo')) ?? relationKeys[0]
   const responsibleRelKey = matchKey(relationKeys, ['Responsable']) ?? relationKeys[1]
   const deadlineKey = matchKey(dateKeys, ['Fecha límite', 'Fecha limite', 'Deadline', 'Fecha de vencimiento']) ?? dateKeys[0]
+  const richTextKeys = idx.rich_text
+  const descripcionKey = matchKey(richTextKeys, ['Descripción', 'Descripcion']) ?? richTextKeys[0]
 
   return {
     id,
@@ -171,5 +175,8 @@ export function parseTaskProps(id: string, p: Record<string, NotionProp>) {
     deadline: dateVal(deadlineKey ? p[deadlineKey] : undefined),
     area: sel(deptKey ? p[deptKey] : undefined),
     type: sel(typeKey ? p[typeKey] : undefined),
+    tipoTarea: sel(tipoTareaKey ? p[tipoTareaKey] : undefined),
+    areaNegocio: sel(areaNegocioKey ? p[areaNegocioKey] : undefined),
+    descripcion: rtv(descripcionKey ? p[descripcionKey] : undefined),
   }
 }
