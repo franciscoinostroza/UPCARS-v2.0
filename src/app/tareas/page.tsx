@@ -205,8 +205,8 @@ function TaskDetailModal({ task, employees, onClose, onMove, onArchive, onUpdate
         <div className="flex items-center justify-between mb-3">
           <span className="text-lg">{STATE_ICONS[task.state]}</span>
           <div className="flex items-center gap-1">
-            <button onClick={() => { setName(task.name); setPriority(task.priority); setArea(task.area); setType(task.type); setTipoTarea(task.tipoTarea); setAreaNegocio(task.areaNegocio); setResponsableId(task.responsibleIds[0] || ''); setDeadline(task.deadline || ''); setDescripcion(task.descripcion || ''); setEditing(true) }} className="text-[10px] px-2 py-1 rounded" style={{ color: 'var(--accent-blue)' }}>✏️</button>
-            <button onClick={onClose} className="text-sm px-2 py-1 rounded" style={{ color: 'var(--text-muted)' }}>✕</button>
+            <button onClick={() => { setName(task.name); setPriority(task.priority); setArea(task.area); setType(task.type); setTipoTarea(task.tipoTarea); setAreaNegocio(task.areaNegocio); setResponsableId(task.responsibleIds[0] || ''); setDeadline(task.deadline || ''); setDescripcion(task.descripcion || ''); setEditing(true) }} className="text-[10px] px-2 py-1 rounded transition-opacity hover:opacity-70 cursor-pointer" style={{ color: 'var(--accent-blue)' }}>✏️</button>
+            <button onClick={onClose} className="text-sm px-2 py-1 rounded transition-opacity hover:opacity-70 cursor-pointer" style={{ color: 'var(--text-muted)' }}>✕</button>
           </div>
         </div>
         <h2 className="text-sm font-semibold mb-3" style={{ color: 'var(--text)' }}>{task.name}</h2>
@@ -223,7 +223,7 @@ function TaskDetailModal({ task, employees, onClose, onMove, onArchive, onUpdate
           {task.descripcion && <div className="mt-3 pt-3 border-t" style={{ borderColor: 'var(--border)' }}><span className="text-[10px] font-medium block mb-1" style={{ color: 'var(--text-muted)' }}>Descripción:</span><p className="text-[11px] leading-relaxed" style={{ color: 'var(--text-secondary)', whiteSpace: 'pre-wrap' }}>{task.descripcion}</p></div>}
         </div>
          <button onClick={() => onArchive(task.id)}
-           className="w-full text-[11px] font-semibold py-2 rounded min-h-[36px]"
+           className="w-full text-[11px] font-semibold py-2 rounded min-h-[36px] transition-opacity hover:opacity-70 cursor-pointer"
            style={{ background: 'var(--bg-pill)', color: 'var(--text)' }}
          >🗑 Limpiar</button>
       </div>
