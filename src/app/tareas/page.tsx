@@ -4,9 +4,7 @@ import { useState, useEffect, useCallback } from 'react'
 import { ThemeProvider, useTheme } from '../dashboard/theme-context'
 import { DarkModeToggle } from '../dashboard/dark-mode'
 import { Skeleton } from '@/components/skeleton'
-import { DndContext, DragOverlay, closestCenter, PointerSensor, useSensor, useSensors } from '@dnd-kit/core'
-import { SortableContext, useSortable, verticalListSortingStrategy } from '@dnd-kit/sortable'
-import { CSS } from '@dnd-kit/utilities'
+import { DndContext, PointerSensor, useSensor, useSensors, useDroppable, useDraggable } from '@dnd-kit/core'
 
 interface TaskItem {
   id: string
@@ -76,27 +74,174 @@ function FilterSelect({ label, value, onChange, options }: {
   )
 }
 
-function SortableTaskCard({ task, onClick }: { task: TaskItem; onClick: () => void }) {
-  const { attributes, listeners, setNodeRef, transform, transition, isDragging } = useSortable({ id: task.id })
-  const style = { transform: CSS.Transform.toString(transform), transition, opacity: isDragging ? 0.5 : 1 }
+function DroppableColumn({ id, children }: { id: string; children: React.ReactNode }) {
+  const { isOver, setNodeRef } = useDroppable({ id })
+  return (
+    <div ref={setNodeRef} className="pipeline-column p-2 sm:p-3" style={{ minWidth: 180, flex: 1, display: 'flex', flexDirection: 'column', maxHeight: '60vh', outline: isOver ? '2px solid var(--accent-blue)' : 'none', outlineOffset: -2 }}>
+      {children}
+    </div>
+  )
+}
+
+function DraggableTaskCard({ task, onClick }: { task: TaskItem; onClick: () => void }) {
+  const { attributes, listeners, setNodeRef, transform, isDragging } = useDraggable({ id: task.id })
+  const style = transform ? { transform: `translate(${transform.x}px, ${transform.y}px)`, zIndex: 999, opacity: 0.8 } : {}
 
   return (
     <button ref={setNodeRef} style={style} {...attributes} {...listeners}
       onClick={onClick}
-      className="vehicle-card w-full text-left cursor-grab active:cursor-grabbing transition-all duration-150 touch-none"
+      className="vehicle-card w-full text-left cursor-grab active:cursor-grabbing transition-shadow duration-150 touch-none"
     >
       <p className="text-[11px] sm:text-xs font-semibold leading-tight mb-1.5 line-clamp-2" style={{ color: 'var(--text)' }}>
         {task.name}
       </p>
       <div className="flex items-center gap-1 flex-wrap">
-        <span className="text-[9px] font-semibold px-1.5 py-0.5 rounded" style={{ background: `${PRIORITY_COLORS[task.priority]}20`, color: PRIORITY_COLORS[task.priority] }}>
-          {task.priority}
-        </span>
+        <span className="text-[9px] font-semibold px-1.5 py-0.5 rounded" style={{ background: `${PRIORITY_COLORS[task.priority]}20`, color: PRIORITY_COLORS[task.priority] }}>{task.priority}</span>
         {task.area && <span className="text-[9px] px-1.5 py-0.5 rounded" style={{ background: 'var(--bg-pill)', color: 'var(--text-muted)' }}>{task.area}</span>}
         {task.tipoTarea && <span className="text-[9px] px-1.5 py-0.5 rounded" style={{ background: 'rgba(59,130,246,0.12)', color: '#3b82f6' }}>{task.tipoTarea}</span>}
         {task.areaNegocio && <span className="text-[9px] px-1.5 py-0.5 rounded" style={{ background: 'rgba(139,92,246,0.12)', color: '#8b5cf6' }}>{task.areaNegocio}</span>}
       </div>
     </button>
+  )
+}
+
+function TaskDetailModal({ task, employees, onClose, onMove, onArchive, onUpdate }: {
+  task: TaskItem
+  employees: { id: string; name: string }[]
+  onClose: () => void
+  onMove: (id: string, state: string) => void
+  onArchive: (id: string) => void
+  onUpdate: (id: string, data: Partial<TaskItem>) => void
+}) {
+  const [editing, setEditing] = useState(false)
+  const [name, setName] = useState(task.name)
+  const [priority, setPriority] = useState(task.priority)
+  const [area, setArea] = useState(task.area)
+  const [type, setType] = useState(task.type)
+  const [tipoTarea, setTipoTarea] = useState(task.tipoTarea)
+  const [areaNegocio, setAreaNegocio] = useState(task.areaNegocio)
+  const [responsableId, setResponsableId] = useState(task.responsibleIds[0] || '')
+  const [deadline, setDeadline] = useState(task.deadline || '')
+  const [descripcion, setDescripcion] = useState(task.descripcion || '')
+
+  const AREAS = ['Gerencia', 'Administración', 'Ventas', 'Taller', 'Logística', 'Marketing']
+  const TIPOS = ['Personal', 'Grupal', 'Departamental', 'Proyecto']
+  const TIPOS_TAREA = ['Mejora interna', 'Marketing', 'Nuevo negocio', 'Visitas', 'Administrativo', 'Otro']
+  const AREAS_NEGOCIO = ['Taller', 'V.O', 'Renting', 'Marketing', 'Growth', 'General', 'RRHH']
+  const inputStyle = { background: 'var(--bg-card)', color: 'var(--text)', border: '1px solid var(--border)', fontSize: 11, padding: '6px 8px', borderRadius: 6, width: '100%', outline: 'none' }
+
+  async function handleSave() {
+    const data: any = {}
+    if (name !== task.name) data.name = name.trim()
+    if (priority !== task.priority) data.priority = priority
+    if (area !== task.area) data.area = area
+    if (type !== task.type) data.type = type || undefined
+    if (tipoTarea !== task.tipoTarea) data.tipoTarea = tipoTarea || undefined
+    if (areaNegocio !== task.areaNegocio) data.areaNegocio = areaNegocio || undefined
+    if (responsableId !== (task.responsibleIds[0] || '')) data.responsibleIds = responsableId ? [responsableId] : []
+    if (deadline !== task.deadline) data.deadline = deadline || undefined
+    if (descripcion !== task.descripcion) data.descripcion = descripcion.trim() || undefined
+
+    if (Object.keys(data).length === 0) { setEditing(false); return }
+
+    try {
+      const res = await fetch(`/api/tasks/${task.id}`, {
+        method: 'PATCH',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(data),
+      })
+      if (res.ok) {
+        onUpdate(task.id, { ...data, priority: data.priority || task.priority } as any)
+        setEditing(false)
+      }
+    } catch {}
+  }
+
+  if (editing) {
+    return (
+      <div className="fixed inset-0 z-40 flex items-center justify-center p-4" style={{ background: 'rgba(0,0,0,0.6)' }} onClick={(e) => { if (e.target === e.currentTarget) onClose() }}>
+        <div className="card w-full max-w-lg animate-fade-up p-5" style={{ background: 'var(--bg-card)', maxHeight: '90vh', overflowY: 'auto' }}>
+          <div className="flex items-center justify-between mb-4">
+            <h2 className="text-sm font-semibold" style={{ color: 'var(--text)' }}>✏️ Editar tarea</h2>
+            <button onClick={() => setEditing(false)} className="text-sm px-2 py-1 rounded" style={{ color: 'var(--text-muted)' }}>✕</button>
+          </div>
+          <div className="space-y-3">
+            <input value={name} onChange={e => setName(e.target.value)} style={inputStyle} />
+            <div className="grid grid-cols-2 gap-2">
+              <select value={priority} onChange={e => setPriority(e.target.value as any)} style={inputStyle}>
+                <option value="Alta">🔴 Alta</option><option value="Media">🟡 Media</option><option value="Baja">🟢 Baja</option>
+              </select>
+              <select value={area} onChange={e => setArea(e.target.value)} style={inputStyle}>
+                {AREAS.map(a => <option key={a} value={a}>{a}</option>)}
+              </select>
+            </div>
+            <div className="grid grid-cols-2 gap-2">
+              <select value={type} onChange={e => setType(e.target.value)} style={inputStyle}>
+                <option value="">Tipo</option>{TIPOS.map(t => <option key={t} value={t}>{t}</option>)}
+              </select>
+              <select value={tipoTarea} onChange={e => setTipoTarea(e.target.value)} style={inputStyle}>
+                <option value="">Tipo tarea</option>{TIPOS_TAREA.map(t => <option key={t} value={t}>{t}</option>)}
+              </select>
+            </div>
+            <div className="grid grid-cols-2 gap-2">
+              <select value={areaNegocio} onChange={e => setAreaNegocio(e.target.value)} style={inputStyle}>
+                <option value="">Área negocio</option>{AREAS_NEGOCIO.map(a => <option key={a} value={a}>{a}</option>)}
+              </select>
+              <input type="date" value={deadline} onChange={e => setDeadline(e.target.value)} style={inputStyle} />
+            </div>
+            <div className="grid grid-cols-2 gap-2">
+              <select value={responsableId} onChange={e => setResponsableId(e.target.value)} style={inputStyle}>
+                <option value="">Responsable</option>{employees.map(e => <option key={e.id} value={e.id}>{e.name}</option>)}
+              </select>
+            </div>
+            <textarea value={descripcion} onChange={e => setDescripcion(e.target.value)} rows={3} style={{ ...inputStyle, resize: 'vertical' }} />
+            <div className="flex gap-2 pt-1">
+              <button onClick={() => setEditing(false)} className="flex-1 text-[11px] font-semibold py-2 rounded" style={{ background: 'var(--bg-pill)', color: 'var(--text)' }}>Cancelar</button>
+              <button onClick={handleSave} className="flex-1 text-[11px] font-semibold py-2 rounded" style={{ background: 'var(--accent-blue)', color: '#fff' }}>💾 Guardar</button>
+            </div>
+          </div>
+        </div>
+      </div>
+    )
+  }
+
+  return (
+    <div className="fixed inset-0 z-40 flex items-center justify-center p-4" style={{ background: 'rgba(0,0,0,0.6)' }} onClick={(e) => { if (e.target === e.currentTarget) onClose() }}>
+      <div className="card w-full max-w-sm animate-fade-up p-5" style={{ background: 'var(--bg-card)' }}>
+        <div className="flex items-center justify-between mb-3">
+          <span className="text-lg">{STATE_ICONS[task.state]}</span>
+          <div className="flex items-center gap-1">
+            <button onClick={() => { setName(task.name); setPriority(task.priority); setArea(task.area); setType(task.type); setTipoTarea(task.tipoTarea); setAreaNegocio(task.areaNegocio); setResponsableId(task.responsibleIds[0] || ''); setDeadline(task.deadline || ''); setDescripcion(task.descripcion || ''); setEditing(true) }} className="text-[10px] px-2 py-1 rounded" style={{ color: 'var(--accent-blue)' }}>✏️</button>
+            <button onClick={onClose} className="text-sm px-2 py-1 rounded" style={{ color: 'var(--text-muted)' }}>✕</button>
+          </div>
+        </div>
+        <h2 className="text-sm font-semibold mb-3" style={{ color: 'var(--text)' }}>{task.name}</h2>
+        <div className="space-y-1.5 mb-4">
+          <div className="flex items-center gap-2">
+            <span className="text-[10px] font-medium" style={{ color: 'var(--text-muted)' }}>Prioridad:</span>
+            <span className="text-[10px] font-semibold px-1.5 py-0.5 rounded" style={{ background: `${PRIORITY_COLORS[task.priority]}20`, color: PRIORITY_COLORS[task.priority] }}>{task.priority}</span>
+          </div>
+          {task.area && <div className="flex items-center gap-2"><span className="text-[10px] font-medium" style={{ color: 'var(--text-muted)' }}>Departamento:</span><span className="text-[10px]" style={{ color: 'var(--text-secondary)' }}>{task.area}</span></div>}
+          {task.type && <div className="flex items-center gap-2"><span className="text-[10px] font-medium" style={{ color: 'var(--text-muted)' }}>Tipo:</span><span className="text-[10px]" style={{ color: 'var(--text-secondary)' }}>{task.type}</span></div>}
+          {task.tipoTarea && <div className="flex items-center gap-2"><span className="text-[10px] font-medium" style={{ color: 'var(--text-muted)' }}>Tipo tarea:</span><span className="text-[10px]" style={{ color: '#3b82f6' }}>{task.tipoTarea}</span></div>}
+          {task.areaNegocio && <div className="flex items-center gap-2"><span className="text-[10px] font-medium" style={{ color: 'var(--text-muted)' }}>Área negocio:</span><span className="text-[10px]" style={{ color: '#8b5cf6' }}>{task.areaNegocio}</span></div>}
+          {task.deadline && <div className="flex items-center gap-2"><span className="text-[10px] font-medium" style={{ color: 'var(--text-muted)' }}>Vence:</span><span className="text-[10px]" style={{ color: 'var(--text-secondary)' }}>{new Date(task.deadline).toLocaleDateString('es')}</span></div>}
+          {task.descripcion && <div className="mt-3 pt-3 border-t" style={{ borderColor: 'var(--border)' }}><span className="text-[10px] font-medium block mb-1" style={{ color: 'var(--text-muted)' }}>Descripción:</span><p className="text-[11px] leading-relaxed" style={{ color: 'var(--text-secondary)', whiteSpace: 'pre-wrap' }}>{task.descripcion}</p></div>}
+        </div>
+        <div className="flex flex-col gap-1.5">
+          {(STATE_TRANSITIONS[task.state] || []).map((ns) => (
+            <button key={ns} onClick={() => onMove(task.id, ns)} disabled={false}
+              className="w-full text-[11px] font-semibold py-2 rounded min-h-[36px] transition-opacity disabled:opacity-40"
+              style={{ background: 'var(--accent-blue)', color: '#fff' }}
+            >{STATE_ICONS[ns] || '→'} Mover a {ns}</button>
+          ))}
+          <button onClick={() => onArchive(task.id)}
+            className="w-full text-[11px] font-semibold py-2 rounded min-h-[36px]"
+            style={{ background: 'var(--bg-pill)', color: 'var(--text)' }}
+          >🗑 Limpiar</button>
+        </div>
+      </div>
+    </div>
   )
 }
 
@@ -332,9 +477,6 @@ function TareasInner() {
     const task = tasks.find(t => t.id === active.id)
     if (!task) return
 
-    const targetCol = document.querySelector(`[data-column-id="${over.id}"]`)
-    if (!targetCol) return
-
     const newState = over.id as string
     const validStates = ['Sin empezar', 'En progreso', 'Bloqueada', 'Completada', 'Cancelada']
     if (!validStates.includes(newState) || newState === task.state) return
@@ -509,10 +651,10 @@ function TareasInner() {
                 })()}
               </div>
             ) : (
-            <DndContext sensors={sensors} collisionDetection={closestCenter} onDragStart={(e) => setActiveId(e.active.id as string)} onDragEnd={handleDragEnd}>
+            <DndContext sensors={sensors} onDragEnd={handleDragEnd}>
             <div className="flex gap-1.5 sm:gap-2 overflow-x-auto pb-1">
               {columns.map((col) => (
-                <div key={col.state} data-column-id={col.state} className="pipeline-column p-2 sm:p-3" style={{ minWidth: 180, flex: 1, display: 'flex', flexDirection: 'column', maxHeight: '60vh' }}>
+                <DroppableColumn key={col.state} id={col.state}>
                   <div className="flex items-center gap-1.5 mb-2 sm:mb-3 shrink-0">
                     <span className="text-xs">{STATE_ICONS[col.state]}</span>
                     <h3 className="text-[10px] sm:text-xs font-semibold uppercase tracking-wider" style={{ color: 'var(--text-secondary)' }}>
@@ -523,18 +665,16 @@ function TareasInner() {
                     </span>
                   </div>
 
-                  <SortableContext items={col.tasks.map(t => t.id)} strategy={verticalListSortingStrategy}>
                   <div className="space-y-1.5 sm:space-y-2 overflow-y-auto flex-1" style={{ minHeight: 60 }}>
                     {col.tasks.length === 0 ? (
                       <p className="text-[11px] py-4 text-center" style={{ color: 'var(--text-muted)' }}>Vacío</p>
                     ) : (
                       col.tasks.map((task) => (
-                        <SortableTaskCard key={task.id} task={task} onClick={() => setSelected(task)} />
+                        <DraggableTaskCard key={task.id} task={task} onClick={() => setSelected(task)} />
                       ))
                     )}
                   </div>
-                  </SortableContext>
-                </div>
+                </DroppableColumn>
               ))}
             </div>
             </DndContext>
@@ -553,96 +693,17 @@ function TareasInner() {
         )}
 
         {selected && (
-          <div
-            className="fixed inset-0 z-40 flex items-center justify-center p-4"
-            style={{ background: 'rgba(0,0,0,0.6)' }}
-            onClick={(e) => { if (e.target === e.currentTarget) setSelected(null) }}
-          >
-            <div className="card w-full max-w-sm animate-fade-up p-5" style={{ background: 'var(--bg-card)' }}>
-              <div className="flex items-center justify-between mb-3">
-                <span className="text-lg">{STATE_ICONS[selected.state]}</span>
-                <button onClick={() => setSelected(null)} className="text-sm px-2 py-1 rounded" style={{ color: 'var(--text-muted)' }}>
-                  ✕
-                </button>
-              </div>
-
-              <h2 className="text-sm font-semibold mb-3" style={{ color: 'var(--text)' }}>{selected.name}</h2>
-
-              <div className="space-y-1.5 mb-4">
-                <div className="flex items-center gap-2">
-                  <span className="text-[10px] font-medium" style={{ color: 'var(--text-muted)' }}>Prioridad:</span>
-                  <span
-                    className="text-[10px] font-semibold px-1.5 py-0.5 rounded"
-                    style={{
-                      background: `${PRIORITY_COLORS[selected.priority]}20`,
-                      color: PRIORITY_COLORS[selected.priority],
-                    }}
-                  >
-                    {selected.priority}
-                  </span>
-                </div>
-                {selected.area && (
-                  <div className="flex items-center gap-2">
-                    <span className="text-[10px] font-medium" style={{ color: 'var(--text-muted)' }}>Departamento:</span>
-                    <span className="text-[10px]" style={{ color: 'var(--text-secondary)' }}>{selected.area}</span>
-                  </div>
-                )}
-                {selected.type && (
-                  <div className="flex items-center gap-2">
-                    <span className="text-[10px] font-medium" style={{ color: 'var(--text-muted)' }}>Tipo:</span>
-                    <span className="text-[10px]" style={{ color: 'var(--text-secondary)' }}>{selected.type}</span>
-                  </div>
-                )}
-                {selected.tipoTarea && (
-                  <div className="flex items-center gap-2">
-                    <span className="text-[10px] font-medium" style={{ color: 'var(--text-muted)' }}>Tipo tarea:</span>
-                    <span className="text-[10px]" style={{ color: '#3b82f6' }}>{selected.tipoTarea}</span>
-                  </div>
-                )}
-                {selected.areaNegocio && (
-                  <div className="flex items-center gap-2">
-                    <span className="text-[10px] font-medium" style={{ color: 'var(--text-muted)' }}>Área negocio:</span>
-                    <span className="text-[10px]" style={{ color: '#8b5cf6' }}>{selected.areaNegocio}</span>
-                  </div>
-                )}
-                {selected.deadline && (
-                  <div className="flex items-center gap-2">
-                    <span className="text-[10px] font-medium" style={{ color: 'var(--text-muted)' }}>Vence:</span>
-                    <span className="text-[10px]" style={{ color: 'var(--text-secondary)' }}>
-                      {new Date(selected.deadline).toLocaleDateString('es')}
-                    </span>
-                  </div>
-                )}
-                {selected.descripcion && (
-                  <div className="mt-3 pt-3 border-t" style={{ borderColor: 'var(--border)' }}>
-                    <span className="text-[10px] font-medium block mb-1" style={{ color: 'var(--text-muted)' }}>Descripción:</span>
-                    <p className="text-[11px] leading-relaxed" style={{ color: 'var(--text-secondary)', whiteSpace: 'pre-wrap' }}>{selected.descripcion}</p>
-                  </div>
-                )}
-              </div>
-
-              <div className="flex flex-col gap-1.5">
-                {(STATE_TRANSITIONS[selected.state] || []).map((ns) => (
-                  <button
-                    key={ns}
-                    onClick={() => handleMove(selected.id, ns)}
-                    disabled={moving === selected.id}
-                    className="w-full text-[11px] font-semibold py-2 rounded min-h-[36px] transition-opacity disabled:opacity-40"
-                    style={{ background: 'var(--accent-blue)', color: '#fff' }}
-                  >
-                    {moving === selected.id ? '...' : `${STATE_ICONS[ns] || '→'} Mover a ${ns}`}
-                  </button>
-                ))}
-                <button
-                  onClick={() => handleArchive(selected.id)}
-                  className="w-full text-[11px] font-semibold py-2 rounded min-h-[36px]"
-                  style={{ background: 'var(--bg-pill)', color: 'var(--text)' }}
-                >
-                  🗑 Limpiar
-                </button>
-              </div>
-            </div>
-          </div>
+          <TaskDetailModal
+            task={selected}
+            employees={employees}
+            onClose={() => setSelected(null)}
+            onMove={handleMove}
+            onArchive={handleArchive}
+            onUpdate={(id, data) => {
+              setTasks(prev => prev.map(t => t.id === id ? { ...t, ...data } as TaskItem : t))
+              setSelected(prev => prev && prev.id === id ? { ...prev, ...data } as TaskItem : prev)
+            }}
+          />
         )}
       </div>
     </div>
