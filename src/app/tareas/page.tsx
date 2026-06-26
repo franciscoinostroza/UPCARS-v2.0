@@ -46,12 +46,6 @@ const PRIORITY_COLORS: Record<string, string> = {
 
 const AREAS = ['Gerencia', 'Administración', 'Ventas', 'Taller', 'Logística', 'Marketing']
 
-const STATE_TRANSITIONS: Record<string, string[]> = {
-  'Sin empezar': ['En progreso', 'Bloqueada', 'Cancelada'],
-  'En progreso': ['Bloqueada', 'Completada', 'Cancelada'],
-  Bloqueada: ['En progreso', 'Cancelada'],
-}
-
 const LS_KEY = 'tareas_mi_nombre'
 
 function FilterSelect({ label, value, onChange, options }: {
@@ -228,18 +222,10 @@ function TaskDetailModal({ task, employees, onClose, onMove, onArchive, onUpdate
           {task.deadline && <div className="flex items-center gap-2"><span className="text-[10px] font-medium" style={{ color: 'var(--text-muted)' }}>Vence:</span><span className="text-[10px]" style={{ color: 'var(--text-secondary)' }}>{new Date(task.deadline).toLocaleDateString('es')}</span></div>}
           {task.descripcion && <div className="mt-3 pt-3 border-t" style={{ borderColor: 'var(--border)' }}><span className="text-[10px] font-medium block mb-1" style={{ color: 'var(--text-muted)' }}>Descripción:</span><p className="text-[11px] leading-relaxed" style={{ color: 'var(--text-secondary)', whiteSpace: 'pre-wrap' }}>{task.descripcion}</p></div>}
         </div>
-        <div className="flex flex-col gap-1.5">
-          {(STATE_TRANSITIONS[task.state] || []).map((ns) => (
-            <button key={ns} onClick={() => onMove(task.id, ns)} disabled={false}
-              className="w-full text-[11px] font-semibold py-2 rounded min-h-[36px] transition-opacity disabled:opacity-40"
-              style={{ background: 'var(--accent-blue)', color: '#fff' }}
-            >{STATE_ICONS[ns] || '→'} Mover a {ns}</button>
-          ))}
-          <button onClick={() => onArchive(task.id)}
-            className="w-full text-[11px] font-semibold py-2 rounded min-h-[36px]"
-            style={{ background: 'var(--bg-pill)', color: 'var(--text)' }}
-          >🗑 Limpiar</button>
-        </div>
+         <button onClick={() => onArchive(task.id)}
+           className="w-full text-[11px] font-semibold py-2 rounded min-h-[36px]"
+           style={{ background: 'var(--bg-pill)', color: 'var(--text)' }}
+         >🗑 Limpiar</button>
       </div>
     </div>
   )
