@@ -4,6 +4,9 @@ import { useState, useEffect, useCallback } from 'react'
 import { ThemeProvider, useTheme } from '../dashboard/theme-context'
 import { DarkModeToggle } from '../dashboard/dark-mode'
 import { Skeleton } from '@/components/skeleton'
+import { DndContext, DragOverlay, closestCenter, PointerSensor, useSensor, useSensors } from '@dnd-kit/core'
+import { SortableContext, useSortable, verticalListSortingStrategy } from '@dnd-kit/sortable'
+import { CSS } from '@dnd-kit/utilities'
 
 interface TaskItem {
   id: string
@@ -73,19 +76,152 @@ function FilterSelect({ label, value, onChange, options }: {
   )
 }
 
+function SortableTaskCard({ task, onClick }: { task: TaskItem; onClick: () => void }) {
+  const { attributes, listeners, setNodeRef, transform, transition, isDragging } = useSortable({ id: task.id })
+  const style = { transform: CSS.Transform.toString(transform), transition, opacity: isDragging ? 0.5 : 1 }
+
+  return (
+    <button ref={setNodeRef} style={style} {...attributes} {...listeners}
+      onClick={onClick}
+      className="vehicle-card w-full text-left cursor-grab active:cursor-grabbing transition-all duration-150 touch-none"
+    >
+      <p className="text-[11px] sm:text-xs font-semibold leading-tight mb-1.5 line-clamp-2" style={{ color: 'var(--text)' }}>
+        {task.name}
+      </p>
+      <div className="flex items-center gap-1 flex-wrap">
+        <span className="text-[9px] font-semibold px-1.5 py-0.5 rounded" style={{ background: `${PRIORITY_COLORS[task.priority]}20`, color: PRIORITY_COLORS[task.priority] }}>
+          {task.priority}
+        </span>
+        {task.area && <span className="text-[9px] px-1.5 py-0.5 rounded" style={{ background: 'var(--bg-pill)', color: 'var(--text-muted)' }}>{task.area}</span>}
+        {task.tipoTarea && <span className="text-[9px] px-1.5 py-0.5 rounded" style={{ background: 'rgba(59,130,246,0.12)', color: '#3b82f6' }}>{task.tipoTarea}</span>}
+        {task.areaNegocio && <span className="text-[9px] px-1.5 py-0.5 rounded" style={{ background: 'rgba(139,92,246,0.12)', color: '#8b5cf6' }}>{task.areaNegocio}</span>}
+      </div>
+    </button>
+  )
+}
+
+function CreateTaskModal({ employees, vehicles, onClose, onCreate }: {
+  employees: { id: string; name: string }[]
+  vehicles: { id: string; name: string }[]
+  onClose: () => void
+  onCreate: (data: any) => void
+}) {
+  const [name, setName] = useState('')
+  const [area, setArea] = useState('')
+  const [priority, setPriority] = useState('Media')
+  const [type, setType] = useState('')
+  const [tipoTarea, setTipoTarea] = useState('')
+  const [areaNegocio, setAreaNegocio] = useState('')
+  const [responsableId, setResponsableId] = useState('')
+  const [vehicleId, setVehicleId] = useState('')
+  const [deadline, setDeadline] = useState('')
+  const [descripcion, setDescripcion] = useState('')
+  const [submitting, setSubmitting] = useState(false)
+
+  const AREAS = ['Gerencia', 'Administración', 'Ventas', 'Taller', 'Logística', 'Marketing']
+  const TIPOS = ['Personal', 'Grupal', 'Departamental', 'Proyecto']
+  const TIPOS_TAREA = ['Mejora interna', 'Marketing', 'Nuevo negocio', 'Visitas', 'Administrativo', 'Otro']
+  const AREAS_NEGOCIO = ['Taller', 'V.O', 'Renting', 'Marketing', 'Growth', 'General', 'RRHH']
+
+  async function handleSubmit(e: React.FormEvent) {
+    e.preventDefault()
+    if (!name.trim() || !area) return
+    setSubmitting(true)
+    await onCreate({
+      name: name.trim(),
+      area,
+      priority,
+      type: type || undefined,
+      tipoTarea: tipoTarea || undefined,
+      areaNegocio: areaNegocio || undefined,
+      responsableId: responsableId || undefined,
+      vehicleId: vehicleId || undefined,
+      deadline: deadline || undefined,
+      descripcion: descripcion.trim() || undefined,
+    })
+    setSubmitting(false)
+  }
+
+  const selectStyle = { background: 'var(--bg-card)', color: 'var(--text)', border: '1px solid var(--border)', fontSize: 11, padding: '6px 8px', borderRadius: 6, width: '100%', outline: 'none' }
+
+  return (
+    <div className="fixed inset-0 z-40 flex items-center justify-center p-4" style={{ background: 'rgba(0,0,0,0.6)' }} onClick={(e) => { if (e.target === e.currentTarget) onClose() }}>
+      <div className="card w-full max-w-lg animate-fade-up p-5" style={{ background: 'var(--bg-card)', maxHeight: '90vh', overflowY: 'auto' }}>
+        <div className="flex items-center justify-between mb-4">
+          <h2 className="text-sm font-semibold" style={{ color: 'var(--text)' }}>➕ Nueva tarea</h2>
+          <button onClick={onClose} className="text-sm px-2 py-1 rounded" style={{ color: 'var(--text-muted)' }}>✕</button>
+        </div>
+        <form onSubmit={handleSubmit} className="space-y-3">
+          <input required placeholder="Nombre de la tarea *" value={name} onChange={e => setName(e.target.value)} style={{ ...selectStyle, fontSize: 13 }} />
+          <div className="grid grid-cols-2 gap-2">
+            <select required value={area} onChange={e => setArea(e.target.value)} style={selectStyle}>
+              <option value="">Departamento *</option>
+              {AREAS.map(a => <option key={a} value={a}>{a}</option>)}
+            </select>
+            <select value={priority} onChange={e => setPriority(e.target.value)} style={selectStyle}>
+              <option value="Media">Prioridad: Media</option>
+              <option value="Alta">🔴 Alta</option>
+              <option value="Baja">🟢 Baja</option>
+            </select>
+          </div>
+          <div className="grid grid-cols-2 gap-2">
+            <select value={type} onChange={e => setType(e.target.value)} style={selectStyle}>
+              <option value="">Tipo</option>
+              {TIPOS.map(t => <option key={t} value={t}>{t}</option>)}
+            </select>
+            <select value={tipoTarea} onChange={e => setTipoTarea(e.target.value)} style={selectStyle}>
+              <option value="">Tipo de tarea</option>
+              {TIPOS_TAREA.map(t => <option key={t} value={t}>{t}</option>)}
+            </select>
+          </div>
+          <div className="grid grid-cols-2 gap-2">
+            <select value={areaNegocio} onChange={e => setAreaNegocio(e.target.value)} style={selectStyle}>
+              <option value="">Área de negocio</option>
+              {AREAS_NEGOCIO.map(a => <option key={a} value={a}>{a}</option>)}
+            </select>
+            <input type="date" value={deadline} onChange={e => setDeadline(e.target.value)} style={selectStyle} />
+          </div>
+          <div className="grid grid-cols-2 gap-2">
+            <select value={responsableId} onChange={e => setResponsableId(e.target.value)} style={selectStyle}>
+              <option value="">Responsable</option>
+              {employees.map(e => <option key={e.id} value={e.id}>{e.name}</option>)}
+            </select>
+            <select value={vehicleId} onChange={e => setVehicleId(e.target.value)} style={selectStyle}>
+              <option value="">Vehículo</option>
+              {vehicles.map(v => <option key={v.id} value={v.id}>{v.name}</option>)}
+            </select>
+          </div>
+          <textarea placeholder="Descripción" value={descripcion} onChange={e => setDescripcion(e.target.value)} rows={3} style={{ ...selectStyle, resize: 'vertical' }} />
+          <div className="flex gap-2 pt-1">
+            <button type="button" onClick={onClose} className="flex-1 text-[11px] font-semibold py-2 rounded" style={{ background: 'var(--bg-pill)', color: 'var(--text)' }}>Cancelar</button>
+            <button type="submit" disabled={submitting || !name.trim() || !area} className="flex-1 text-[11px] font-semibold py-2 rounded transition-opacity disabled:opacity-40" style={{ background: 'var(--accent-blue)', color: '#fff' }}>
+              {submitting ? '...' : '✅ Crear tarea'}
+            </button>
+          </div>
+        </form>
+      </div>
+    </div>
+  )
+}
+
 function TareasInner() {
   const { dark } = useTheme()
   const [tasks, setTasks] = useState<TaskItem[]>([])
   const [employees, setEmployees] = useState<EmployeeItem[]>([])
+  const [vehicles, setVehicles] = useState<{ id: string; name: string }[]>([])
   const [loading, setLoading] = useState(true)
   const [selected, setSelected] = useState<TaskItem | null>(null)
   const [moving, setMoving] = useState<string | null>(null)
+  const [showCreate, setShowCreate] = useState(false)
+  const [activeId, setActiveId] = useState<string | null>(null)
 
   const [filterArea, setFilterArea] = useState('')
   const [filterPriority, setFilterPriority] = useState('')
   const [filterEmployee, setFilterEmployee] = useState('')
   const [myName, setMyName] = useState('')
   const [vista, setVista] = useState<'kanban' | 'gantt'>('kanban')
+
+  const sensors = useSensors(useSensor(PointerSensor, { activationConstraint: { distance: 8 } }))
 
   useEffect(() => {
     const saved = localStorage.getItem(LS_KEY)
@@ -117,10 +253,21 @@ function TareasInner() {
     }
   }, [])
 
+  const fetchVehicles = useCallback(async () => {
+    try {
+      const res = await fetch('/api/vehicles?list=true')
+      const json = await res.json()
+      if (json.success) setVehicles(json.data)
+    } catch {
+      // silent
+    }
+  }, [])
+
   useEffect(() => {
     fetchTasks()
     fetchEmployees()
-  }, [fetchTasks, fetchEmployees])
+    fetchVehicles()
+  }, [fetchTasks, fetchEmployees, fetchVehicles])
 
   const filteredTasks = tasks.filter((t) => {
     if (filterArea && t.area !== filterArea) return false
@@ -177,6 +324,41 @@ function TareasInner() {
     }
   }
 
+  function handleDragEnd(event: any) {
+    setActiveId(null)
+    const { active, over } = event
+    if (!over || active.id === over.id) return
+
+    const task = tasks.find(t => t.id === active.id)
+    if (!task) return
+
+    const targetCol = document.querySelector(`[data-column-id="${over.id}"]`)
+    if (!targetCol) return
+
+    const newState = over.id as string
+    const validStates = ['Sin empezar', 'En progreso', 'Bloqueada', 'Completada', 'Cancelada']
+    if (!validStates.includes(newState) || newState === task.state) return
+
+    setTasks(prev => prev.map(t => t.id === task.id ? { ...t, state: newState as any } : t))
+    fetch(`/api/tasks/${task.id}`, { method: 'PATCH', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ state: newState }) }).catch(() => {})
+  }
+
+  async function handleCreateTask(formData: any) {
+    try {
+      const res = await fetch('/api/tasks', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(formData),
+      })
+      if (res.ok) {
+        setShowCreate(false)
+        fetchTasks()
+      }
+    } catch {
+      // silent
+    }
+  }
+
   return (
     <div style={{ background: 'var(--bg)', minHeight: '100vh' }}>
       <div className="max-w-6xl mx-auto p-4 sm:p-6">
@@ -189,6 +371,7 @@ function TareasInner() {
           <div className="flex items-center gap-2 mb-2 animate-fade-up" style={{ animationDelay: '40ms' }}>
             <button onClick={() => setVista('kanban')} className="px-2.5 py-1 text-[10px] sm:text-xs rounded font-medium transition-all" style={{ background: vista === 'kanban' ? 'var(--bg-pill)' : 'transparent', color: vista === 'kanban' ? 'var(--text)' : 'var(--text-muted)', border: '1px solid var(--border)' }}>📋 Kanban</button>
             <button onClick={() => setVista('gantt')} className="px-2.5 py-1 text-[10px] sm:text-xs rounded font-medium transition-all" style={{ background: vista === 'gantt' ? 'var(--bg-pill)' : 'transparent', color: vista === 'gantt' ? 'var(--text)' : 'var(--text-muted)', border: '1px solid var(--border)' }}>📊 Gantt</button>
+            <button onClick={() => setShowCreate(true)} className="px-2.5 py-1 text-[10px] sm:text-xs rounded font-medium transition-all" style={{ background: 'var(--bg-pill)', color: 'var(--accent-blue)', border: '1px solid var(--border)' }}>➕ Nueva tarea</button>
           </div>
         )}
 
@@ -326,10 +509,11 @@ function TareasInner() {
                 })()}
               </div>
             ) : (
+            <DndContext sensors={sensors} collisionDetection={closestCenter} onDragStart={(e) => setActiveId(e.active.id as string)} onDragEnd={handleDragEnd}>
             <div className="flex gap-1.5 sm:gap-2 overflow-x-auto pb-1">
               {columns.map((col) => (
-                <div key={col.state} className="pipeline-column p-2 sm:p-3" style={{ minWidth: 180, flex: 1 }}>
-                  <div className="flex items-center gap-1.5 mb-2 sm:mb-3">
+                <div key={col.state} data-column-id={col.state} className="pipeline-column p-2 sm:p-3" style={{ minWidth: 180, flex: 1, display: 'flex', flexDirection: 'column', maxHeight: '60vh' }}>
+                  <div className="flex items-center gap-1.5 mb-2 sm:mb-3 shrink-0">
                     <span className="text-xs">{STATE_ICONS[col.state]}</span>
                     <h3 className="text-[10px] sm:text-xs font-semibold uppercase tracking-wider" style={{ color: 'var(--text-secondary)' }}>
                       {col.state}
@@ -339,54 +523,33 @@ function TareasInner() {
                     </span>
                   </div>
 
-                  <div className="space-y-1.5 sm:space-y-2">
+                  <SortableContext items={col.tasks.map(t => t.id)} strategy={verticalListSortingStrategy}>
+                  <div className="space-y-1.5 sm:space-y-2 overflow-y-auto flex-1" style={{ minHeight: 60 }}>
                     {col.tasks.length === 0 ? (
                       <p className="text-[11px] py-4 text-center" style={{ color: 'var(--text-muted)' }}>Vacío</p>
                     ) : (
                       col.tasks.map((task) => (
-                        <button
-                          key={task.id}
-                          onClick={() => setSelected(task)}
-                          className="vehicle-card w-full text-left cursor-pointer transition-all duration-150"
-                        >
-                          <p className="text-[11px] sm:text-xs font-semibold leading-tight mb-1.5 line-clamp-2" style={{ color: 'var(--text)' }}>
-                            {task.name}
-                          </p>
-                          <div className="flex items-center gap-1 flex-wrap">
-                            <span
-                              className="text-[9px] font-semibold px-1.5 py-0.5 rounded"
-                              style={{
-                                background: `${PRIORITY_COLORS[task.priority]}20`,
-                                color: PRIORITY_COLORS[task.priority],
-                              }}
-                            >
-                              {task.priority}
-                            </span>
-                            {task.area && (
-                              <span className="text-[9px] px-1.5 py-0.5 rounded" style={{ background: 'var(--bg-pill)', color: 'var(--text-muted)' }}>
-                                {task.area}
-                              </span>
-                            )}
-                            {task.tipoTarea && (
-                              <span className="text-[9px] px-1.5 py-0.5 rounded" style={{ background: 'rgba(59,130,246,0.12)', color: '#3b82f6' }}>
-                                {task.tipoTarea}
-                              </span>
-                            )}
-                            {task.areaNegocio && (
-                              <span className="text-[9px] px-1.5 py-0.5 rounded" style={{ background: 'rgba(139,92,246,0.12)', color: '#8b5cf6' }}>
-                                {task.areaNegocio}
-                              </span>
-                            )}
-                          </div>
-                        </button>
+                        <SortableTaskCard key={task.id} task={task} onClick={() => setSelected(task)} />
                       ))
                     )}
                   </div>
+                  </SortableContext>
                 </div>
               ))}
             </div>
+            </DndContext>
             )}
           </>
+        )}
+
+        {/* Create task modal */}
+        {showCreate && (
+          <CreateTaskModal
+            employees={employees}
+            vehicles={vehicles}
+            onClose={() => setShowCreate(false)}
+            onCreate={handleCreateTask}
+          />
         )}
 
         {selected && (

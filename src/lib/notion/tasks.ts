@@ -3,19 +3,26 @@ import { getDbSchema, findPropertyByType, findPropertiesByType } from './schema'
 import { parseTaskProps } from './props'
 import type { Task } from '@/lib/types'
 
-export async function createTask(
-  name: string,
-  vehicleId: string | null,
-  responsibleIds: string[] = [],
-  priority: 'Alta' | 'Media' | 'Baja' = 'Media',
-  area: string = ''
-) {
+export async function createTask(data: {
+  name: string
+  area: string
+  priority?: 'Alta' | 'Media' | 'Baja'
+  vehicleId?: string | null
+  responsibleIds?: string[]
+  type?: string
+  tipoTarea?: string
+  areaNegocio?: string
+  deadline?: string
+  descripcion?: string
+}) {
   const dbId = getDatabaseId('tasks')
   const schema = await getDbSchema('tasks')
 
   const titleKey = findPropertyByType(schema, 'title') || 'Nombre de la tarea'
-  const relationProps = findPropertiesByType(schema, 'relation')
-  const selectProps = findPropertiesByType(schema, 'select')
+  const relationProps = findPropertiesByType(schema, 'relation') || []
+  const selectProps = findPropertiesByType(schema, 'select') || []
+  const dateProps = findPropertiesByType(schema, 'date') || []
+  const richTextProps = findPropertiesByType(schema, 'rich_text') || []
 
   function findSelect(candidates: string[], fallbackIdx: number): string {
     for (const c of candidates) {
@@ -30,27 +37,29 @@ export async function createTask(
   const priorityKey = findSelect(['Prioridad'], 1)
   const deptKey = findSelect(['Departamento', 'Department'], 2)
   const typeKey = findSelect(['Tipo', 'Type'], 3)
-  const vehicleRelKey = relationProps?.find((r) => r.name === 'Vehículo relacionado' || r.name.includes('Vehículo'))?.name || relationProps[0]?.name
-  const responsibleRelKey = relationProps?.find((r) => r.name === 'Responsable')?.name || relationProps[1]?.name
+  const tipoTareaKey = findSelect(['Tipo de tarea', 'Tipo tarea'], 4)
+  const areaNegocioKey = findSelect(['Área de negocio', 'Area de negocio', 'Area negocio'], 5)
+  const vehicleRelKey = relationProps.find((r) => r.name.includes('Vehículo'))?.name || relationProps[0]?.name
+  const responsibleRelKey = relationProps.find((r) => r.name === 'Responsable')?.name || relationProps[1]?.name
+  const deadlineKey = dateProps.find((d) => d.name.includes('Fecha'))?.name || dateProps[0]?.name
+  const descKey = richTextProps.find((r) => r.name.includes('Descripción'))?.name || richTextProps[0]?.name
 
   const properties: Record<string, unknown> = {
-    [titleKey]: { title: [{ text: { content: name } }] },
-    [priorityKey]: { select: { name: priority } },
+    [titleKey]: { title: [{ text: { content: data.name } }] },
     [statusKey]: { select: { name: 'Sin empezar' } },
-    [typeKey]: { select: { name: 'Departamental' } },
+    [priorityKey]: { select: { name: data.priority || 'Media' } },
+    [deptKey]: { select: { name: data.area } },
   }
 
-  if (area) {
-    properties[deptKey] = { select: { name: area } }
+  if (data.type) properties[typeKey] = { select: { name: data.type } }
+  if (data.tipoTarea && tipoTareaKey) properties[tipoTareaKey] = { select: { name: data.tipoTarea } }
+  if (data.areaNegocio && areaNegocioKey) properties[areaNegocioKey] = { select: { name: data.areaNegocio } }
+  if (data.vehicleId && vehicleRelKey) properties[vehicleRelKey] = { relation: [{ id: data.vehicleId }] }
+  if (data.responsibleIds && data.responsibleIds.length > 0 && responsibleRelKey) {
+    properties[responsibleRelKey] = { relation: data.responsibleIds.map((id) => ({ id })) }
   }
-
-  if (vehicleId) {
-    properties[vehicleRelKey] = { relation: [{ id: vehicleId }] }
-  }
-
-  if (responsibleIds.length > 0) {
-    properties[responsibleRelKey] = { relation: responsibleIds.map((id) => ({ id })) }
-  }
+  if (data.deadline && deadlineKey) properties[deadlineKey] = { date: { start: data.deadline } }
+  if (data.descripcion && descKey) properties[descKey] = { rich_text: [{ text: { content: data.descripcion } }] }
 
   await notionPost('/pages', {
     parent: { database_id: dbId },

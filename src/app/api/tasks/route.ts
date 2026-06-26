@@ -21,7 +21,7 @@ export async function GET() {
 export async function POST(request: NextRequest) {
   try {
     const body = await request.json()
-    const { name, vehicleId, area, responsableId } = body
+    const { name, area, priority, vehicleId, responsableId, type, tipoTarea, areaNegocio, deadline, descripcion } = body
 
     if (!name || !area) {
       return NextResponse.json(
@@ -30,8 +30,18 @@ export async function POST(request: NextRequest) {
       )
     }
 
-    const ids = responsableId ? [responsableId] : []
-    await createTask(name.trim(), vehicleId || null, ids, 'Media', area)
+    await createTask({
+      name: name.trim(),
+      area,
+      priority,
+      vehicleId: vehicleId || null,
+      responsibleIds: responsableId ? [responsableId] : [],
+      type,
+      tipoTarea,
+      areaNegocio,
+      deadline,
+      descripcion,
+    })
 
     if (responsableId) {
       const employees = await getEmployees()
