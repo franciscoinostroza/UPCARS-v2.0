@@ -42,72 +42,30 @@ async function handleTransito(event: StateChangeEvent) {
   const today = new Date().toISOString().split('T')[0]
   await createCalendarEvent(event.vehicleName, logistico?.id || null, today)
   await createWorkshopOrder('Logistica', event.vehicleId, logistico?.id || null, 'Traslado de vehículo')
-  await createTask(
-    `Gestionar traslado - ${event.vehicleName}`,
-    event.vehicleId,
-    logistico ? [logistico.id] : [],
-    'Alta',
-    'Logística'
-  )
+  await createTask({ name: `Gestionar traslado - ${event.vehicleName}`, area: 'Logística', priority: 'Alta', vehicleId: event.vehicleId, responsibleIds: logistico ? [logistico.id] : [] })
 }
 
 async function handleTaller(event: StateChangeEvent) {
   const mecanico = await getEmployeeByRole('Mecánico')
   await createWorkshopOrder('Taller', event.vehicleId, mecanico?.id || null, 'Revisión mecánica general')
-  await createTask(
-    `Revisión mecánica - ${event.vehicleName}`,
-    event.vehicleId,
-    mecanico ? [mecanico.id] : [],
-    'Alta',
-    'Taller'
-  )
+  await createTask({ name: `Revisión mecánica - ${event.vehicleName}`, area: 'Taller', priority: 'Alta', vehicleId: event.vehicleId, responsibleIds: mecanico ? [mecanico.id] : [] })
 }
 
 async function handleChapa(event: StateChangeEvent) {
   await createChapaRecord(event.vehicleId, event.vehicleName, undefined, 'Salida a proveedor externo para chapa y pintura')
-  await createTask(
-    `Gestionar chapa y pintura - ${event.vehicleName}`,
-    event.vehicleId,
-    [],
-    'Alta',
-    'Taller'
-  )
+  await createTask({ name: `Gestionar chapa y pintura - ${event.vehicleName}`, area: 'Taller', priority: 'Alta', vehicleId: event.vehicleId })
 }
 
 async function handlePreparacion(event: StateChangeEvent) {
   const preparador = await getEmployeeByRole('Preparador')
   await createWorkshopOrder('Preparacion', event.vehicleId, preparador?.id || null, 'Preparación y limpieza')
-  await createTask(
-    `Checklist limpieza - ${event.vehicleName}`,
-    event.vehicleId,
-    preparador ? [preparador.id] : [],
-    'Alta',
-    'Taller'
-  )
-  await createTask(
-    `Preparar vehículo - ${event.vehicleName}`,
-    event.vehicleId,
-    preparador ? [preparador.id] : [],
-    'Alta',
-    'Taller'
-  )
+  await createTask({ name: `Checklist limpieza - ${event.vehicleName}`, area: 'Taller', priority: 'Alta', vehicleId: event.vehicleId, responsibleIds: preparador ? [preparador.id] : [] })
+  await createTask({ name: `Preparar vehículo - ${event.vehicleName}`, area: 'Taller', priority: 'Alta', vehicleId: event.vehicleId, responsibleIds: preparador ? [preparador.id] : [] })
 }
 
 async function handleVendido(event: StateChangeEvent) {
   const today = new Date().toISOString().split('T')[0]
   await setVehicleDate(event.vehicleId, ['listo', 'venta'], today)
-  await createTask(
-    `Publicar vehículo - ${event.vehicleName}`,
-    event.vehicleId,
-    [],
-    'Media',
-    'Marketing'
-  )
-  await createTask(
-    `Gestionar venta - ${event.vehicleName}`,
-    event.vehicleId,
-    [],
-    'Alta',
-    'Ventas'
-  )
+  await createTask({ name: `Publicar vehículo - ${event.vehicleName}`, area: 'Marketing', priority: 'Media', vehicleId: event.vehicleId })
+  await createTask({ name: `Gestionar venta - ${event.vehicleName}`, area: 'Ventas', priority: 'Alta', vehicleId: event.vehicleId })
 }
