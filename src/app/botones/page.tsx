@@ -208,6 +208,7 @@ function BotonesInner() {
         <Modal onClose={() => setModal(null)} title="📝 Crear tarea rápida">
           <TaskForm
             vehicles={vehicles}
+            employees={employees}
             onSuccess={() => { setModal(null); showToast('Tarea creada ✓'); fetchData() }}
             onError={(msg) => showToast(msg, true)}
           />
@@ -235,7 +236,7 @@ function Modal({ children, title, onClose }: { children: React.ReactNode; title:
       onClick={(e) => { if (e.target === e.currentTarget) onClose() }}
     >
       <div
-        className="card w-full max-w-sm animate-fade-up flex flex-col"
+        className="card w-full max-w-md animate-fade-up flex flex-col"
         style={{ background: 'var(--bg-card)', maxHeight: '85vh' }}
       >
         <div className="flex items-center justify-between px-4 py-3 border-b shrink-0" style={{ borderColor: 'var(--border)' }}>
@@ -548,11 +549,23 @@ function VenderForm({ vehicles, onSuccess, onError }: { vehicles: VehicleItem[];
 
 /* ─── Form: Crear tarea rápida ─── */
 
-function TaskForm({ vehicles, onSuccess, onError }: { vehicles: VehicleItem[]; onSuccess: () => void; onError: (msg: string) => void }) {
+function TaskForm({ vehicles, employees, onSuccess, onError }: { vehicles: VehicleItem[]; employees: EmployeeItem[]; onSuccess: () => void; onError: (msg: string) => void }) {
   const [name, setName] = useState('')
   const [vehicleId, setVehicleId] = useState('')
   const [area, setArea] = useState('')
+  const [priority, setPriority] = useState('Media')
+  const [type, setType] = useState('')
+  const [tipoTarea, setTipoTarea] = useState('')
+  const [areaNegocio, setAreaNegocio] = useState('')
+  const [responsableId, setResponsableId] = useState('')
+  const [deadline, setDeadline] = useState('')
+  const [descripcion, setDescripcion] = useState('')
   const [saving, setSaving] = useState(false)
+
+  const AREAS = ['Taller', 'Logística', 'Marketing', 'Ventas', 'Gerencia', 'Administración']
+  const TIPOS = ['Personal', 'Grupal', 'Departamental', 'Proyecto']
+  const TIPOS_TAREA = ['Mejora interna', 'Marketing', 'Nuevo negocio', 'Visitas', 'Administrativo', 'Otro']
+  const AREAS_NEGOCIO = ['Taller', 'V.O', 'Renting', 'Marketing', 'Growth', 'General', 'RRHH']
 
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault()
@@ -562,7 +575,18 @@ function TaskForm({ vehicles, onSuccess, onError }: { vehicles: VehicleItem[]; o
       const res = await fetch('/api/tasks', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ name: name.trim(), vehicleId: vehicleId || null, area }),
+        body: JSON.stringify({
+          name: name.trim(),
+          area,
+          priority,
+          vehicleId: vehicleId || null,
+          type: type || undefined,
+          tipoTarea: tipoTarea || undefined,
+          areaNegocio: areaNegocio || undefined,
+          responsableId: responsableId || undefined,
+          deadline: deadline || undefined,
+          descripcion: descripcion.trim() || undefined,
+        }),
       })
       const data = await res.json()
       if (res.ok) onSuccess()
@@ -577,19 +601,51 @@ function TaskForm({ vehicles, onSuccess, onError }: { vehicles: VehicleItem[]; o
   return (
     <form onSubmit={handleSubmit} className="space-y-3">
       <Input label="Nombre de la tarea *" value={name} onChange={setName} required />
-      <Select
-        label="Vehículo (opcional)" value={vehicleId} onChange={setVehicleId}
-        options={vehicles.map((v) => ({ value: v.id, label: `${v.name} (${v.matricula || v.brand || '—'})` }))}
+      <div className="grid grid-cols-2 gap-2">
+        <Select label="Departamento *" value={area} onChange={setArea}
+          options={AREAS.map(a => ({ value: a, label: a }))}
+        />
+        <Select label="Prioridad" value={priority} onChange={setPriority}
+          options={[
+            { value: 'Media', label: '🟡 Media' },
+            { value: 'Alta', label: '🔴 Alta' },
+            { value: 'Baja', label: '🟢 Baja' },
+          ]}
+        />
+      </div>
+      <div className="grid grid-cols-2 gap-2">
+        <Select label="Tipo" value={type} onChange={setType}
+          options={[{ value: '', label: 'Seleccionar...' }, ...TIPOS.map(t => ({ value: t, label: t }))]}
+        />
+        <Select label="Tipo de tarea" value={tipoTarea} onChange={setTipoTarea}
+          options={[{ value: '', label: 'Seleccionar...' }, ...TIPOS_TAREA.map(t => ({ value: t, label: t }))]}
+        />
+      </div>
+      <div className="grid grid-cols-2 gap-2">
+        <Select label="Área de negocio" value={areaNegocio} onChange={setAreaNegocio}
+          options={[{ value: '', label: 'Seleccionar...' }, ...AREAS_NEGOCIO.map(a => ({ value: a, label: a }))]}
+        />
+        <div>
+          <label className="block text-xs font-medium mb-1" style={{ color: 'var(--text-secondary)' }}>Fecha límite</label>
+          <input type="date" value={deadline} onChange={e => setDeadline(e.target.value)}
+            className="w-full text-sm px-3 py-2 rounded outline-none"
+            style={{ background: 'var(--bg)', color: 'var(--text)', border: '1px solid var(--border)' }}
+          />
+        </div>
+      </div>
+      <Select label="Responsable" value={responsableId} onChange={setResponsableId}
+        options={[{ value: '', label: 'Seleccionar...' }, ...employees.map(e => ({ value: e.id, label: e.name }))]}
       />
-      <Select
-        label="Área *" value={area} onChange={setArea}
-        options={[
-          { value: 'Taller', label: '🔧 Taller' },
-          { value: 'Logística', label: '🚛 Logística' },
-          { value: 'Marketing', label: '📢 Marketing' },
-          { value: 'Ventas', label: '💰 Ventas' },
-        ]}
+      <Select label="Vehículo" value={vehicleId} onChange={setVehicleId}
+        options={[{ value: '', label: 'Seleccionar...' }, ...vehicles.map(v => ({ value: v.id, label: `${v.name} (${v.matricula || v.brand || '—'})` }))]}
       />
+      <div>
+        <label className="block text-xs font-medium mb-1" style={{ color: 'var(--text-secondary)' }}>Descripción</label>
+        <textarea value={descripcion} onChange={e => setDescripcion(e.target.value)} rows={3}
+          className="w-full text-sm px-3 py-2 rounded outline-none resize-none"
+          style={{ background: 'var(--bg)', color: 'var(--text)', border: '1px solid var(--border)' }}
+        />
+      </div>
       <button
         type="submit"
         disabled={saving || !name.trim() || !area}
