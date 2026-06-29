@@ -81,7 +81,7 @@ export async function GET(request: NextRequest) {
 export async function POST(request: NextRequest) {
   try {
     const body = await request.json()
-    const { name, matricula, brand, model, year, lineaNegocio, tipo, fechaCompra, fechaListo, precioCompra, precioVenta } = body
+    const { name, matricula, brand, model, year, lineaNegocio, tipo, color, combustible, kilometrajeEntrada, notas, fechaCompra, fechaListo, precioCompra, precioVenta } = body
 
     if (!name) {
       return NextResponse.json(
@@ -90,8 +90,11 @@ export async function POST(request: NextRequest) {
       )
     }
 
-    console.log('Creating vehicle with data:', JSON.stringify(body))
-    const id = await createVehicle({ name, matricula, brand, model, year, lineaNegocio, tipo, fechaCompra, fechaListo, precioCompra, precioVenta })
+    const id = await createVehicle({
+      name, matricula, brand, model, year, lineaNegocio, tipo,
+      color, combustible, kilometrajeEntrada, notas,
+      fechaCompra, fechaListo, precioCompra, precioVenta,
+    })
 
     return NextResponse.json({ success: true, data: { id } }, { status: 201 })
   } catch (error: any) {

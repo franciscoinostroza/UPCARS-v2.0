@@ -41,13 +41,13 @@ async function handleTransito(event: StateChangeEvent) {
   const logistico = await getEmployeeByRole('Logística')
   const today = new Date().toISOString().split('T')[0]
   await createCalendarEvent(event.vehicleName, logistico?.id || null, today)
-  await createWorkshopOrder('Logistica', event.vehicleId, logistico?.id || null, 'Traslado de vehículo')
+  await createWorkshopOrder({ type: 'Logistica', vehicleId: event.vehicleId, responsibleId: logistico?.id || null, notes: 'Traslado de vehículo' })
   await createTask({ name: `Gestionar traslado - ${event.vehicleName}`, area: 'Logística', priority: 'Alta', vehicleId: event.vehicleId, responsibleIds: logistico ? [logistico.id] : [] })
 }
 
 async function handleTaller(event: StateChangeEvent) {
   const mecanico = await getEmployeeByRole('Mecánico')
-  await createWorkshopOrder('Taller', event.vehicleId, mecanico?.id || null, 'Revisión mecánica general')
+  await createWorkshopOrder({ type: 'Taller', vehicleId: event.vehicleId, responsibleId: mecanico?.id || null, notes: 'Revisión mecánica general' })
   await createTask({ name: `Revisión mecánica - ${event.vehicleName}`, area: 'Taller', priority: 'Alta', vehicleId: event.vehicleId, responsibleIds: mecanico ? [mecanico.id] : [] })
 }
 
@@ -58,7 +58,7 @@ async function handleChapa(event: StateChangeEvent) {
 
 async function handlePreparacion(event: StateChangeEvent) {
   const preparador = await getEmployeeByRole('Preparador')
-  await createWorkshopOrder('Preparacion', event.vehicleId, preparador?.id || null, 'Preparación y limpieza')
+  await createWorkshopOrder({ type: 'Preparacion', vehicleId: event.vehicleId, responsibleId: preparador?.id || null, notes: 'Preparación y limpieza' })
   await createTask({ name: `Checklist limpieza - ${event.vehicleName}`, area: 'Taller', priority: 'Alta', vehicleId: event.vehicleId, responsibleIds: preparador ? [preparador.id] : [] })
   await createTask({ name: `Preparar vehículo - ${event.vehicleName}`, area: 'Taller', priority: 'Alta', vehicleId: event.vehicleId, responsibleIds: preparador ? [preparador.id] : [] })
 }

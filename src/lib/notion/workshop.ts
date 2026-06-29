@@ -56,39 +56,66 @@ async function getVehicleName(vehicleId: string): Promise<string> {
   }
 }
 
-export async function createWorkshopOrder(
-  type: OrderType,
-  vehicleId: string,
-  responsibleId: string | null,
+export async function createWorkshopOrder(data: {
+  type: OrderType
+  vehicleId: string
+  responsibleId?: string | null
   notes?: string
-) {
+  tipoTrabajo?: string
+  mecanicoId?: string | null
+  fechaEntrada?: string
+  costeMateriales?: number
+  costeManoObra?: number
+}) {
   const dbId = getDatabaseId('workshop')
   const schema = await getDbSchema('workshop')
-  const prefix = PREFIXES[type]
-  const vehicle = await getVehicleName(vehicleId)
+  const prefix = PREFIXES[data.type]
+  const vehicle = await getVehicleName(data.vehicleId)
 
   const titleKey = findPropertyByType(schema, 'title') || 'Nombre'
-  const relations = findPropertiesByType(schema, 'relation')
-  const selects = findPropertiesByType(schema, 'select')
-  const richTexts = findPropertiesByType(schema, 'rich_text')
+  const relations = findPropertiesByType(schema, 'relation') || []
+  const selects = findPropertiesByType(schema, 'select') || []
+  const richTexts = findPropertiesByType(schema, 'rich_text') || []
+  const numbers = findPropertiesByType(schema, 'number') || []
+  const dates = findPropertiesByType(schema, 'date') || []
 
   const relationKey = relations.find((r) => r.name === 'Vehículo')?.name || relations[0]?.name || 'Vehículo'
   const statusKey = selects.find((s) => s.name === 'Estado')?.name || selects[0]?.name || 'Estado'
   const responsableKey = relations.find((r) => r.name === 'Mecánico asignado' || r.name === 'Responsable')?.name || relations[1]?.name || 'Responsable'
   const notesKey = richTexts.find((r) => r.name === 'Observaciones')?.name || richTexts[0]?.name || 'Observaciones'
+  const tipoTrabajoKey = selects.find((s) => s.name === 'Tipo de trabajo')?.name || selects[1]?.name
+  const fechaEntradaKey = dates.find((d) => d.name.includes('entrada'))?.name || dates[0]?.name
+  const costeMatKey = numbers.find((n) => n.name.includes('materiales') || n.name.includes('Materiales'))?.name || numbers[0]?.name
+  const costeMOKey = numbers.find((n) => n.name.includes('mano') || n.name.includes('obra'))?.name || numbers[1]?.name
 
   const properties: Record<string, unknown> = {
     [titleKey]: { title: [{ text: { content: `${prefix} - ${vehicle}` } }] },
-    [relationKey]: { relation: [{ id: vehicleId }] },
+    [relationKey]: { relation: [{ id: data.vehicleId }] },
     [statusKey]: { select: { name: 'En proceso' } },
   }
 
-  if (responsibleId) {
-    properties[responsableKey] = { relation: [{ id: responsibleId }] }
+  if (data.responsibleId || data.mecanicoId) {
+    properties[responsableKey] = { relation: [{ id: data.mecanicoId || data.responsibleId }] }
   }
 
-  if (notes) {
-    properties[notesKey] = { rich_text: [{ text: { content: notes } }] }
+  if (data.notes) {
+    properties[notesKey] = { rich_text: [{ text: { content: data.notes } }] }
+  }
+
+  if (data.tipoTrabajo && tipoTrabajoKey) {
+    properties[tipoTrabajoKey] = { select: { name: data.tipoTrabajo } }
+  }
+
+  if (data.fechaEntrada && fechaEntradaKey) {
+    properties[fechaEntradaKey] = { date: { start: data.fechaEntrada } }
+  }
+
+  if (data.costeMateriales != null && costeMatKey) {
+    properties[costeMatKey] = { number: data.costeMateriales }
+  }
+
+  if (data.costeManoObra != null && costeMOKey) {
+    properties[costeMOKey] = { number: data.costeManoObra }
   }
 
   await notionPost('/pages', {

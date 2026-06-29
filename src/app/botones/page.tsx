@@ -190,6 +190,7 @@ function BotonesInner() {
         <Modal onClose={() => setModal(null)} title="📋 Nueva orden taller">
           <OrdenForm
             vehicles={vehicles}
+            employees={employees}
             onSuccess={() => { setModal(null); showToast('Orden creada ✓'); fetchData() }}
             onError={(msg) => showToast(msg, true)}
           />
@@ -261,11 +262,17 @@ function NuevoVehiculoForm({ onSuccess, onError }: { onSuccess: () => void; onEr
   const [year, setYear] = useState('')
   const [lineaNegocio, setLineaNegocio] = useState('')
   const [tipo, setTipo] = useState('')
+  const [color, setColor] = useState('')
+  const [combustible, setCombustible] = useState('')
+  const [kilometraje, setKilometraje] = useState('')
+  const [notas, setNotas] = useState('')
   const [fechaCompra, setFechaCompra] = useState('')
   const [fechaListo, setFechaListo] = useState('')
   const [precioCompra, setPrecioCompra] = useState('')
   const [precioVenta, setPrecioVenta] = useState('')
   const [saving, setSaving] = useState(false)
+
+  const COMBUSTIBLES = ['Gasolina', 'Diesel', 'Hibrido (ECO)', 'PHEV', 'Electrico']
 
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault()
@@ -279,6 +286,10 @@ function NuevoVehiculoForm({ onSuccess, onError }: { onSuccess: () => void; onEr
       if (year.trim()) body.year = parseInt(year)
       if (lineaNegocio.trim()) body.lineaNegocio = lineaNegocio.trim()
       if (tipo.trim()) body.tipo = tipo.trim()
+      if (color.trim()) body.color = color.trim()
+      if (combustible) body.combustible = combustible
+      if (kilometraje.trim()) body.kilometrajeEntrada = parseInt(kilometraje)
+      if (notas.trim()) body.notas = notas.trim()
       if (fechaCompra) body.fechaCompra = fechaCompra
       if (fechaListo) body.fechaListo = fechaListo
       if (precioCompra.trim()) body.precioCompra = parseFloat(precioCompra)
@@ -302,16 +313,34 @@ function NuevoVehiculoForm({ onSuccess, onError }: { onSuccess: () => void; onEr
   return (
     <form onSubmit={handleSubmit} className="space-y-3">
       <Input label="Nombre *" value={name} onChange={setName} required />
-      <Input label="Matrícula" value={matricula} onChange={setMatricula} />
-      <Input label="Marca" value={brand} onChange={setBrand} />
-      <Input label="Modelo" value={model} onChange={setModel} />
-      <Input label="Año" value={year} onChange={setYear} inputMode="numeric" />
-      <Input label="Línea de negocio" value={lineaNegocio} onChange={setLineaNegocio} />
+      <div className="grid grid-cols-2 gap-2">
+        <Input label="Matrícula" value={matricula} onChange={setMatricula} />
+        <Input label="Año" value={year} onChange={setYear} inputMode="numeric" />
+      </div>
+      <div className="grid grid-cols-2 gap-2">
+        <Input label="Marca" value={brand} onChange={setBrand} />
+        <Input label="Modelo" value={model} onChange={setModel} />
+      </div>
+      <div className="grid grid-cols-2 gap-2">
+        <Input label="Color" value={color} onChange={setColor} />
+        <Select label="Combustible" value={combustible} onChange={setCombustible}
+          options={[{ value: '', label: 'Seleccionar...' }, ...COMBUSTIBLES.map(c => ({ value: c, label: c }))]}
+        />
+      </div>
+      <div className="grid grid-cols-2 gap-2">
+        <Input label="Kilometraje entrada" value={kilometraje} onChange={setKilometraje} inputMode="numeric" />
+        <Input label="Línea de negocio" value={lineaNegocio} onChange={setLineaNegocio} />
+      </div>
       <Input label="Tipo de vehículo" value={tipo} onChange={setTipo} />
-      <Input label="Fecha de compra" value={fechaCompra} onChange={setFechaCompra} type="date" />
-      <Input label="Fecha listo para venta" value={fechaListo} onChange={setFechaListo} type="date" />
-      <Input label="Precio de compra (€)" value={precioCompra} onChange={setPrecioCompra} inputMode="decimal" />
-      <Input label="Precio de venta (€)" value={precioVenta} onChange={setPrecioVenta} inputMode="decimal" />
+      <div className="grid grid-cols-2 gap-2">
+        <Input label="Fecha de compra" value={fechaCompra} onChange={setFechaCompra} type="date" />
+        <Input label="Fecha listo para venta" value={fechaListo} onChange={setFechaListo} type="date" />
+      </div>
+      <div className="grid grid-cols-2 gap-2">
+        <Input label="Precio de compra (€)" value={precioCompra} onChange={setPrecioCompra} inputMode="decimal" />
+        <Input label="Precio de venta (€)" value={precioVenta} onChange={setPrecioVenta} inputMode="decimal" />
+      </div>
+      <Input label="Notas" value={notas} onChange={setNotas} textarea />
       <button
         type="submit"
         disabled={saving || !name.trim()}
@@ -436,11 +465,18 @@ function AsignarForm({ vehicles, employees, onSuccess, onError }: { vehicles: Ve
 
 /* ─── Form: Nueva orden taller ─── */
 
-function OrdenForm({ vehicles, onSuccess, onError }: { vehicles: VehicleItem[]; onSuccess: () => void; onError: (msg: string) => void }) {
+function OrdenForm({ vehicles, employees, onSuccess, onError }: { vehicles: VehicleItem[]; employees: EmployeeItem[]; onSuccess: () => void; onError: (msg: string) => void }) {
   const [vehicleId, setVehicleId] = useState('')
   const [type, setType] = useState('')
+  const [tipoTrabajo, setTipoTrabajo] = useState('')
+  const [mecanicoId, setMecanicoId] = useState('')
+  const [fechaEntrada, setFechaEntrada] = useState('')
+  const [costeMateriales, setCosteMateriales] = useState('')
+  const [costeManoObra, setCosteManoObra] = useState('')
   const [notes, setNotes] = useState('')
   const [saving, setSaving] = useState(false)
+
+  const TIPOS_TRABAJO = ['Revisión general', 'Frenos', 'Motor', 'Electricidad', 'Otro']
 
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault()
@@ -450,7 +486,15 @@ function OrdenForm({ vehicles, onSuccess, onError }: { vehicles: VehicleItem[]; 
       const res = await fetch('/api/workshop-orders', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ type, vehicleId, notes: notes.trim() || undefined }),
+        body: JSON.stringify({
+          type, vehicleId,
+          tipoTrabajo: tipoTrabajo || undefined,
+          mecanicoId: mecanicoId || undefined,
+          fechaEntrada: fechaEntrada || undefined,
+          costeMateriales: costeMateriales ? parseFloat(costeMateriales) : undefined,
+          costeManoObra: costeManoObra ? parseFloat(costeManoObra) : undefined,
+          notes: notes.trim() || undefined,
+        }),
       })
       const data = await res.json()
       if (res.ok) onSuccess()
@@ -464,19 +508,38 @@ function OrdenForm({ vehicles, onSuccess, onError }: { vehicles: VehicleItem[]; 
 
   return (
     <form onSubmit={handleSubmit} className="space-y-3">
-      <Select
-        label="Vehículo" value={vehicleId} onChange={setVehicleId}
-        options={vehicles.map((v) => ({ value: v.id, label: `${v.name} (${v.matricula || v.brand || '—'})` }))}
+      <Select label="Vehículo" value={vehicleId} onChange={setVehicleId}
+        options={vehicles.map(v => ({ value: v.id, label: `${v.name} (${v.matricula || v.brand || '—'})` }))}
       />
-      <Select
-        label="Tipo de orden" value={type} onChange={setType}
-        options={[
-          { value: 'Taller', label: '🔧 Taller' },
-          { value: 'Chapa', label: '🎨 Chapa y Pintura' },
-          { value: 'Preparacion', label: '✨ Preparación' },
-          { value: 'Logistica', label: '🚛 Logística' },
-        ]}
-      />
+      <div className="grid grid-cols-2 gap-2">
+        <Select label="Tipo de orden" value={type} onChange={setType}
+          options={[
+            { value: 'Taller', label: '🔧 Taller' },
+            { value: 'Chapa', label: '🎨 Chapa y Pintura' },
+            { value: 'Preparacion', label: '✨ Preparación' },
+            { value: 'Logistica', label: '🚛 Logística' },
+          ]}
+        />
+        <Select label="Tipo de trabajo" value={tipoTrabajo} onChange={setTipoTrabajo}
+          options={[{ value: '', label: 'Seleccionar...' }, ...TIPOS_TRABAJO.map(t => ({ value: t, label: t }))]}
+        />
+      </div>
+      <div className="grid grid-cols-2 gap-2">
+        <div>
+          <label className="block text-xs font-medium mb-1" style={{ color: 'var(--text-secondary)' }}>Fecha entrada</label>
+          <input type="date" value={fechaEntrada} onChange={e => setFechaEntrada(e.target.value)}
+            className="w-full text-sm px-3 py-2 rounded outline-none"
+            style={{ background: 'var(--bg)', color: 'var(--text)', border: '1px solid var(--border)' }}
+          />
+        </div>
+        <Select label="Mecánico asignado" value={mecanicoId} onChange={setMecanicoId}
+          options={[{ value: '', label: 'Seleccionar...' }, ...employees.map(e => ({ value: e.id, label: e.name }))]}
+        />
+      </div>
+      <div className="grid grid-cols-2 gap-2">
+        <Input label="Coste materiales (€)" value={costeMateriales} onChange={setCosteMateriales} inputMode="decimal" />
+        <Input label="Coste mano de obra (€)" value={costeManoObra} onChange={setCosteManoObra} inputMode="decimal" />
+      </div>
       <Input label="Notas (opcional)" value={notes} onChange={setNotes} textarea />
       <button
         type="submit"
