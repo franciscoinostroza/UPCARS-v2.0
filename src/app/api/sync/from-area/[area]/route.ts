@@ -127,7 +127,13 @@ async function handleRequest(request: NextRequest, { area }: { area: string }) {
     const observaciones = extractText(props, 'Observaciones')
     const trabajos = area === 'chapa' ? extractText(props, 'Trabajos solicitados') : ''
     const checkboxes = ['Limpieza exterior', 'Limpieza interior', 'Fotografía para anuncio']
-    const extraNotas = observaciones || trabajos || (area === 'preparacion' && checkboxes.some(c => props[c]?.checkbox))
+    const ventasData = area === 'ventas' ? {
+      cliente: extractText(props, 'Cliente nombre'),
+      contacto: extractText(props, 'Cliente contacto'),
+      formaPago: extractSelect(props, 'Forma de pago'),
+      financiada: props['Financiada']?.checkbox,
+    } : null
+    const extraNotas = observaciones || trabajos || (area === 'preparacion' && checkboxes.some(c => props[c]?.checkbox)) || (ventasData && (ventasData.cliente || ventasData.formaPago || ventasData.financiada))
     if (extraNotas) {
       let existingNotas = ''
       try {
@@ -140,6 +146,12 @@ async function handleRequest(request: NextRequest, { area }: { area: string }) {
         for (const cb of checkboxes) {
           if (props[cb]?.checkbox) parts.push(`${cb}: ✅`)
         }
+      }
+      if (ventasData) {
+        if (ventasData.cliente) parts.push(`Cliente: ${ventasData.cliente}`)
+        if (ventasData.contacto) parts.push(`Contacto: ${ventasData.contacto}`)
+        if (ventasData.formaPago) parts.push(`Forma de pago: ${ventasData.formaPago}`)
+        if (ventasData.financiada) parts.push(`Financiada: ✅`)
       }
       if (observaciones) parts.push(`Observaciones: ${observaciones}`)
       const blockHeader = `--- ${config.label} ---`
