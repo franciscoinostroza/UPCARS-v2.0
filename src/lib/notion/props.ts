@@ -60,17 +60,17 @@ function matchKey(keys: string[], candidates: string[]): string | undefined {
 export function parseVehicleProps(id: string, p: Record<string, NotionProp>) {
   const idx = indexByType(p)
 
-  const nameKey = idx.title[0]
+  const titleKey = idx.title[0]
+  const matricula = tv(titleKey ? p[titleKey] : undefined)
 
   const selectKeys = idx.select
   const situacionKey = matchKey(selectKeys, ['Situación', 'Situacion', 'Estado']) ?? selectKeys[0]
   const ubicacionKey = matchKey(selectKeys, ['Ubicación', 'Ubicacion']) ?? selectKeys[1]
 
   const richTextKeys = idx.rich_text
-  const matriculaKey = matchKey(richTextKeys, ['Matricula / VIN', 'Matrícula', 'Matricula']) ?? richTextKeys[0]
-  const brandKey = matchKey(richTextKeys, ['Marca', 'Brand']) ?? richTextKeys[1]
-  const modelKey = matchKey(richTextKeys, ['Modelo', 'Model']) ?? richTextKeys[2]
-  const colorKey = matchKey(richTextKeys, ['Color']) ?? richTextKeys[3]
+  const brandKey = matchKey(richTextKeys, ['Marca', 'Brand']) ?? richTextKeys[0]
+  const modelKey = matchKey(richTextKeys, ['Modelo', 'Model']) ?? richTextKeys[1]
+  const colorKey = matchKey(richTextKeys, ['Color']) ?? richTextKeys[2]
   const notasKey = matchKey(richTextKeys, ['Notas']) ?? richTextKeys[richTextKeys.length - 1]
 
   const combustibleKey = matchKey(selectKeys, ['Combustible']) ?? selectKeys[2]
@@ -98,10 +98,12 @@ export function parseVehicleProps(id: string, p: Record<string, NotionProp>) {
   const diasActivoKey = matchKey(formulaKeys, ['Días activo sin cerrar']) ?? formulaKeys[1]
   const margenBrutoKey = matchKey(formulaKeys, ['Margen bruto (€)', 'Margen bruto']) ?? formulaKeys[2]
 
+  const autoName = [rtv(brandKey ? p[brandKey] : undefined), rtv(modelKey ? p[modelKey] : undefined)].filter(Boolean).join(' ')
+
   return {
     id,
-    name: tv(nameKey ? p[nameKey] : undefined),
-    matricula: rtv(matriculaKey ? p[matriculaKey] : undefined),
+    name: autoName || matricula,
+    matricula,
     brand: rtv(brandKey ? p[brandKey] : undefined),
     model: rtv(modelKey ? p[modelKey] : undefined),
     year: num(yearKey ? p[yearKey] : undefined, 0)!,

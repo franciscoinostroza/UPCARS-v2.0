@@ -138,13 +138,8 @@ export async function createVehicle(data: {
   }
 
   const properties: Record<string, unknown> = {
-    [titleKey]: { title: [{ text: { content: data.name } }] },
+    [titleKey]: { title: [{ text: { content: data.matricula || data.name } }] },
     [statusKey]: { select: { name: 'Comprado' } },
-  }
-
-  if (data.matricula) {
-    const k = getRichTextKey(['Matricula / VIN', 'Matrícula', 'Matricula'], 0)
-    if (k) properties[k] = { rich_text: [{ text: { content: data.matricula } }] }
   }
   if (data.brand) {
     const k = getRichTextKey(['Marca', 'Brand'], 0)

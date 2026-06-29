@@ -312,7 +312,7 @@ function NuevoVehiculoForm({ onSuccess, onError }: { onSuccess: () => void; onEr
 
   return (
     <form onSubmit={handleSubmit} className="space-y-3">
-      <Input label="Nombre *" value={name} onChange={setName} required />
+      <Input label="Matrícula *" value={name} onChange={setName} required />
       <div className="grid grid-cols-2 gap-2">
         <Input label="Matrícula" value={matricula} onChange={setMatricula} />
         <Input label="Año" value={year} onChange={setYear} inputMode="numeric" />

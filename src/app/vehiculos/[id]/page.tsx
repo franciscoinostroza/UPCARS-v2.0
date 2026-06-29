@@ -155,12 +155,12 @@ function VehicleDetailInner() {
           <div>
             <div className="flex items-center gap-2 mb-1">
               <span className="text-xl">{STATE_ICONS[v.state] || '🚗'}</span>
-              <h1 className="text-lg sm:text-xl font-bold" style={{ color: 'var(--text)' }}>{v.name}</h1>
+              <h1 className="text-lg sm:text-xl font-bold" style={{ color: 'var(--text)' }}>{v.brand} {v.model}</h1>
             </div>
             <div className="flex flex-wrap gap-2 text-xs" style={{ color: 'var(--text-secondary)' }}>
               <span>{v.matricula || 'Sin matrícula'}</span>
               <span>·</span>
-              <span>{v.brand} {v.model} {v.year}</span>
+              <span>{v.year || ''}</span>
               {v.lineaNegocio && <><span>·</span><span>{v.lineaNegocio}</span></>}
             </div>
           </div>
