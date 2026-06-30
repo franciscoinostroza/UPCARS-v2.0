@@ -256,7 +256,6 @@ function Modal({ children, title, onClose }: { children: React.ReactNode; title:
 
 function NuevoVehiculoForm({ onSuccess, onError }: { onSuccess: () => void; onError: (msg: string) => void }) {
   const [name, setName] = useState('')
-  const [matricula, setMatricula] = useState('')
   const [brand, setBrand] = useState('')
   const [model, setModel] = useState('')
   const [year, setYear] = useState('')
@@ -280,7 +279,6 @@ function NuevoVehiculoForm({ onSuccess, onError }: { onSuccess: () => void; onEr
     setSaving(true)
     try {
       const body: Record<string, unknown> = { name: name.trim() }
-      if (matricula.trim()) body.matricula = matricula.trim()
       if (brand.trim()) body.brand = brand.trim()
       if (model.trim()) body.model = model.trim()
       if (year.trim()) body.year = parseInt(year)
@@ -313,10 +311,7 @@ function NuevoVehiculoForm({ onSuccess, onError }: { onSuccess: () => void; onEr
   return (
     <form onSubmit={handleSubmit} className="space-y-3">
       <Input label="Matrícula *" value={name} onChange={setName} required />
-      <div className="grid grid-cols-2 gap-2">
-        <Input label="Matrícula" value={matricula} onChange={setMatricula} />
-        <Input label="Año" value={year} onChange={setYear} inputMode="numeric" />
-      </div>
+      <Input label="Año" value={year} onChange={setYear} inputMode="numeric" />
       <div className="grid grid-cols-2 gap-2">
         <Input label="Marca" value={brand} onChange={setBrand} />
         <Input label="Modelo" value={model} onChange={setModel} />
