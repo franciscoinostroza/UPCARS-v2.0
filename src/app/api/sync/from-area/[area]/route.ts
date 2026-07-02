@@ -86,7 +86,7 @@ async function handleRequest(request: NextRequest, { area }: { area: string }) {
 
     const vehicleId = extractRelation(props, 'Vehículo')
     if (!vehicleId) {
-      return NextResponse.json({ success: false, error: 'No vehicle linked in this record' }, { status: 400 })
+      return NextResponse.json({ success: true, message: 'Skipped - no vehicle linked' })
     }
 
     const updateProps: Record<string, any> = {}
