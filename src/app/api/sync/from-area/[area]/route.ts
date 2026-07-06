@@ -124,6 +124,38 @@ async function handleRequest(request: NextRequest, { area }: { area: string }) {
       if (precio != null) updateProps['Precio venta (€)'] = { number: precio }
     }
 
+    // ─── Mapeo de estado del área → Estado Actual del vehículo ───
+    const STATE_MAP: Record<string, Record<string, string>> = {
+      logistica: { 'Pendiente autorización': 'Logística - Pendiente autorización', 'Autorizado': 'Logística - Autorizado', 'Completado': 'Logística - Entregado' },
+      taller: { 'En proceso': 'Taller - En proceso', 'Terminado': 'Taller - Finalizado' },
+      chapa: { 'Pendiente de Chapa': 'Chapa - Pendiente', 'En taller': 'Chapa - En proceso', 'Terminado': 'Chapa - Finalizado' },
+      preparacion: { 'Pendiente': 'Preparación - Pendiente', 'En preparación': 'Preparación - En proceso', 'Listo para stock': 'Preparación - Finalizado' },
+    }
+    const areaEstado = extractSelect(props, 'Estado')
+    const estadoVehiculo = STATE_MAP[area]?.[areaEstado]
+    if (estadoVehiculo) {
+      updateProps['Estado Actual'] = { select: { name: estadoVehiculo } }
+
+      // ─── Captura automática de Inicio/Fin según el nuevo estado ───
+      const INICIO_MAP: Record<string, string> = {
+        'Taller - En proceso': 'Inicio Taller',
+        'Chapa - En proceso': 'Inicio Chapa',
+        'Preparación - En proceso': 'Inicio Preparación',
+        'Logística - Autorizado': 'Inicio Logística',
+      }
+      const FIN_MAP: Record<string, string> = {
+        'Taller - Finalizado': 'Fin Taller',
+        'Chapa - Finalizado': 'Fin Chapa',
+        'Preparación - Finalizado': 'Fin Preparación',
+        'Logística - Entregado': 'Fin Logística',
+      }
+      const targetKey = INICIO_MAP[estadoVehiculo] || FIN_MAP[estadoVehiculo]
+      if (targetKey) {
+        const now = new Date().toISOString()
+        updateProps[targetKey] = { date: { start: now } }
+      }
+    }
+
     const observaciones = extractText(props, 'Observaciones')
     const trabajos = area === 'chapa' ? extractText(props, 'Trabajos solicitados') : ''
 

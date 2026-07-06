@@ -17,6 +17,9 @@ export interface Vehicle {
   year: number
   lineaNegocio: string
   tipo: string
+  estadoActual: string
+  area: string
+  subEstado: string
   situacion: SituacionComercial
   ubicacion: string
   fechaCompra: string

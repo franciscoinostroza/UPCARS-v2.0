@@ -64,8 +64,15 @@ export function parseVehicleProps(id: string, p: Record<string, NotionProp>) {
   const matricula = tv(titleKey ? p[titleKey] : undefined)
 
   const selectKeys = idx.select
+  const estadoActualKey = matchKey(selectKeys, ['Estado Actual']) ?? selectKeys[0]
   const situacionKey = matchKey(selectKeys, ['Situación', 'Situacion', 'Estado']) ?? selectKeys[0]
   const ubicacionKey = matchKey(selectKeys, ['Ubicación', 'Ubicacion']) ?? selectKeys[1]
+
+  // Extraer área y sub-estado desde "Estado Actual" (ej: "Taller - En proceso")
+  const estadoActual = sel(estadoActualKey ? p[estadoActualKey] : undefined)
+  const estadoParts = estadoActual.split(' - ')
+  const areaEstado = estadoParts.length > 1 ? estadoParts[0] : estadoActual
+  const subEstado = estadoParts.length > 1 ? estadoParts[1] : ''
 
   const richTextKeys = idx.rich_text
   const brandKey = matchKey(richTextKeys, ['Marca', 'Brand']) ?? richTextKeys[0]
@@ -100,6 +107,20 @@ export function parseVehicleProps(id: string, p: Record<string, NotionProp>) {
 
   const autoName = [rtv(brandKey ? p[brandKey] : undefined), rtv(modelKey ? p[modelKey] : undefined)].filter(Boolean).join(' ')
 
+  // Derivar Situación y Ubicación desde Estado Actual
+  const derivedSituacion: SituacionComercial = 
+    estadoActual === 'Vendido' ? 'Vendido' :
+    estadoActual === 'Cedido' ? 'Cedido' :
+    (estadoActual.includes('Exposición') || estadoActual === 'Exposición') ? 'Exposición' as any :
+    'Stock'
+  const derivedUbicacion =
+    estadoActual.startsWith('Taller') ? 'Taller Mecánica' :
+    estadoActual.startsWith('Chapa') ? 'Taller Chapa' :
+    estadoActual.startsWith('Preparación') ? 'Taller Preparación' :
+    estadoActual === 'Logística - En proceso' ? 'En tránsito' :
+    estadoActual.startsWith('Logística') ? 'Sede Central' :
+    'Sede Central'
+
   return {
     id,
     name: autoName || matricula,
@@ -109,8 +130,11 @@ export function parseVehicleProps(id: string, p: Record<string, NotionProp>) {
     year: num(yearKey ? p[yearKey] : undefined, 0)!,
     lineaNegocio: sel(lineaNegocioKey ? p[lineaNegocioKey] : undefined),
     tipo: sel(tipoKey ? p[tipoKey] : undefined),
-    situacion: sel(situacionKey ? p[situacionKey] : undefined, 'Stock') as SituacionComercial,
-    ubicacion: sel(ubicacionKey ? p[ubicacionKey] : undefined, 'Sede Central'),
+    estadoActual,
+    area: areaEstado,
+    subEstado,
+    situacion: derivedSituacion,
+    ubicacion: derivedUbicacion,
     fechaCompra: dateVal(fechaCompraKey ? p[fechaCompraKey] : undefined, '')!,
     fechaListo: dateVal(fechaListoKey ? p[fechaListoKey] : undefined),
     fechaVendido: dateVal(fechaVendidoKey ? p[fechaVendidoKey] : undefined),
