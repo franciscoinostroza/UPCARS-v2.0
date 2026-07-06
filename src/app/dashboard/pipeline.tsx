@@ -7,6 +7,10 @@ import Link from 'next/link'
 const STATE_LABELS: Record<string, string> = {
   Stock: 'Stock',
   Exposición: 'Exposición',
+  'Logística': 'Logística',
+  'Taller': 'Taller',
+  'Chapa': 'Chapa',
+  'Preparación': 'Preparación',
   Vendido: 'Vendido',
   Cedido: 'Cedido',
 }
@@ -14,6 +18,10 @@ const STATE_LABELS: Record<string, string> = {
 const STATE_ICONS: Record<string, string> = {
   Stock: '📦',
   Exposición: '🏪',
+  'Logística': '🚛',
+  'Taller': '🔧',
+  'Chapa': '🎨',
+  'Preparación': '🧹',
   Vendido: '💰',
   Cedido: '↩️',
 }

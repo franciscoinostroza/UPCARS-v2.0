@@ -1,27 +1,22 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { getVehicles, createVehicle } from '@/lib/notion/vehicles'
-import { SLA_THRESHOLDS, STUCK_THRESHOLDS } from '@/lib/types'
 
 export const dynamic = 'force-dynamic'
 
-const SLA_UBICACION_MAP: Record<string, string> = {
-  'Taller Mecánica': 'Taller',
-  'Taller Chapa': 'Chapa',
-  'Taller Preparación': 'Preparacion',
+const AREA_ORDER = ['Logística', 'Taller', 'Chapa', 'Preparación', 'Stock', 'Exposición', 'Vendido', 'Cedido']
+
+function getArea(estadoActual: string): string {
+  if (estadoActual.startsWith('Logística')) return 'Logística'
+  if (estadoActual.startsWith('Taller')) return 'Taller'
+  if (estadoActual.startsWith('Chapa')) return 'Chapa'
+  if (estadoActual.startsWith('Preparación')) return 'Preparación'
+  if (estadoActual === 'Vendido') return 'Vendido'
+  if (estadoActual === 'Cedido') return 'Cedido'
+  if (estadoActual === 'Exposición') return 'Exposición'
+  return 'Stock'
 }
 
-const SITUACIONES_ACTIVAS = ['Stock', 'Exposición']
-
-function calcSlaStatus(ubicacion: string, daysInUbicacion: number): 'green' | 'yellow' | 'red' | null {
-  const hours = daysInUbicacion * 24
-  const area = SLA_UBICACION_MAP[ubicacion]
-  const threshold = area ? SLA_THRESHOLDS[area] : STUCK_THRESHOLDS[ubicacion]
-  if (!threshold) return null
-  const pct = (hours / (threshold * 24)) * 100
-  if (pct < 50) return 'green'
-  if (pct <= 80) return 'yellow'
-  return 'red'
-}
+const ESTADOS_ACTIVOS = ['Logística', 'Taller', 'Chapa', 'Preparación', 'Stock', 'Exposición']
 
 export async function GET(request: NextRequest) {
   try {
@@ -31,46 +26,38 @@ export async function GET(request: NextRequest) {
     const filterResponsable = searchParams.get('responsable')
     const filterBrand = searchParams.get('marca')
     const filterLinea = searchParams.get('linea')
-    const filterUbicacion = searchParams.get('ubicacion')
 
-    let activeVehicles = vehicles.filter((v) => SITUACIONES_ACTIVAS.includes(v.situacion))
+    let activeVehicles = vehicles.filter((v) => ESTADOS_ACTIVOS.includes(getArea(v.estadoActual)))
 
     if (filterResponsable) activeVehicles = activeVehicles.filter(v => v.responsable === filterResponsable)
     if (filterBrand) activeVehicles = activeVehicles.filter(v => v.brand.toLowerCase().includes(filterBrand.toLowerCase()))
     if (filterLinea) activeVehicles = activeVehicles.filter(v => v.lineaNegocio === filterLinea)
-    if (filterUbicacion) activeVehicles = activeVehicles.filter(v => v.ubicacion === filterUbicacion)
 
     if (list === 'true') return NextResponse.json({ success: true, data: activeVehicles })
 
-    function calcDaysInUbicacion(v: typeof activeVehicles[number]): number {
-      const refDate = v.ubicacion === 'Taller Mecánica' ? v.fechaEntradaTaller
-        : v.ubicacion === 'Taller Preparación' ? v.fechaEntradaPreparacion
-        : v.fechaCompra
-      if (!refDate) return 0
-      return Math.floor((Date.now() - new Date(refDate).getTime()) / (1000 * 60 * 60 * 24))
+    function calcDaysInArea(v: typeof activeVehicles[number]): number {
+      if (!v.fechaCompra) return 0
+      return Math.floor((Date.now() - new Date(v.fechaCompra).getTime()) / (1000 * 60 * 60 * 24))
     }
 
-    const pipeline = SITUACIONES_ACTIVAS.map((situacion) => ({
-      state: situacion,
+    const pipeline = AREA_ORDER.filter(a => ESTADOS_ACTIVOS.includes(a) || a === 'Vendido' || a === 'Cedido').map((area) => ({
+      state: area,
       vehicles: activeVehicles
-        .filter((v) => v.situacion === situacion)
-        .map((v) => {
-          const daysInUbicacion = calcDaysInUbicacion(v)
-          return {
-            id: v.id,
-            name: v.name,
-            matricula: v.matricula,
-            brand: v.brand,
-            model: v.model,
-            year: v.year,
-            combustible: v.combustible,
-            ubicacion: v.ubicacion,
-            daysInUbicacion,
-            daysInState: daysInUbicacion,
-            slaStatus: calcSlaStatus(v.ubicacion, daysInUbicacion),
-          }
-        }),
-    }))
+        .filter((v) => getArea(v.estadoActual) === area)
+        .map((v) => ({
+          id: v.id,
+          name: v.name,
+          matricula: v.matricula,
+          brand: v.brand,
+          model: v.model,
+          year: v.year,
+          combustible: v.combustible,
+          ubicacion: v.subEstado,
+          daysInUbicacion: calcDaysInArea(v),
+          daysInState: calcDaysInArea(v),
+          slaStatus: null as 'green' | 'yellow' | 'red' | null,
+        })),
+    })).filter(col => col.vehicles.length > 0 || ESTADOS_ACTIVOS.includes(col.state))
 
     return NextResponse.json({ success: true, data: { pipeline, total: activeVehicles.length } })
   } catch {

@@ -106,7 +106,7 @@ function DashboardInner() {
   }
 
   if (loading) {
-    const PIPELINE_STATES = ['Stock', 'Exposición', 'Vendido', 'Cedido']
+    const PIPELINE_STATES = ['Logística', 'Taller', 'Chapa', 'Preparación', 'Stock', 'Exposición', 'Vendido', 'Cedido']
     return (
       <div style={{ background: 'var(--bg)', minHeight: '100vh' }}>
         <div className="max-w-6xl mx-auto p-4 sm:p-6">
