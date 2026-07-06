@@ -127,13 +127,28 @@ async function handleRequest(request: NextRequest, { area }: { area: string }) {
     const observaciones = extractText(props, 'Observaciones')
     const trabajos = area === 'chapa' ? extractText(props, 'Trabajos solicitados') : ''
     const checkboxes = ['Limpieza exterior', 'Limpieza interior', 'Fotografía para anuncio']
+    const chapaData = area === 'chapa' ? {
+      estado: extractSelect(props, 'Estado'),
+      fechaRetorno: extractDate(props, 'Fecha retorno'),
+      diasFuera: props['Días fuera']?.formula?.number,
+      costeTotal: extractNumber(props, 'Coste total (€)'),
+      proveedorId: extractRelation(props, 'Proveedor externo'),
+    } : null
+    let proveedorNombre = ''
+    if (chapaData?.proveedorId) {
+      try {
+        const provData: any = await notionGet(`/pages/${chapaData.proveedorId}`)
+        proveedorNombre = provData.properties?.['Nombre Empresa']?.title?.[0]?.plain_text ?? ''
+      } catch {}
+    }
     const ventasData = area === 'ventas' ? {
       cliente: extractText(props, 'Cliente nombre'),
       contacto: extractText(props, 'Cliente contacto'),
       formaPago: extractSelect(props, 'Forma de pago'),
       financiada: props['Financiada']?.checkbox,
     } : null
-    const extraNotas = observaciones || trabajos || (area === 'preparacion' && checkboxes.some(c => props[c]?.checkbox)) || (ventasData && (ventasData.cliente || ventasData.formaPago || ventasData.financiada))
+    const chapaExtra = chapaData && (chapaData.estado || chapaData.fechaRetorno || chapaData.diasFuera != null || chapaData.costeTotal != null || proveedorNombre)
+    const extraNotas = observaciones || trabajos || chapaExtra || (area === 'preparacion' && checkboxes.some(c => props[c]?.checkbox)) || (ventasData && (ventasData.cliente || ventasData.formaPago || ventasData.financiada))
     if (extraNotas) {
       let existingNotas = ''
       try {
@@ -142,6 +157,13 @@ async function handleRequest(request: NextRequest, { area }: { area: string }) {
       } catch {}
       const parts: string[] = []
       if (trabajos) parts.push(`Trabajos: ${trabajos}`)
+      if (area === 'chapa' && chapaData) {
+        if (proveedorNombre) parts.push(`Proveedor: ${proveedorNombre}`)
+        if (chapaData.estado) parts.push(`Estado: ${chapaData.estado}`)
+        if (chapaData.fechaRetorno) parts.push(`Fecha retorno: ${chapaData.fechaRetorno}`)
+        if (chapaData.diasFuera != null) parts.push(`Días fuera: ${chapaData.diasFuera}`)
+        if (chapaData.costeTotal != null) parts.push(`Coste total: ${chapaData.costeTotal}€`)
+      }
       if (area === 'preparacion') {
         for (const cb of checkboxes) {
           if (props[cb]?.checkbox) parts.push(`${cb}: ✅`)
