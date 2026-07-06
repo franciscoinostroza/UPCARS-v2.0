@@ -126,7 +126,19 @@ async function handleRequest(request: NextRequest, { area }: { area: string }) {
 
     const observaciones = extractText(props, 'Observaciones')
     const trabajos = area === 'chapa' ? extractText(props, 'Trabajos solicitados') : ''
-    const checkboxes = ['Limpieza exterior', 'Limpieza interior', 'Fotografía para anuncio']
+
+    // ─── Taller data ───
+    const tallerData = area === 'taller' ? {
+      tipoTrabajo: extractSelect(props, 'Tipo de trabajo'),
+      estado: extractSelect(props, 'Estado'),
+      fechaSalida: extractDate(props, 'Fecha salida taller'),
+      costeMateriales: extractNumber(props, 'Coste materiales (€)'),
+      costeManoObra: extractNumber(props, 'Coste mano de obra (€)'),
+      diasTaller: props['Días en taller']?.formula?.number,
+      costeTotal: props['Coste total']?.formula?.number,
+    } : null
+
+    // ─── Chapa data ───
     const chapaData = area === 'chapa' ? {
       estado: extractSelect(props, 'Estado'),
       fechaRetorno: extractDate(props, 'Fecha retorno'),
@@ -141,14 +153,51 @@ async function handleRequest(request: NextRequest, { area }: { area: string }) {
         proveedorNombre = provData.properties?.['Nombre Empresa']?.title?.[0]?.plain_text ?? ''
       } catch {}
     }
+
+    // ─── Preparación data ───
+    const preparacionCheckboxes = ['Limpieza exterior', 'Limpieza interior', 'Fotografía para anuncio']
+    const preparacionData = area === 'preparacion' ? {
+      estado: extractSelect(props, 'Estado'),
+      fechaEntrega: extractDate(props, 'fecha de entrega'),
+      fechaFin: extractDate(props, 'Fecha fin'),
+      registrarInicio: props['Registrar inicio']?.checkbox,
+      registrarFin: props['registrar fin']?.checkbox,
+      tipoLimpieza: extractSelect(props, 'Tipo de limpieza'),
+      horasInvertidas: props['Horas invertidas']?.formula?.number,
+    } : null
+
+    // ─── Logística data ───
+    const logisticaData = area === 'logistica' ? {
+      estado: extractSelect(props, 'Estado'),
+      fechaRealizada: extractDate(props, 'Fecha realizada'),
+      authFileName: props['Autorización de retirada ']?.files?.[0]?.name ?? null,
+    } : null
+
+    // ─── Ventas data ───
+    let financieraNombre = ''
+    const financieraId = area === 'ventas' ? extractRelation(props, 'Financiera') : null
+    if (financieraId) {
+      try {
+        const finData: any = await notionGet(`/pages/${financieraId}`)
+        const titleKey = Object.keys(finData.properties).find(k => finData.properties[k]?.type === 'title') || ''
+        financieraNombre = titleKey ? (finData.properties[titleKey]?.title?.[0]?.plain_text ?? '') : ''
+      } catch {}
+    }
     const ventasData = area === 'ventas' ? {
       cliente: extractText(props, 'Cliente nombre'),
       contacto: extractText(props, 'Cliente contacto'),
       formaPago: extractSelect(props, 'Forma de pago'),
       financiada: props['Financiada']?.checkbox,
+      margenBruto: props['Margen bruto (€)']?.formula?.number,
+      precioCompra: props['Precio de compra (€)']?.rollup?.number,
     } : null
+
+    const tallerExtra = tallerData && (tallerData.tipoTrabajo || tallerData.estado || tallerData.fechaSalida || tallerData.costeMateriales != null || tallerData.costeManoObra != null || tallerData.diasTaller != null || tallerData.costeTotal != null)
     const chapaExtra = chapaData && (chapaData.estado || chapaData.fechaRetorno || chapaData.diasFuera != null || chapaData.costeTotal != null || proveedorNombre)
-    const extraNotas = observaciones || trabajos || chapaExtra || (area === 'preparacion' && checkboxes.some(c => props[c]?.checkbox)) || (ventasData && (ventasData.cliente || ventasData.formaPago || ventasData.financiada))
+    const preparacionExtra = preparacionData && (preparacionData.estado || preparacionData.fechaEntrega || preparacionData.fechaFin || preparacionData.registrarInicio || preparacionData.registrarFin || preparacionData.tipoLimpieza || preparacionData.horasInvertidas != null)
+    const logisticaExtra = logisticaData && (logisticaData.estado || logisticaData.fechaRealizada || logisticaData.authFileName)
+    const ventasExtra = ventasData && (ventasData.cliente || ventasData.formaPago || ventasData.financiada || financieraNombre || ventasData.margenBruto != null || ventasData.precioCompra != null)
+    const extraNotas = observaciones || trabajos || tallerExtra || chapaExtra || preparacionExtra || logisticaExtra || ventasExtra
     if (extraNotas) {
       let existingNotas = ''
       try {
@@ -157,6 +206,19 @@ async function handleRequest(request: NextRequest, { area }: { area: string }) {
       } catch {}
       const parts: string[] = []
       if (trabajos) parts.push(`Trabajos: ${trabajos}`)
+
+      // ── Taller ──
+      if (area === 'taller' && tallerData) {
+        if (tallerData.tipoTrabajo) parts.push(`Tipo de trabajo: ${tallerData.tipoTrabajo}`)
+        if (tallerData.estado) parts.push(`Estado: ${tallerData.estado}`)
+        if (tallerData.fechaSalida) parts.push(`Fecha salida: ${tallerData.fechaSalida}`)
+        if (tallerData.costeMateriales != null) parts.push(`Coste materiales: ${tallerData.costeMateriales}€`)
+        if (tallerData.costeManoObra != null) parts.push(`Coste mano de obra: ${tallerData.costeManoObra}€`)
+        if (tallerData.costeTotal != null) parts.push(`Coste total: ${tallerData.costeTotal}€`)
+        if (tallerData.diasTaller != null) parts.push(`Días en taller: ${tallerData.diasTaller}`)
+      }
+
+      // ── Chapa ──
       if (area === 'chapa' && chapaData) {
         if (proveedorNombre) parts.push(`Proveedor: ${proveedorNombre}`)
         if (chapaData.estado) parts.push(`Estado: ${chapaData.estado}`)
@@ -164,17 +226,39 @@ async function handleRequest(request: NextRequest, { area }: { area: string }) {
         if (chapaData.diasFuera != null) parts.push(`Días fuera: ${chapaData.diasFuera}`)
         if (chapaData.costeTotal != null) parts.push(`Coste total: ${chapaData.costeTotal}€`)
       }
-      if (area === 'preparacion') {
-        for (const cb of checkboxes) {
+
+      // ── Preparación ──
+      if (area === 'preparacion' && preparacionData) {
+        if (preparacionData.tipoLimpieza) parts.push(`Tipo de limpieza: ${preparacionData.tipoLimpieza}`)
+        if (preparacionData.estado) parts.push(`Estado: ${preparacionData.estado}`)
+        if (preparacionData.fechaEntrega) parts.push(`Fecha entrega: ${preparacionData.fechaEntrega}`)
+        if (preparacionData.fechaFin) parts.push(`Fecha fin: ${preparacionData.fechaFin}`)
+        if (preparacionData.horasInvertidas != null) parts.push(`Horas invertidas: ${preparacionData.horasInvertidas}`)
+        if (preparacionData.registrarInicio) parts.push(`Registrar inicio: ✅`)
+        if (preparacionData.registrarFin) parts.push(`Registrar fin: ✅`)
+        for (const cb of preparacionCheckboxes) {
           if (props[cb]?.checkbox) parts.push(`${cb}: ✅`)
         }
       }
+
+      // ── Logística ──
+      if (area === 'logistica' && logisticaData) {
+        if (logisticaData.estado) parts.push(`Estado: ${logisticaData.estado}`)
+        if (logisticaData.fechaRealizada) parts.push(`Fecha realizada: ${logisticaData.fechaRealizada}`)
+        if (logisticaData.authFileName) parts.push(`Autorización: ${logisticaData.authFileName}`)
+      }
+
+      // ── Ventas ──
       if (ventasData) {
         if (ventasData.cliente) parts.push(`Cliente: ${ventasData.cliente}`)
         if (ventasData.contacto) parts.push(`Contacto: ${ventasData.contacto}`)
         if (ventasData.formaPago) parts.push(`Forma de pago: ${ventasData.formaPago}`)
         if (ventasData.financiada) parts.push(`Financiada: ✅`)
+        if (financieraNombre) parts.push(`Financiera: ${financieraNombre}`)
+        if (ventasData.margenBruto != null) parts.push(`Margen bruto: ${ventasData.margenBruto}€`)
+        if (ventasData.precioCompra != null) parts.push(`Precio compra: ${ventasData.precioCompra}€`)
       }
+
       if (observaciones) parts.push(`Observaciones: ${observaciones}`)
       const blockHeader = `--- ${config.label} ---`
       const newBlock = `\n${blockHeader}\n${parts.join('\n')}`
