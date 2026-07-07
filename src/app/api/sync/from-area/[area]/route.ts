@@ -337,6 +337,24 @@ async function handleRequest(request: NextRequest, { area }: { area: string }) {
       }).catch(() => {})
     }
 
+    // ─── Auto-horas en Preparación ───
+    if (area === 'preparacion' && recordId) {
+      const patchProps: Record<string, any> = {}
+      const regInicio = props['Registrar inicio']?.checkbox
+      const regFin = props['registrar fin']?.checkbox
+
+      if (regInicio && !props['Fecha inicio']?.date?.start) {
+        patchProps['Fecha inicio'] = { date: { start: new Date().toISOString() } }
+      }
+      if (regFin && !props['Fecha fin']?.date?.start) {
+        patchProps['Fecha fin'] = { date: { start: new Date().toISOString() } }
+      }
+
+      if (Object.keys(patchProps).length > 0) {
+        await notionPatch(`/pages/${recordId}`, { properties: patchProps }).catch(() => {})
+      }
+    }
+
     return NextResponse.json({ success: true, area, updated: Object.keys(updateProps) })
   } catch (error: any) {
     console.error('Sync from-area error:', error)
