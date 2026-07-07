@@ -211,6 +211,8 @@ async function handleRequest(request: NextRequest, { area }: { area: string }) {
       estado: extractSelect(props, 'Estado'),
       fechaRealizada: extractDate(props, 'Fecha realizada'),
       authFileName: props['Autorización de retirada ']?.files?.[0]?.name ?? null,
+      situacionComercial: extractSelect(props, 'Situación comercial'),
+      prioridad: extractSelect(props, 'Prioridad'),
     } : null
 
     // ─── Ventas data ───
@@ -236,7 +238,7 @@ async function handleRequest(request: NextRequest, { area }: { area: string }) {
     const chapaExtra = chapaData && (chapaData.estado || chapaData.fechaRetorno || chapaData.diasFuera != null || chapaData.costeTotal != null || proveedorNombre)
     const checkboxesMarcados = preparacionCheckboxes.some(cb => props[cb]?.checkbox)
     const preparacionExtra = preparacionData && (preparacionData.estado || preparacionData.fechaEntrega || preparacionData.fechaFin || preparacionData.registrarInicio || preparacionData.registrarFin || preparacionData.tipoLimpieza || preparacionData.horasInvertidas != null || checkboxesMarcados)
-    const logisticaExtra = logisticaData && (logisticaData.estado || logisticaData.fechaRealizada || logisticaData.authFileName)
+    const logisticaExtra = logisticaData && (logisticaData.estado || logisticaData.fechaRealizada || logisticaData.authFileName || logisticaData.situacionComercial || logisticaData.prioridad)
     const ventasExtra = ventasData && (ventasData.cliente || ventasData.formaPago || ventasData.financiada || financieraNombre || ventasData.margenBruto != null || ventasData.precioCompra != null)
     const extraNotas = observaciones || trabajos || tallerExtra || chapaExtra || preparacionExtra || logisticaExtra || ventasExtra
     if (extraNotas) {
@@ -284,8 +286,10 @@ async function handleRequest(request: NextRequest, { area }: { area: string }) {
 
       // ── Logística ──
       if (area === 'logistica' && logisticaData) {
+        if (logisticaData.situacionComercial) parts.push(`Situación comercial: ${logisticaData.situacionComercial}`)
+        if (logisticaData.prioridad) parts.push(`Prioridad: ${logisticaData.prioridad}`)
         if (logisticaData.estado) parts.push(`Estado: ${logisticaData.estado}`)
-        if (logisticaData.fechaRealizada) parts.push(`Fecha realizada: ${logisticaData.fechaRealizada}`)
+        if (logisticaData.fechaRealizada) parts.push(`Fecha realizada: ${fmtDate(logisticaData.fechaRealizada)}`)
         if (logisticaData.authFileName) parts.push(`Autorización: ${logisticaData.authFileName}`)
       }
 
