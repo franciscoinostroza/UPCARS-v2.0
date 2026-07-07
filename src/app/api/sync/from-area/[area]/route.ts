@@ -226,7 +226,8 @@ async function handleRequest(request: NextRequest, { area }: { area: string }) {
 
     const tallerExtra = tallerData && (tallerData.tipoTrabajo || tallerData.estado || tallerData.fechaSalida || tallerData.costeMateriales != null || tallerData.costeManoObra != null || tallerData.diasTaller != null || tallerData.costeTotal != null)
     const chapaExtra = chapaData && (chapaData.estado || chapaData.fechaRetorno || chapaData.diasFuera != null || chapaData.costeTotal != null || proveedorNombre)
-    const preparacionExtra = preparacionData && (preparacionData.estado || preparacionData.fechaEntrega || preparacionData.fechaFin || preparacionData.registrarInicio || preparacionData.registrarFin || preparacionData.tipoLimpieza || preparacionData.horasInvertidas != null)
+    const checkboxesMarcados = preparacionCheckboxes.some(cb => props[cb]?.checkbox)
+    const preparacionExtra = preparacionData && (preparacionData.estado || preparacionData.fechaEntrega || preparacionData.fechaFin || preparacionData.registrarInicio || preparacionData.registrarFin || preparacionData.tipoLimpieza || preparacionData.horasInvertidas != null || checkboxesMarcados)
     const logisticaExtra = logisticaData && (logisticaData.estado || logisticaData.fechaRealizada || logisticaData.authFileName)
     const ventasExtra = ventasData && (ventasData.cliente || ventasData.formaPago || ventasData.financiada || financieraNombre || ventasData.margenBruto != null || ventasData.precioCompra != null)
     const extraNotas = observaciones || trabajos || tallerExtra || chapaExtra || preparacionExtra || logisticaExtra || ventasExtra
