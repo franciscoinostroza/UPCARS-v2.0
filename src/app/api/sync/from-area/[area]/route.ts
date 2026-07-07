@@ -4,10 +4,10 @@ import { notionGet, notionPatch } from '@/lib/notion/client'
 export const dynamic = 'force-dynamic'
 
 const VEHICLE_DATE_MAP: Record<string, string> = {
-  'Fecha programada': 'F. E. Logística',
-  'Fecha entrada taller': 'F. E taller',
-  'Fecha salida': 'F. E. Chapista',
-  'Fecha inicio': 'F. E. preparación (Limpieza)',
+  'Fecha programada': 'Inicio Logística',
+  'Fecha entrada taller': 'Inicio Taller',
+  'Fecha salida': 'Inicio Chapa',
+  'Fecha inicio': 'Inicio Preparación',
   'Fecha de venta': 'Fecha de venta',
 }
 

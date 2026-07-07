@@ -17,6 +17,7 @@ const OLD_TO_NEW: Record<string, string> = {
   'Listo para venta': 'Stock',
   'Vendido': 'Vendido',
   'Cedido': 'Cedido',
+  'SUV': 'Stock',
 }
 
 const NEW_TO_INICIO: Record<string, string> = {
