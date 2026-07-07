@@ -82,7 +82,7 @@ async function handleRequest(request: NextRequest, { area }: { area: string }) {
       return NextResponse.json({ success: false, error: `Unknown area: ${area}` }, { status: 400 })
     }
 
-    const { props } = await getProperties(request, area)
+    const { props, recordId } = await getProperties(request, area)
 
     const vehicleId = extractRelation(props, 'Vehículo')
     if (!vehicleId) {
@@ -307,6 +307,23 @@ async function handleRequest(request: NextRequest, { area }: { area: string }) {
     }
 
     await notionPatch(`/pages/${vehicleId}`, { properties: updateProps })
+
+    // ─── Auto-setear fecha de fin en el registro del área ───
+    const END_DATE_MAP: Record<string, { state: string; field: string }> = {
+      taller: { state: 'Terminado', field: 'Fecha salida taller' },
+      chapa: { state: 'Terminado', field: 'Fecha retorno' },
+      preparacion: { state: 'Listo para stock', field: 'Fecha fin' },
+      logistica: { state: 'Completado', field: 'Fecha realizada' },
+    }
+    const areaEnd = END_DATE_MAP[area]
+    if (areaEnd && areaEstado === areaEnd.state && recordId) {
+      await notionPatch(`/pages/${recordId}`, {
+        properties: {
+          [areaEnd.field]: { date: { start: new Date().toISOString() } },
+        },
+      }).catch(() => {})
+    }
+
     return NextResponse.json({ success: true, area, updated: Object.keys(updateProps) })
   } catch (error: any) {
     console.error('Sync from-area error:', error)
