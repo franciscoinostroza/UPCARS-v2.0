@@ -39,6 +39,14 @@ function extractSelect(props: any, key: string): string {
   return props[key]?.select?.name ?? ''
 }
 
+function fmtDate(d: string | null): string {
+  if (!d) return '-'
+  return new Date(d).toLocaleString('es-ES', {
+    day: '2-digit', month: '2-digit', year: 'numeric',
+    hour: '2-digit', minute: '2-digit',
+  })
+}
+
 async function getProperties(request: NextRequest, area: string): Promise<{ props: any; recordId: string | null }> {
   const { searchParams } = new URL(request.url)
   const recordId = searchParams.get('recordId')
@@ -244,7 +252,7 @@ async function handleRequest(request: NextRequest, { area }: { area: string }) {
       if (area === 'taller' && tallerData) {
         if (tallerData.tipoTrabajo) parts.push(`Tipo de trabajo: ${tallerData.tipoTrabajo}`)
         if (tallerData.estado) parts.push(`Estado: ${tallerData.estado}`)
-        if (tallerData.fechaSalida) parts.push(`Fecha salida: ${tallerData.fechaSalida}`)
+        if (tallerData.fechaSalida) parts.push(`Fecha salida: ${fmtDate(tallerData.fechaSalida)}`)
         if (tallerData.costeMateriales != null) parts.push(`Coste materiales: ${tallerData.costeMateriales}€`)
         if (tallerData.costeManoObra != null) parts.push(`Coste mano de obra: ${tallerData.costeManoObra}€`)
         if (tallerData.costeTotal != null) parts.push(`Coste total: ${tallerData.costeTotal}€`)
@@ -255,7 +263,7 @@ async function handleRequest(request: NextRequest, { area }: { area: string }) {
       if (area === 'chapa' && chapaData) {
         if (proveedorNombre) parts.push(`Proveedor: ${proveedorNombre}`)
         if (chapaData.estado) parts.push(`Estado: ${chapaData.estado}`)
-        if (chapaData.fechaRetorno) parts.push(`Fecha retorno: ${chapaData.fechaRetorno}`)
+        if (chapaData.fechaRetorno) parts.push(`Fecha retorno: ${fmtDate(chapaData.fechaRetorno)}`)
         if (chapaData.diasFuera != null) parts.push(`Días fuera: ${chapaData.diasFuera}`)
         if (chapaData.costeTotal != null) parts.push(`Coste total: ${chapaData.costeTotal}€`)
       }
@@ -264,8 +272,8 @@ async function handleRequest(request: NextRequest, { area }: { area: string }) {
       if (area === 'preparacion' && preparacionData) {
         if (preparacionData.tipoLimpieza) parts.push(`Tipo de limpieza: ${preparacionData.tipoLimpieza}`)
         if (preparacionData.estado) parts.push(`Estado: ${preparacionData.estado}`)
-        if (preparacionData.fechaEntrega) parts.push(`Fecha entrega: ${preparacionData.fechaEntrega}`)
-        if (preparacionData.fechaFin) parts.push(`Fecha fin: ${preparacionData.fechaFin}`)
+        if (preparacionData.fechaEntrega) parts.push(`Fecha entrega: ${fmtDate(preparacionData.fechaEntrega)}`)
+        if (preparacionData.fechaFin) parts.push(`Fecha fin: ${fmtDate(preparacionData.fechaFin)}`)
         if (preparacionData.horasInvertidas != null) parts.push(`Horas invertidas: ${preparacionData.horasInvertidas}`)
         if (preparacionData.registrarInicio) parts.push(`Registrar inicio: ✅`)
         if (preparacionData.registrarFin) parts.push(`Registrar fin: ✅`)
