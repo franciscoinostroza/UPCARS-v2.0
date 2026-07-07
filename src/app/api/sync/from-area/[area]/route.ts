@@ -162,6 +162,10 @@ async function handleRequest(request: NextRequest, { area }: { area: string }) {
         const now = new Date().toISOString()
         updateProps[targetKey] = { date: { start: now } }
       }
+
+      if (estadoVehiculo === 'Cedido') {
+        updateProps['Fecha de cesión'] = { date: { start: new Date().toISOString() } }
+      }
     }
 
     const observaciones = extractText(props, 'Observaciones')
