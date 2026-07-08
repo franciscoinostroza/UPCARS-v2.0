@@ -1,0 +1,33 @@
+import { NextRequest, NextResponse } from 'next/server'
+import { getLogisticaRecords } from '@/lib/notion/logistica'
+import { getEmployees } from '@/lib/notion/employees'
+
+export const dynamic = 'force-dynamic'
+
+export async function GET(request: NextRequest) {
+  try {
+    const { searchParams } = new URL(request.url)
+    const filterEstado = searchParams.get('estado')
+    const filterVehiculo = searchParams.get('vehiculo')
+
+    let records = await getLogisticaRecords()
+    const employees = await getEmployees()
+    const empMap = new Map(employees.map(e => [e.id, e.name]))
+
+    if (filterEstado) records = records.filter(r => r.estado === filterEstado)
+    if (filterVehiculo) records = records.filter(r => r.vehiculoId === filterVehiculo)
+
+    const data = records.map(r => ({
+      ...r,
+      responsableNombre: r.responsableId ? (empMap.get(r.responsableId) || 'Desconocido') : null,
+    }))
+
+    return NextResponse.json({ success: true, data })
+  } catch (error: any) {
+    console.error('Logística GET error:', error)
+    return NextResponse.json(
+      { success: false, error: error?.message || 'Failed to fetch logistica' },
+      { status: 500 }
+    )
+  }
+}
