@@ -442,40 +442,23 @@ function AsignarForm({ vehicles, employees, onSuccess, onError }: { vehicles: Ve
     }
   }
 
-  const vehOptions = vehicles.map(function(v: any) { return { value: v.id, label: vehLabel(v) } })
-  const vehStateOptions = vehicles.map(function(v: any) { return { value: v.id, label: vehLabel(v) + ' — ' + (STATE_LABELS[v.state] || v.state) } })
+  const vehOpts = vehicles.map(function(v: any) { return { value: v.id, label: vehLabel(v) } })
   return (
     <form onSubmit={handleSubmit} className="space-y-3">
-      <Select
-        label="Vehículo" value={vehicleId} onChange={(v) => { setVehicleId(v); setToState('') }}
-        options={vehStateOptions}
+      <Select label="Vehículo" value={vehicleId} onChange={setVehicleId} options={vehOpts} />
+      <Select label="Responsable" value={employeeId} onChange={setEmployeeId}
+        options={employees.map((e: any) => ({ value: e.id, label: e.name }))}
       />
-      {vehicle && (
-        <div className="text-xs px-2 py-1.5 rounded" style={{ background: 'var(--bg-pill)', color: 'var(--text-secondary)' }}>
-          Estado actual: <strong style={{ color: 'var(--text)' }}>{STATE_LABELS[vehicle.state] || vehicle.state}</strong>
-        </div>
-      )}
-      {availableStates.length > 0 ? (
-        <Select
-          label="Mover a" value={toState} onChange={setToState}
-          options={availableStates.map((s) => ({ value: s, label: STATE_LABELS[s] || s }))}
-        />
-      ) : (
-        vehicle && <p className="text-xs" style={{ color: 'var(--text-muted)' }}>Este vehículo no puede avanzar a más estados.</p>
-      )}
-      <button
-        type="submit"
-        disabled={saving || !vehicleId || !employeeId}
+      <button type="submit" disabled={saving || !vehicleId || !employeeId}
         className="w-full text-sm font-semibold py-2.5 rounded min-h-[44px] transition-opacity disabled:opacity-40"
-        style={{ background: 'var(--accent-blue)', color: '#fff' }}
-      >
+        style={{ background: 'var(--accent-blue)', color: '#fff' }}>
         {saving ? 'Asignando...' : 'Asignar responsable'}
       </button>
-      </form>
-    )
-  }
-  
-  function OrdenForm({ vehicles, employees, onSuccess, onError }: { vehicles: VehicleItem[]; employees: EmployeeItem[]; onSuccess: () => void; onError: (msg: string) => void }) {
+    </form>
+  )
+}
+
+function OrdenForm({ vehicles, employees, onSuccess, onError }: { vehicles: VehicleItem[]; employees: EmployeeItem[]; onSuccess: () => void; onError: (msg: string) => void }) {
   const [vehicleId, setVehicleId] = useState('')
   const [type, setType] = useState('')
   const [tipoTrabajo, setTipoTrabajo] = useState('')
