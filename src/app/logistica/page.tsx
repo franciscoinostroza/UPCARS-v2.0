@@ -52,6 +52,7 @@ function LogisticaInner() {
   const [selected, setSelected] = useState<LogItem | null>(null)
   const [editing, setEditing] = useState(false)
   const [editData, setEditData] = useState<any>({})
+  const [showCreate, setShowCreate] = useState(false)
 
   const fetchData = useCallback(async () => {
     try {
@@ -136,7 +137,7 @@ function LogisticaInner() {
         <div className="flex items-center justify-between mb-4 animate-fade-up">
           <h1 className="text-lg sm:text-xl font-bold" style={{ color: 'var(--text)' }}>🚛 Logística</h1>
           <div className="flex items-center gap-2">
-            <CreateModal employees={employees} vehicles={vehicles} onCreate={handleCreate} onRefresh={fetchData} />
+            <button onClick={() => setShowCreate(true)} className="text-[10px] sm:text-xs px-2 py-1.5 rounded font-medium" style={{ background: 'var(--accent-blue)', color: '#fff', border: 'none' }}>➕ Nuevo</button>
             <DarkModeToggle />
           </div>
         </div>
@@ -240,6 +241,11 @@ function LogisticaInner() {
             onSave={handleSaveEdit} onCancel={() => setEditing(false)} />
         )}
 
+        {showCreate && (
+          <CreateModal employees={employees} vehicles={vehicles}
+            onCreate={handleCreate} onClose={() => setShowCreate(false)} onRefresh={fetchData} />
+        )}
+
       </div>
     </div>
   )
@@ -324,8 +330,7 @@ function EditModal({ item, editData, setEditData, employees, vehicles, onSave, o
   )
 }
 
-function CreateModal({ employees, vehicles, onCreate, onRefresh }: { employees: any[]; vehicles: any[]; onCreate: (d: any) => Promise<boolean>; onRefresh: () => void }) {
-  const [open, setOpen] = useState(false)
+function CreateModal({ employees, vehicles, onCreate, onClose, onRefresh }: { employees: any[]; vehicles: any[]; onCreate: (d: any) => Promise<boolean>; onClose: () => void; onRefresh: () => void }) {
   const [name, setName] = useState('')
   const [estado, setEstado] = useState('Pendiente autorización')
   const [ubicacion, setUbicacion] = useState('')
@@ -343,55 +348,50 @@ function CreateModal({ employees, vehicles, onCreate, onRefresh }: { employees: 
     setSaving(true)
     const ok = await onCreate({ nombre: name.trim(), vehiculoId: vehId || undefined, responsableId: respId || undefined, estado, fechaProgramada: fecha || undefined, ubicacion: ubicacion.trim() || undefined, situacionComercial: sitCom || undefined, prioridad: prioridad || undefined, observaciones: obs.trim() || undefined })
     setSaving(false)
-    if (ok) { setOpen(false); setName(''); setVehId(''); setRespId(''); setUbicacion(''); setObs(''); setSitCom(''); setPrioridad(''); setFecha('') }
+    if (ok) { onClose(); setName(''); setVehId(''); setRespId(''); setUbicacion(''); setObs(''); setSitCom(''); setPrioridad(''); setFecha('') }
   }
 
   return (
-    <>
-      <button onClick={() => setOpen(true)} className="text-[10px] sm:text-xs px-2 py-1.5 rounded font-medium" style={{ background: 'var(--accent-blue)', color: '#fff', border: 'none' }}>➕ Nuevo</button>
-      {open && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center p-4" style={{ background: 'rgba(0,0,0,0.6)' }} onClick={(e) => { if (e.target === e.currentTarget) setOpen(false) }}>
-          <div className="card w-full max-w-lg animate-fade-up p-5" style={{ background: 'var(--bg-card)', maxHeight: '90vh', overflowY: 'auto' }}>
-            <div className="flex items-center justify-between mb-4">
-              <h2 className="text-sm font-semibold" style={{ color: 'var(--text)' }}>➕ Nueva logística</h2>
-              <button onClick={() => setOpen(false)} className="text-sm px-2 py-1 rounded" style={{ color: 'var(--text-muted)' }}>✕</button>
-            </div>
-            <form onSubmit={handleSubmit} className="space-y-3">
-              <input required placeholder="Nombre *" value={name} onChange={e => setName(e.target.value)} style={selectSx} />
-              <select value={estado} onChange={e => setEstado(e.target.value)} style={selectSx}>
-                {ESTADOS.map(e => <option key={e} value={e}>{e}</option>)}
-              </select>
-              <div className="grid grid-cols-2 gap-2">
-                <input type="date" value={fecha} onChange={e => setFecha(e.target.value)} style={selectSx} />
-                <input placeholder="Ubicación" value={ubicacion} onChange={e => setUbicacion(e.target.value)} style={selectSx} />
-              </div>
-              <div className="grid grid-cols-2 gap-2">
-                <select value={sitCom} onChange={e => setSitCom(e.target.value)} style={selectSx}>
-                  <option value="">Sin situación</option>
-                  {SITUACIONES.filter(Boolean).map(s => <option key={s} value={s}>{s}</option>)}
-                </select>
-                <select value={prioridad} onChange={e => setPrioridad(e.target.value)} style={selectSx}>
-                  <option value="">Sin prioridad</option>
-                  {PRIORIDADES.filter(Boolean).map(p => <option key={p} value={p}>{p}</option>)}
-                </select>
-              </div>
-              <div className="grid grid-cols-2 gap-2">
-                <select value={respId} onChange={e => setRespId(e.target.value)} style={selectSx}>
-                  <option value="">Sin responsable</option>
-                  {employees.map((e: any) => <option key={e.id} value={e.id}>{e.name}</option>)}
-                </select>
-                <select value={vehId} onChange={e => setVehId(e.target.value)} style={selectSx}>
-                  <option value="">Sin vehículo</option>
-                  {vehicles.map((v: any) => <option key={v.id} value={v.id}>{v.name}</option>)}
-                </select>
-              </div>
-              <textarea placeholder="Observaciones" value={obs} onChange={e => setObs(e.target.value)} rows={3} style={{...selectSx, resize: 'vertical'}} />
-              <button type="submit" disabled={saving || !name.trim()} className="w-full text-[11px] font-semibold py-2 rounded transition-opacity disabled:opacity-40" style={{ background: 'var(--accent-blue)', color: '#fff' }}>{saving ? '...' : '✅ Crear'}</button>
-            </form>
-          </div>
+    <div className="fixed inset-0 z-50 flex items-center justify-center p-4" style={{ background: 'rgba(0,0,0,0.6)' }} onClick={(e) => { if (e.target === e.currentTarget) onClose() }}>
+      <div className="card w-full max-w-lg animate-fade-up p-5" style={{ background: 'var(--bg-card)', maxHeight: '90vh', overflowY: 'auto' }}>
+        <div className="flex items-center justify-between mb-4">
+          <h2 className="text-sm font-semibold" style={{ color: 'var(--text)' }}>➕ Nueva logística</h2>
+          <button onClick={onClose} className="text-sm px-2 py-1 rounded" style={{ color: 'var(--text-muted)' }}>✕</button>
         </div>
-      )}
-    </>
+        <form onSubmit={handleSubmit} className="space-y-3">
+          <input required placeholder="Nombre *" value={name} onChange={e => setName(e.target.value)} style={selectSx} />
+          <select value={estado} onChange={e => setEstado(e.target.value)} style={selectSx}>
+            {ESTADOS.map(e => <option key={e} value={e}>{e}</option>)}
+          </select>
+          <div className="grid grid-cols-2 gap-2">
+            <input type="date" value={fecha} onChange={e => setFecha(e.target.value)} style={selectSx} />
+            <input placeholder="Ubicación" value={ubicacion} onChange={e => setUbicacion(e.target.value)} style={selectSx} />
+          </div>
+          <div className="grid grid-cols-2 gap-2">
+            <select value={sitCom} onChange={e => setSitCom(e.target.value)} style={selectSx}>
+              <option value="">Sin situación</option>
+              {SITUACIONES.filter(Boolean).map(s => <option key={s} value={s}>{s}</option>)}
+            </select>
+            <select value={prioridad} onChange={e => setPrioridad(e.target.value)} style={selectSx}>
+              <option value="">Sin prioridad</option>
+              {PRIORIDADES.filter(Boolean).map(p => <option key={p} value={p}>{p}</option>)}
+            </select>
+          </div>
+          <div className="grid grid-cols-2 gap-2">
+            <select value={respId} onChange={e => setRespId(e.target.value)} style={selectSx}>
+              <option value="">Sin responsable</option>
+              {employees.map((e: any) => <option key={e.id} value={e.id}>{e.name}</option>)}
+            </select>
+            <select value={vehId} onChange={e => setVehId(e.target.value)} style={selectSx}>
+              <option value="">Sin vehículo</option>
+              {vehicles.map((v: any) => <option key={v.id} value={v.id}>{v.name}</option>)}
+            </select>
+          </div>
+          <textarea placeholder="Observaciones" value={obs} onChange={e => setObs(e.target.value)} rows={3} style={{...selectSx, resize: 'vertical'}} />
+          <button type="submit" disabled={saving || !name.trim()} className="w-full text-[11px] font-semibold py-2 rounded transition-opacity disabled:opacity-40" style={{ background: 'var(--accent-blue)', color: '#fff' }}>{saving ? '...' : '✅ Crear'}</button>
+        </form>
+      </div>
+    </div>
   )
 }
 
