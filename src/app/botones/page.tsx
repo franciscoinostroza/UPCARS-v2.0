@@ -454,6 +454,9 @@ function AsignarForm({ vehicles, employees, onSuccess, onError }: { vehicles: Ve
           label="Mover a" value={toState} onChange={setToState}
           options={availableStates.map((s) => ({ value: s, label: STATE_LABELS[s] || s }))}
         />
+      ) : (
+        vehicle && <p className="text-xs" style={{ color: 'var(--text-muted)' }}>Este vehículo no puede avanzar a más estados.</p>
+      )}
       <button
         type="submit"
         disabled={saving || !vehicleId || !employeeId}
@@ -462,6 +465,11 @@ function AsignarForm({ vehicles, employees, onSuccess, onError }: { vehicles: Ve
       >
         {saving ? 'Asignando...' : 'Asignar responsable'}
       </button>
+      </form>
+    )
+  }
+  
+  function OrdenForm({ vehicles, employees, onSuccess, onError }: { vehicles: VehicleItem[]; employees: EmployeeItem[]; onSuccess: () => void; onError: (msg: string) => void }) {
     </form>
   )
 }
