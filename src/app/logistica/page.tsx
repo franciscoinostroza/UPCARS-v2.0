@@ -9,6 +9,7 @@ interface LogItem {
   id: string
   nombre: string
   vehiculoId: string | null
+  vehiculoNombre: string | null
   responsableId: string | null
   responsableNombre: string | null
   estado: string
@@ -168,6 +169,7 @@ function LogisticaInner() {
                     <button key={item.id} onClick={() => { setSelected(item); setEditing(false) }} className="vehicle-card w-full text-left p-2 cursor-pointer transition-all hover:opacity-80">
                       <p className="text-[11px] font-semibold truncate" style={{ color: 'var(--text)' }}>{item.nombre}</p>
                       <div className="flex items-center gap-1 text-[10px] mt-0.5 flex-wrap" style={{ color: 'var(--text-muted)' }}>
+                        {item.vehiculoNombre && <span>🚗 {item.vehiculoNombre}</span>}
                         {item.ubicacion && <span>📍 {item.ubicacion}</span>}
                         {item.responsableNombre && <span>👤 {item.responsableNombre}</span>}
                         {item.fechaProgramada && <span>📅 {fmtDate(item.fechaProgramada)}</span>}
@@ -193,6 +195,7 @@ function LogisticaInner() {
                 <thead>
                   <tr style={{ color: 'var(--text-secondary)', borderBottom: '1px solid var(--border)' }}>
                     <th className="text-left p-2 sm:p-3 font-medium">ID</th>
+                    <th className="text-left p-2 sm:p-3 font-medium">Vehículo</th>
                     <th className="text-left p-2 sm:p-3 font-medium">Estado</th>
                     <th className="text-left p-2 sm:p-3 font-medium">Ubicación</th>
                     <th className="text-left p-2 sm:p-3 font-medium">Situación</th>
@@ -207,6 +210,7 @@ function LogisticaInner() {
                   {records.map(r => (
                     <tr key={r.id} onClick={() => { setSelected(r); setEditing(false) }} style={{ borderBottom: '1px solid var(--border)', cursor: 'pointer' }} className="hover:opacity-80">
                       <td className="p-2 sm:p-3 font-medium truncate max-w-[100px]" style={{ color: 'var(--text)' }}>{r.nombre}</td>
+                      <td className="p-2 sm:p-3 truncate max-w-[100px]" style={{ color: 'var(--text-secondary)' }}>{r.vehiculoNombre || '-'}</td>
                       <td className="p-2 sm:p-3"><span className="text-[10px] px-1.5 py-0.5 rounded font-medium" style={{
                         background: r.estado === 'Completado' ? 'rgba(34,197,94,0.12)' : r.estado === 'Autorizado' ? 'rgba(59,130,246,0.12)' : r.estado === 'Bloqueado' ? 'rgba(239,68,68,0.12)' : 'rgba(234,179,8,0.12)',
                         color: r.estado === 'Completado' ? '#22c55e' : r.estado === 'Autorizado' ? '#3b82f6' : r.estado === 'Bloqueado' ? '#ef4444' : '#eab308',
@@ -253,7 +257,7 @@ function DetailModal({ item, onClose, onEdit }: { item: LogItem; onClose: () => 
           </div>
         </div>
         <div className="space-y-1.5 text-xs sm:text-sm mb-4">
-          {[['Estado', item.estado], ['Ubicación', item.ubicacion], ['Situación comercial', item.situacionComercial], ['Prioridad', item.prioridad], ['Responsable', item.responsableNombre],
+          {[['Vehículo', item.vehiculoNombre], ['Estado', item.estado], ['Ubicación', item.ubicacion], ['Situación comercial', item.situacionComercial], ['Prioridad', item.prioridad], ['Responsable', item.responsableNombre],
             ['Fecha programada', fmtDate(item.fechaProgramada)], ['Fecha realizada', fmtDate(item.fechaRealizada)],
           ].map(([l, v]) => v ? <div key={l} className="flex gap-2"><span className="font-medium shrink-0" style={{ color: 'var(--text-muted)' }}>{l}:</span><span style={{ color: 'var(--text)' }}>{v}</span></div> : null)}
           {item.authFileName && (
