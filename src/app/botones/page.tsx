@@ -470,13 +470,6 @@ function AsignarForm({ vehicles, employees, onSuccess, onError }: { vehicles: Ve
   }
   
   function OrdenForm({ vehicles, employees, onSuccess, onError }: { vehicles: VehicleItem[]; employees: EmployeeItem[]; onSuccess: () => void; onError: (msg: string) => void }) {
-    </form>
-  )
-}
-
-/* ─── Form: Nueva orden taller ─── */
-
-function OrdenForm({ vehicles, employees, onSuccess, onError }: { vehicles: VehicleItem[]; employees: EmployeeItem[]; onSuccess: () => void; onError: (msg: string) => void }) {
   const [vehicleId, setVehicleId] = useState('')
   const [type, setType] = useState('')
   const [tipoTrabajo, setTipoTrabajo] = useState('')
