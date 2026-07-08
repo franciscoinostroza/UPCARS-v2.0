@@ -10,6 +10,8 @@ interface VehicleItem {
   name: string
   matricula: string
   brand: string
+  model: string
+  year: number
   state: string
 }
 
