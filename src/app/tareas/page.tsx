@@ -4,6 +4,10 @@ import { useState, useEffect, useCallback } from 'react'
 import { ThemeProvider, useTheme } from '../dashboard/theme-context'
 import { DarkModeToggle } from '../dashboard/dark-mode'
 import { Skeleton } from '@/components/skeleton'
+
+function vehLabel(v: any): string {
+  return v.matricula ? v.matricula + ' - ' + v.brand + ' ' + v.model + ' (' + (v.year || '—') + ')' : v.name
+}
 import { DndContext, MouseSensor, TouchSensor, useSensor, useSensors, useDroppable, useDraggable } from '@dnd-kit/core'
 
 interface TaskItem {
@@ -319,7 +323,7 @@ function CreateTaskModal({ employees, vehicles, onClose, onCreate }: {
             </select>
             <select value={vehicleId} onChange={e => setVehicleId(e.target.value)} style={selectStyle}>
               <option value="">Vehículo</option>
-              {vehicles.map(v => { const lbl = v.matricula ? v.matricula + ' - ' + v.brand + ' ' + v.model + ' (' + (v.year || '—') + ')' : v.name; return <option key={v.id} value={v.id}>{lbl}</option>; })}
+              {vehicles.map(v => <option key={v.id} value={v.id}>{vehLabel(v)}</option>)}
             </select>
           </div>
           <textarea placeholder="Descripción" value={descripcion} onChange={e => setDescripcion(e.target.value)} rows={3} style={{ ...selectStyle, resize: 'vertical' }} />
