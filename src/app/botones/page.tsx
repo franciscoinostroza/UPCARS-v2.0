@@ -517,7 +517,7 @@ function AsignarForm({ vehicles, employees, onSuccess, onError }: { vehicles: Ve
   return (
     <form onSubmit={handleSubmit} className="space-y-3">
       <Select label="Vehículo" value={vehicleId} onChange={setVehicleId}
-        options={vehicles.map(v => ({ value: v.id, label: vehLabel(v) })))}
+        options={vehicles.map(v => ({ value: v.id, label: vehLabel(v) }))}
       />
       {vehicleId && (
         <div className="text-xs px-2 py-1.5 rounded" style={{ background: 'var(--bg-pill)', color: 'var(--text-secondary)' }}>
@@ -571,7 +571,7 @@ function VenderForm({ vehicles, onSuccess, onError }: { vehicles: VehicleItem[];
         </p>
       ) : (
         <Select label="Vehículo" value={vehicleId} onChange={setVehicleId}
-          options={listos.map((v) => ({ value: v.id, label: vehLabel(v) })))}
+          options={listos.map((v) => ({ value: v.id, label: vehLabel(v) }))}
         />
       )}
       <button type="submit" disabled={saving || !vehicleId || listos.length === 0}
