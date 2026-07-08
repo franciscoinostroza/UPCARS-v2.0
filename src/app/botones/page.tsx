@@ -382,7 +382,7 @@ function MoverVehiculoForm({ vehicles, onSuccess, onError }: { vehicles: Vehicle
     <form onSubmit={handleSubmit} className="space-y-3">
       <Select
         label="Vehículo" value={vehicleId} onChange={(v) => { setVehicleId(v); setToState('') }}
-        options={vehicles.map((v) => ({ value: v.id, label: `${v.name} (${v.matricula || v.brand || '—'}) — ${STATE_LABELS[v.state] || v.state}` }))}
+        options={vehicles.map((v) => ({ value: v.id, label: `${v.matricula ? `${v.matricula} - ${v.brand} ${v.model} (${v.year || '—'})`.trim() : v.name} — ${STATE_LABELS[v.state] || v.state}` }))}
       />
       {vehicle && (
         <div className="text-xs px-2 py-1.5 rounded" style={{ background: 'var(--bg-pill)', color: 'var(--text-secondary)' }}>
@@ -440,7 +440,7 @@ function AsignarForm({ vehicles, employees, onSuccess, onError }: { vehicles: Ve
     <form onSubmit={handleSubmit} className="space-y-3">
       <Select
         label="Vehículo" value={vehicleId} onChange={setVehicleId}
-        options={vehicles.map((v) => ({ value: v.id, label: `${v.name} (${v.matricula || v.brand || '—'})` }))}
+        options={vehicles.map((v) => ({ value: v.id, label: v.matricula ? `${v.matricula} - ${v.brand} ${v.model} (${v.year || '—'})`.trim() : v.name }))}
       />
       <Select
         label="Responsable" value={employeeId} onChange={setEmployeeId}
@@ -504,90 +504,8 @@ function OrdenForm({ vehicles, employees, onSuccess, onError }: { vehicles: Vehi
   return (
     <form onSubmit={handleSubmit} className="space-y-3">
       <Select label="Vehículo" value={vehicleId} onChange={setVehicleId}
-        options={vehicles.map(v => ({ value: v.id, label: `${v.name} (${v.matricula || v.brand || '—'})` }))}
+        options={vehicles.map(v => ({ value: v.id, label: v.matricula ? `${v.matricula} - ${v.brand} ${v.model} (${v.year || '—'})`.trim() : v.name }))}
       />
-      <div className="grid grid-cols-2 gap-2">
-        <Select label="Tipo de orden" value={type} onChange={setType}
-          options={[
-            { value: 'Taller', label: '🔧 Taller' },
-            { value: 'Chapa', label: '🎨 Chapa y Pintura' },
-            { value: 'Preparacion', label: '✨ Preparación' },
-            { value: 'Logistica', label: '🚛 Logística' },
-          ]}
-        />
-        <Select label="Tipo de trabajo" value={tipoTrabajo} onChange={setTipoTrabajo}
-          options={[{ value: '', label: 'Seleccionar...' }, ...TIPOS_TRABAJO.map(t => ({ value: t, label: t }))]}
-        />
-      </div>
-      <div className="grid grid-cols-2 gap-2">
-        <div>
-          <label className="block text-xs font-medium mb-1" style={{ color: 'var(--text-secondary)' }}>Fecha entrada</label>
-          <input type="date" value={fechaEntrada} onChange={e => setFechaEntrada(e.target.value)}
-            className="w-full text-sm px-3 py-2 rounded outline-none"
-            style={{ background: 'var(--bg)', color: 'var(--text)', border: '1px solid var(--border)' }}
-          />
-        </div>
-        <Select label="Mecánico asignado" value={mecanicoId} onChange={setMecanicoId}
-          options={[{ value: '', label: 'Seleccionar...' }, ...employees.map(e => ({ value: e.id, label: e.name }))]}
-        />
-      </div>
-      <div className="grid grid-cols-2 gap-2">
-        <Input label="Coste materiales (€)" value={costeMateriales} onChange={setCosteMateriales} inputMode="decimal" />
-        <Input label="Coste mano de obra (€)" value={costeManoObra} onChange={setCosteManoObra} inputMode="decimal" />
-      </div>
-      <Input label="Notas (opcional)" value={notes} onChange={setNotes} textarea />
-      <button
-        type="submit"
-        disabled={saving || !vehicleId || !type}
-        className="w-full text-sm font-semibold py-2.5 rounded min-h-[44px] transition-opacity disabled:opacity-40"
-        style={{ background: 'var(--accent-blue)', color: '#fff' }}
-      >
-        {saving ? 'Creando...' : 'Crear orden'}
-      </button>
-    </form>
-  )
-}
-
-/* ─── Form: Marcar como Vendido ─── */
-
-function VenderForm({ vehicles, onSuccess, onError }: { vehicles: VehicleItem[]; onSuccess: () => void; onError: (msg: string) => void }) {
-  const [vehicleId, setVehicleId] = useState('')
-  const [saving, setSaving] = useState(false)
-
-  const listos = vehicles.filter((v) => v.state === 'Listo para venta')
-
-  async function handleSubmit(e: React.FormEvent) {
-    e.preventDefault()
-    if (!vehicleId) return
-    setSaving(true)
-    try {
-      const res = await fetch(`/api/vehicles/${vehicleId}`, {
-        method: 'PATCH',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ state: 'Vendido' }),
-      })
-      const data = await res.json()
-      if (res.ok) onSuccess()
-      else onError(data.error || 'Error al marcar como vendido')
-    } catch (err: any) {
-      onError(err?.message || 'Error de red')
-    } finally {
-      setSaving(false)
-    }
-  }
-
-  return (
-    <form onSubmit={handleSubmit} className="space-y-3">
-      {listos.length === 0 ? (
-        <p className="text-sm py-4 text-center" style={{ color: 'var(--text-muted)' }}>
-          No hay vehículos en "Listo para venta".
-        </p>
-      ) : (
-        <Select
-          label="Vehículo" value={vehicleId} onChange={setVehicleId}
-          options={listos.map((v) => ({ value: v.id, label: `${v.name} (${v.matricula || v.brand || '—'})` }))}
-        />
-      )}
       {vehicleId && (
         <div className="text-xs px-2 py-1.5 rounded" style={{ background: 'var(--bg-pill)', color: 'var(--text-secondary)' }}>
           Estado actual: <strong style={{ color: 'var(--text)' }}>Listo para venta</strong>
@@ -695,7 +613,7 @@ function TaskForm({ vehicles, employees, onSuccess, onError }: { vehicles: Vehic
         options={[{ value: '', label: 'Seleccionar...' }, ...employees.map(e => ({ value: e.id, label: e.name }))]}
       />
       <Select label="Vehículo" value={vehicleId} onChange={setVehicleId}
-        options={[{ value: '', label: 'Seleccionar...' }, ...vehicles.map(v => ({ value: v.id, label: `${v.name} (${v.matricula || v.brand || '—'})` }))]}
+        options={[{ value: '', label: 'Seleccionar...' }, ...vehicles.map(v => ({ value: v.id, label: v.matricula ? `${v.matricula} - ${v.brand} ${v.model} (${v.year || '—'})`.trim() : v.name }))]}
       />
       <div>
         <label className="block text-xs font-medium mb-1" style={{ color: 'var(--text-secondary)' }}>Descripción</label>

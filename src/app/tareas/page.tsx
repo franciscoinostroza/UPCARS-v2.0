@@ -319,7 +319,7 @@ function CreateTaskModal({ employees, vehicles, onClose, onCreate }: {
             </select>
             <select value={vehicleId} onChange={e => setVehicleId(e.target.value)} style={selectStyle}>
               <option value="">Vehículo</option>
-              {vehicles.map(v => <option key={v.id} value={v.id}>{v.name}</option>)}
+              {vehicles.map(v => <option key={v.id} value={v.id}>{v.matricula ? `${v.matricula} - ${v.brand} ${v.model} (${v.year || '—'})`.trim() : v.name}</option>)}
             </select>
           </div>
           <textarea placeholder="Descripción" value={descripcion} onChange={e => setDescripcion(e.target.value)} rows={3} style={{ ...selectStyle, resize: 'vertical' }} />

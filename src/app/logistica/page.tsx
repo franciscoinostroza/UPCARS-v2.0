@@ -317,7 +317,7 @@ function EditModal({ item, editData, setEditData, employees, vehicles, onSave, o
           </select>
           <select value={editData.vehiculoId} onChange={e => setEditData({...editData, vehiculoId: e.target.value})} style={selectSx}>
             <option value="">Sin vehículo</option>
-            {vehicles.map((v: any) => <option key={v.id} value={v.id}>{v.name}</option>)}
+            {vehicles.map((v: any) => <option key={v.id} value={v.id}>{v.matricula ? `${v.matricula} - ${v.brand} ${v.model} (${v.year || '—'})`.trim() : v.name}</option>)}
           </select>
           <textarea value={editData.observaciones} onChange={e => setEditData({...editData, observaciones: e.target.value})} placeholder="Observaciones" rows={3} style={{...selectSx, resize: 'vertical'}} />
           <div className="flex gap-2 pt-1">
@@ -384,7 +384,7 @@ function CreateModal({ employees, vehicles, onCreate, onClose, onRefresh }: { em
             </select>
             <select value={vehId} onChange={e => setVehId(e.target.value)} style={selectSx}>
               <option value="">Sin vehículo</option>
-              {vehicles.map((v: any) => <option key={v.id} value={v.id}>{v.name}</option>)}
+              {vehicles.map((v: any) => <option key={v.id} value={v.id}>{v.matricula ? `${v.matricula} - ${v.brand} ${v.model} (${v.year || '—'})`.trim() : v.name}</option>)}
             </select>
           </div>
           <textarea placeholder="Observaciones" value={obs} onChange={e => setObs(e.target.value)} rows={3} style={{...selectSx, resize: 'vertical'}} />
