@@ -515,10 +515,57 @@ function OrdenForm({ vehicles, employees, onSuccess, onError }: { vehicles: Vehi
       )}
       <button
         type="submit"
-        disabled={saving || !vehicleId || listos.length === 0}
+        disabled={saving || !vehicleId}
         className="w-full text-sm font-semibold py-2.5 rounded min-h-[44px] transition-opacity disabled:opacity-40"
         style={{ background: 'var(--accent-blue)', color: '#fff' }}
       >
+        {saving ? 'Marcando...' : '🏷️ Marcar como Vendido'}
+      </button>
+    </form>
+  )
+}
+
+/* ─── Form: Marcar como Vendido ─── */
+
+function VenderForm({ vehicles, onSuccess, onError }: { vehicles: VehicleItem[]; onSuccess: () => void; onError: (msg: string) => void }) {
+  const [vehicleId, setVehicleId] = useState('')
+  const [saving, setSaving] = useState(false)
+  const listos = vehicles.filter((v) => v.state === 'Listo para venta')
+
+  async function handleSubmit(e: React.FormEvent) {
+    e.preventDefault()
+    if (!vehicleId) return
+    setSaving(true)
+    try {
+      const res = await fetch(`/api/vehicles/${vehicleId}`, {
+        method: 'PATCH',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ state: 'Vendido' }),
+      })
+      const data = await res.json()
+      if (res.ok) onSuccess()
+      else onError(data.error || 'Error al marcar como vendido')
+    } catch (err: any) {
+      onError(err?.message || 'Error de red')
+    } finally {
+      setSaving(false)
+    }
+  }
+
+  return (
+    <form onSubmit={handleSubmit} className="space-y-3">
+      {listos.length === 0 ? (
+        <p className="text-sm py-4 text-center" style={{ color: 'var(--text-muted)' }}>
+          No hay vehículos en "Listo para venta".
+        </p>
+      ) : (
+        <Select label="Vehículo" value={vehicleId} onChange={setVehicleId}
+          options={listos.map((v) => ({ value: v.id, label: `${v.matricula ? `${v.matricula} - ${v.brand} ${v.model} (${v.year || '—'})`.trim() : v.name}` }))}
+        />
+      )}
+      <button type="submit" disabled={saving || !vehicleId || listos.length === 0}
+        className="w-full text-sm font-semibold py-2.5 rounded min-h-[44px] transition-opacity disabled:opacity-40"
+        style={{ background: 'var(--accent-blue)', color: '#fff' }}>
         {saving ? 'Marcando...' : '🏷️ Marcar como Vendido'}
       </button>
     </form>
