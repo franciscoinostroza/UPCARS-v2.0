@@ -384,7 +384,7 @@ function MoverVehiculoForm({ vehicles, onSuccess, onError }: { vehicles: Vehicle
     <form onSubmit={handleSubmit} className="space-y-3">
       <Select
         label="Vehículo" value={vehicleId} onChange={(v) => { setVehicleId(v); setToState('') }}
-        options={vehicles.map((v) => ({ value: v.id, label: `${v.matricula ? `${v.matricula} - ${v.brand} ${v.model} (${v.year || '—'})`.trim() : v.name} — ${STATE_LABELS[v.state] || v.state}` }))}
+        options={vehicles.map((v) => { const lbl = (v.matricula ? v.matricula + ' - ' + v.brand + ' ' + v.model + ' (' + (v.year || '—') + ')' : v.name) + ' — ' + (STATE_LABELS[v.state] || v.state); return { value: v.id, label: lbl }; })}
       />
       {vehicle && (
         <div className="text-xs px-2 py-1.5 rounded" style={{ background: 'var(--bg-pill)', color: 'var(--text-secondary)' }}>
@@ -442,12 +442,18 @@ function AsignarForm({ vehicles, employees, onSuccess, onError }: { vehicles: Ve
     <form onSubmit={handleSubmit} className="space-y-3">
       <Select
         label="Vehículo" value={vehicleId} onChange={setVehicleId}
-        options={vehicles.map((v) => ({ value: v.id, label: v.matricula ? `${v.matricula} - ${v.brand} ${v.model} (${v.year || '—'})`.trim() : v.name }))}
+        options={vehicles.map((v) => { const lbl = v.matricula ? v.matricula + ' - ' + v.brand + ' ' + v.model + ' (' + (v.year || '—') + ')' : v.name; return { value: v.id, label: lbl }; })}
       />
-      <Select
-        label="Responsable" value={employeeId} onChange={setEmployeeId}
-        options={employees.map((e) => ({ value: e.id, label: `${e.name} — ${e.role}` }))}
-      />
+      {vehicle && (
+        <div className="text-xs px-2 py-1.5 rounded" style={{ background: 'var(--bg-pill)', color: 'var(--text-secondary)' }}>
+          Estado actual: <strong style={{ color: 'var(--text)' }}>{STATE_LABELS[vehicle.state] || vehicle.state}</strong>
+        </div>
+      )}
+      {availableStates.length > 0 ? (
+        <Select
+          label="Mover a" value={toState} onChange={setToState}
+          options={availableStates.map((s) => ({ value: s, label: STATE_LABELS[s] || s }))}
+        />
       <button
         type="submit"
         disabled={saving || !vehicleId || !employeeId}
@@ -506,7 +512,7 @@ function OrdenForm({ vehicles, employees, onSuccess, onError }: { vehicles: Vehi
   return (
     <form onSubmit={handleSubmit} className="space-y-3">
       <Select label="Vehículo" value={vehicleId} onChange={setVehicleId}
-        options={vehicles.map(v => ({ value: v.id, label: v.matricula ? `${v.matricula} - ${v.brand} ${v.model} (${v.year || '—'})`.trim() : v.name }))}
+        options={vehicles.map(v => { const lbl = v.matricula ? v.matricula + ' - ' + v.brand + ' ' + v.model + ' (' + (v.year || '—') + ')' : v.name; return { value: v.id, label: lbl }; }))}
       />
       {vehicleId && (
         <div className="text-xs px-2 py-1.5 rounded" style={{ background: 'var(--bg-pill)', color: 'var(--text-secondary)' }}>
@@ -560,7 +566,7 @@ function VenderForm({ vehicles, onSuccess, onError }: { vehicles: VehicleItem[];
         </p>
       ) : (
         <Select label="Vehículo" value={vehicleId} onChange={setVehicleId}
-          options={listos.map((v) => ({ value: v.id, label: `${v.matricula ? `${v.matricula} - ${v.brand} ${v.model} (${v.year || '—'})`.trim() : v.name}` }))}
+          options={listos.map((v) => { const lbl = v.matricula ? v.matricula + ' - ' + v.brand + ' ' + v.model + ' (' + (v.year || '—') + ')' : v.name; return { value: v.id, label: lbl }; }))}
         />
       )}
       <button type="submit" disabled={saving || !vehicleId || listos.length === 0}
@@ -662,7 +668,7 @@ function TaskForm({ vehicles, employees, onSuccess, onError }: { vehicles: Vehic
         options={[{ value: '', label: 'Seleccionar...' }, ...employees.map(e => ({ value: e.id, label: e.name }))]}
       />
       <Select label="Vehículo" value={vehicleId} onChange={setVehicleId}
-        options={[{ value: '', label: 'Seleccionar...' }, ...vehicles.map(v => ({ value: v.id, label: v.matricula ? `${v.matricula} - ${v.brand} ${v.model} (${v.year || '—'})`.trim() : v.name }))]}
+        options={[{ value: '', label: 'Seleccionar...' }, ...vehicles.map(v => { const lbl = v.matricula ? v.matricula + ' - ' + v.brand + ' ' + v.model + ' (' + (v.year || '—') + ')' : v.name; return { value: v.id, label: lbl }; })]}
       />
       <div>
         <label className="block text-xs font-medium mb-1" style={{ color: 'var(--text-secondary)' }}>Descripción</label>
