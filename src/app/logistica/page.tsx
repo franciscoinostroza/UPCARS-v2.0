@@ -247,7 +247,7 @@ function LogisticaInner() {
 
 function DetailModal({ item, onClose, onEdit }: { item: LogItem; onClose: () => void; onEdit: () => void }) {
   return (
-    <div className="fixed inset-0 z-40 flex items-center justify-center p-4" style={{ background: 'rgba(0,0,0,0.6)' }} onClick={(e) => { if (e.target === e.currentTarget) onClose() }}>
+    <div className="fixed inset-0 z-50 flex items-center justify-center p-4" style={{ background: 'rgba(0,0,0,0.6)' }} onClick={(e) => { if (e.target === e.currentTarget) onClose() }}>
       <div className="card w-full max-w-lg animate-fade-up p-5" style={{ background: 'var(--bg-card)', maxHeight: '90vh', overflowY: 'auto' }}>
         <div className="flex items-center justify-between mb-3">
           <h2 className="text-sm font-semibold" style={{ color: 'var(--text)' }}>{item.nombre}</h2>
@@ -286,7 +286,7 @@ function DetailModal({ item, onClose, onEdit }: { item: LogItem; onClose: () => 
 
 function EditModal({ item, editData, setEditData, employees, vehicles, onSave, onCancel }: any) {
   return (
-    <div className="fixed inset-0 z-40 flex items-center justify-center p-4" style={{ background: 'rgba(0,0,0,0.6)' }} onClick={(e) => { if (e.target === e.currentTarget) onCancel() }}>
+    <div className="fixed inset-0 z-50 flex items-center justify-center p-4" style={{ background: 'rgba(0,0,0,0.6)' }} onClick={(e) => { if (e.target === e.currentTarget) onCancel() }}>
       <div className="card w-full max-w-lg animate-fade-up p-5" style={{ background: 'var(--bg-card)', maxHeight: '90vh', overflowY: 'auto' }}>
         <div className="flex items-center justify-between mb-4">
           <h2 className="text-sm font-semibold" style={{ color: 'var(--text)' }}>✏️ Editar {item.nombre}</h2>
@@ -350,7 +350,7 @@ function CreateModal({ employees, vehicles, onCreate, onRefresh }: { employees: 
     <>
       <button onClick={() => setOpen(true)} className="text-[10px] sm:text-xs px-2 py-1.5 rounded font-medium" style={{ background: 'var(--accent-blue)', color: '#fff', border: 'none' }}>➕ Nuevo</button>
       {open && (
-        <div className="fixed inset-0 z-40 flex items-center justify-center p-4" style={{ background: 'rgba(0,0,0,0.6)' }} onClick={(e) => { if (e.target === e.currentTarget) setOpen(false) }}>
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4" style={{ background: 'rgba(0,0,0,0.6)' }} onClick={(e) => { if (e.target === e.currentTarget) setOpen(false) }}>
           <div className="card w-full max-w-lg animate-fade-up p-5" style={{ background: 'var(--bg-card)', maxHeight: '90vh', overflowY: 'auto' }}>
             <div className="flex items-center justify-between mb-4">
               <h2 className="text-sm font-semibold" style={{ color: 'var(--text)' }}>➕ Nueva logística</h2>
