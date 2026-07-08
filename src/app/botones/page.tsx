@@ -442,11 +442,13 @@ function AsignarForm({ vehicles, employees, onSuccess, onError }: { vehicles: Ve
     }
   }
 
+  const vehOptions = vehicles.map(function(v: any) { return { value: v.id, label: vehLabel(v) } })
+  const vehStateOptions = vehicles.map(function(v: any) { return { value: v.id, label: vehLabel(v) + ' — ' + (STATE_LABELS[v.state] || v.state) } })
   return (
     <form onSubmit={handleSubmit} className="space-y-3">
       <Select
-        label="Vehículo" value={vehicleId} onChange={setVehicleId}
-        options={vehicles.map((v) => ({ value: v.id, label: vehLabel(v) }))}
+        label="Vehículo" value={vehicleId} onChange={(v) => { setVehicleId(v); setToState('') }}
+        options={vehStateOptions}
       />
       {vehicle && (
         <div className="text-xs px-2 py-1.5 rounded" style={{ background: 'var(--bg-pill)', color: 'var(--text-secondary)' }}>
