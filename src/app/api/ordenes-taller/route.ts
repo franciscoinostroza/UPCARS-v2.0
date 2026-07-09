@@ -22,6 +22,12 @@ export async function GET(request: NextRequest) {
     if (prefix) records = records.filter(r => r.nombre.startsWith(prefix))
     if (filterEstado) records = records.filter(r => r.estado === filterEstado)
 
+    const data = records.map(r => ({
+      ...r,
+      responsableNombre: r.responsableId ? (empMap.get(r.responsableId) || 'Desconocido') : null,
+      vehiculoNombre: r.vehicleId ? (vehMap.get(r.vehicleId) || 'Desconocido') : null,
+    }))
+
     return NextResponse.json({ success: true, data })
   } catch (error: any) {
     console.error('Taller GET error:', error)
