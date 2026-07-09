@@ -5,6 +5,8 @@ import { ThemeProvider, useTheme } from '../dashboard/theme-context'
 import { DarkModeToggle } from '../dashboard/dark-mode'
 import { Skeleton } from '@/components/skeleton'
 import CalendarView from '@/components/calendar-view'
+import { useUser, UserSelectorModal } from '@/components/user-selector'
+import CommentsSection from '@/components/comments-section'
 
 interface ChapaItem {
   id: string; nombre: string; vehicleId: string | null; vehiculoNombre: string | null
@@ -22,6 +24,7 @@ function fmtDate(d: string | null) {
 
 function ChapaInner() {
   const { dark } = useTheme()
+  const { user, saveUser } = useUser()
   const [records, setRecords] = useState<ChapaItem[]>([])
   const [loading, setLoading] = useState(true)
   const [vista, setVista] = useState<'tabla' | 'kanban' | 'calendario'>('tabla')
@@ -66,9 +69,13 @@ function ChapaInner() {
 
   return (
     <div style={{ background: 'var(--bg)', minHeight: '100vh' }}>
+      <UserSelectorModal employees={employees} user={user} onSave={saveUser} />
       <div className="max-w-7xl mx-auto p-3 sm:p-6 lg:p-8">
         <div className="flex items-center justify-between mb-4 animate-fade-up">
-          <h1 className="text-lg sm:text-xl font-bold" style={{ color: 'var(--text)' }}>🔩 Chapa</h1>
+          <div className="flex items-center gap-2">
+            <h1 className="text-lg sm:text-xl font-bold" style={{ color: 'var(--text)' }}>🔩 Chapa</h1>
+            {user && <span className="text-[10px] px-1.5 py-0.5 rounded" style={{ background: 'var(--bg-pill)', color: 'var(--text-muted)' }}>👤 {user}</span>}
+          </div>
           <div className="flex gap-2">
             <button onClick={() => setShowCreate(true)} className="text-[11px] font-semibold px-3 py-2 rounded" style={{ background: 'var(--accent-blue)', color: '#fff' }}>+ Nueva</button>
             <DarkModeToggle />
@@ -185,6 +192,7 @@ function ChapaInner() {
                   setRecords(prev => prev.map(r => r.id === selected.id ? { ...r, observaciones: editObs } : r))
                 }} className="w-full text-[11px] font-semibold py-2 rounded" style={{ background: 'var(--accent-blue)', color: '#fff' }}>💾 Guardar</button>
               </div>
+              <CommentsSection pageId={selected.id} user={user} />
               <a href={`https://www.notion.so/${selected.id.replace(/-/g, '')}`} target="_blank" rel="noopener noreferrer" className="block w-full text-center text-[10px] font-medium py-2 rounded" style={{ background: 'var(--bg-pill)', color: 'var(--accent-blue)' }}>🔗 Abrir en Notion</a>
             </div>
           </div>

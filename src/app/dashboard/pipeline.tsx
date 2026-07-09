@@ -3,6 +3,8 @@
 import { useState, useEffect, useCallback } from 'react'
 import { Skeleton } from '@/components/skeleton'
 import Link from 'next/link'
+import { useUser, UserSelectorModal } from '@/components/user-selector'
+import CommentsSection from '@/components/comments-section'
 
 const STATE_LABELS: Record<string, string> = {
   Stock: 'Stock',
@@ -96,18 +98,21 @@ function VehicleModal({
   onClose: () => void
   onVehicleMoved?: () => void
 }) {
+  const { user, saveUser } = useUser()
+  const [allEmployees, setAllEmployees] = useState<{ id: string; name: string }[]>([])
   const [data, setData] = useState<ModalData | null>(null)
   const [loading, setLoading] = useState(true)
   const [moving, setMoving] = useState(false)
 
   useEffect(() => {
     setLoading(true)
-    fetch(`/api/vehicles/${vehicleId}/events`)
-      .then((r) => r.json())
-      .then((res) => {
-        if (res.success) setData(res.data)
-      })
-      .finally(() => setLoading(false))
+    Promise.all([
+      fetch(`/api/vehicles/${vehicleId}/events`).then(r => r.json()),
+      fetch('/api/employees').then(r => r.json()),
+    ]).then(([eventsRes, empRes]) => {
+      if (eventsRes.success) setData(eventsRes.data)
+      if (empRes.success) setAllEmployees(empRes.data)
+    }).finally(() => setLoading(false))
   }, [vehicleId])
 
   const handleMove = useCallback(async (toState: string) => {
@@ -142,6 +147,7 @@ function VehicleModal({
       style={{ background: 'rgba(0,0,0,0.6)' }}
       onClick={onClose}
     >
+      <UserSelectorModal employees={allEmployees} user={user} onSave={saveUser} />
       <div
         className="relative w-full max-w-lg max-h-[90vh] overflow-y-auto rounded-xl p-5"
         style={{ background: 'var(--bg)', border: '1px solid var(--border)', color: 'var(--text)' }}
@@ -283,6 +289,7 @@ function VehicleModal({
             </div>
           </>
         )}
+        {data && <CommentsSection pageId={vehicleId} user={user} />}
       </div>
     </div>
   )

@@ -6,6 +6,8 @@ import { ThemeProvider, useTheme } from '../../dashboard/theme-context'
 import { DarkModeToggle } from '../../dashboard/dark-mode'
 import { Skeleton } from '@/components/skeleton'
 import Link from 'next/link'
+import { useUser, UserSelectorModal } from '@/components/user-selector'
+import CommentsSection from '@/components/comments-section'
 
 interface Vehicle {
   id: string
@@ -97,8 +99,14 @@ function VehicleDetailInner() {
   const params = useParams()
   const id = params.id as string
   const { dark } = useTheme()
+  const { user, saveUser } = useUser()
   const [data, setData] = useState<any>(null)
   const [loading, setLoading] = useState(true)
+  const [employees, setEmployees] = useState<{ id: string; name: string }[]>([])
+
+  useEffect(() => {
+    fetch('/api/employees').then(r => r.json()).then(res => { if (res.success) setEmployees(res.data) }).catch(() => {})
+  }, [])
 
   useEffect(() => {
     async function fetchData() {
@@ -143,6 +151,7 @@ function VehicleDetailInner() {
 
   return (
     <div style={{ background: 'var(--bg)', minHeight: '100vh' }}>
+      <UserSelectorModal employees={employees} user={user} onSave={saveUser} />
       <div className="max-w-5xl mx-auto p-3 sm:p-6 lg:p-8">
 
         {/* Back */}
@@ -156,6 +165,7 @@ function VehicleDetailInner() {
             <div className="flex items-center gap-2 mb-1">
               <span className="text-xl">{STATE_ICONS[v.state] || '🚗'}</span>
               <h1 className="text-lg sm:text-xl font-bold" style={{ color: 'var(--text)' }}>{v.brand} {v.model}</h1>
+              {user && <span className="text-[10px] px-1.5 py-0.5 rounded" style={{ background: 'var(--bg-pill)', color: 'var(--text-muted)' }}>👤 {user}</span>}
             </div>
             <div className="flex flex-wrap gap-2 text-xs" style={{ color: 'var(--text-secondary)' }}>
               <span>{v.matricula || 'Sin matrícula'}</span>
@@ -386,6 +396,10 @@ function VehicleDetailInner() {
               </table>
             </div>
           )}
+        </section>
+
+        <section className="mt-6 animate-fade-up">
+          <CommentsSection pageId={id} user={user} />
         </section>
 
       </div>

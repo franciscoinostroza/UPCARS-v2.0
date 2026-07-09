@@ -4,6 +4,8 @@ import { useState, useEffect, useCallback, useRef } from 'react'
 import { ThemeProvider, useTheme } from '../dashboard/theme-context'
 import { DarkModeToggle } from '../dashboard/dark-mode'
 import { Skeleton } from '@/components/skeleton'
+import { useUser, UserSelectorModal } from '@/components/user-selector'
+import CommentsSection from '@/components/comments-section'
 
 function vehLabel(v: any): string {
   return v.matricula ? v.matricula + ' - ' + v.brand + ' ' + v.model + ' (' + (v.year || '—') + ')' : v.name
@@ -47,6 +49,7 @@ const selectSx = { background: 'var(--bg-card)', color: 'var(--text)', border: '
 
 function LogisticaInner() {
   const { dark } = useTheme()
+  const { user, saveUser } = useUser()
   const [records, setRecords] = useState<LogItem[]>([])
   const [employees, setEmployees] = useState<{ id: string; name: string }[]>([])
   const [vehicles, setVehicles] = useState<{ id: string; name: string }[]>([])
@@ -136,10 +139,14 @@ function LogisticaInner() {
 
   return (
     <div style={{ background: 'var(--bg)', minHeight: '100vh' }}>
+      <UserSelectorModal employees={employees} user={user} onSave={saveUser} />
       <div className="max-w-7xl mx-auto p-3 sm:p-6 lg:p-8">
 
         <div className="flex items-center justify-between mb-4 animate-fade-up">
-          <h1 className="text-lg sm:text-xl font-bold" style={{ color: 'var(--text)' }}>🚛 Logística</h1>
+          <div className="flex items-center gap-2">
+            <h1 className="text-lg sm:text-xl font-bold" style={{ color: 'var(--text)' }}>🚛 Logística</h1>
+            {user && <span className="text-[10px] px-1.5 py-0.5 rounded" style={{ background: 'var(--bg-pill)', color: 'var(--text-muted)' }}>👤 {user}</span>}
+          </div>
           <div className="flex items-center gap-2">
             <button onClick={() => setShowCreate(true)} className="text-[10px] sm:text-xs px-2 py-1.5 rounded font-medium" style={{ background: 'var(--accent-blue)', color: '#fff', border: 'none' }}>➕ Nuevo</button>
             <DarkModeToggle />
@@ -237,7 +244,7 @@ function LogisticaInner() {
 
         {/* Modal detalle / edición */}
         {selected && !editing && (
-          <DetailModal item={selected} onClose={() => setSelected(null)} onEdit={() => openEdit(selected)} />
+          <DetailModal item={selected} onClose={() => setSelected(null)} onEdit={() => openEdit(selected)} user={user} />
         )}
         {selected && editing && (
           <EditModal item={selected} editData={editData} setEditData={setEditData}
@@ -255,7 +262,7 @@ function LogisticaInner() {
   )
 }
 
-function DetailModal({ item, onClose, onEdit }: { item: LogItem; onClose: () => void; onEdit: () => void }) {
+function DetailModal({ item, onClose, onEdit, user }: { item: LogItem; onClose: () => void; onEdit: () => void; user: string | null }) {
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center p-4" style={{ background: 'rgba(0,0,0,0.6)' }} onClick={(e) => { if (e.target === e.currentTarget) onClose() }}>
       <div className="card w-full max-w-lg animate-fade-up p-5" style={{ background: 'var(--bg-card)', maxHeight: '90vh', overflowY: 'auto' }}>
@@ -288,6 +295,7 @@ function DetailModal({ item, onClose, onEdit }: { item: LogItem; onClose: () => 
             </div>
           )}
         </div>
+        <CommentsSection pageId={item.id} user={user} />
         <a href={`https://www.notion.so/${item.id.replace(/-/g, '')}`} target="_blank" rel="noopener noreferrer" className="block w-full text-center text-[10px] font-medium py-2 rounded" style={{ background: 'var(--bg-pill)', color: 'var(--accent-blue)' }}>🔗 Abrir en Notion</a>
       </div>
     </div>
