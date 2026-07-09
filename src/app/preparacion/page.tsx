@@ -4,6 +4,7 @@ import { useState, useEffect, useCallback } from 'react'
 import { ThemeProvider, useTheme } from '../dashboard/theme-context'
 import { DarkModeToggle } from '../dashboard/dark-mode'
 import { Skeleton } from '@/components/skeleton'
+import CalendarView from '@/components/calendar-view'
 
 interface PrepItem {
   id: string; nombre: string; vehicleId: string | null; vehiculoNombre: string | null
@@ -23,7 +24,7 @@ function PrepInner() {
   const { dark } = useTheme()
   const [records, setRecords] = useState<PrepItem[]>([])
   const [loading, setLoading] = useState(true)
-  const [vista, setVista] = useState<'tabla' | 'kanban'>('tabla')
+  const [vista, setVista] = useState<'tabla' | 'kanban' | 'calendario'>('tabla')
   const [filterEstado, setFilterEstado] = useState('')
   const [selected, setSelected] = useState<PrepItem | null>(null)
   const [editObs, setEditObs] = useState('')
@@ -78,6 +79,7 @@ function PrepInner() {
           <div className="flex gap-1">
             <button onClick={() => setVista('tabla')} className="px-2 py-1 text-[10px] sm:text-xs rounded font-medium transition-all" style={{ background: vista === 'tabla' ? 'var(--bg-pill)' : 'transparent', color: vista === 'tabla' ? 'var(--text)' : 'var(--text-muted)', border: '1px solid var(--border)' }}>📋 Tabla</button>
             <button onClick={() => setVista('kanban')} className="px-2 py-1 text-[10px] sm:text-xs rounded font-medium transition-all" style={{ background: vista === 'kanban' ? 'var(--bg-pill)' : 'transparent', color: vista === 'kanban' ? 'var(--text)' : 'var(--text-muted)', border: '1px solid var(--border)' }}>📊 Kanban</button>
+            <button onClick={() => setVista('calendario')} className="px-2 py-1 text-[10px] sm:text-xs rounded font-medium transition-all" style={{ background: vista === 'calendario' ? 'var(--bg-pill)' : 'transparent', color: vista === 'calendario' ? 'var(--text)' : 'var(--text-muted)', border: '1px solid var(--border)' }}>📅 Calendario</button>
           </div>
           <select value={filterEstado} onChange={e => setFilterEstado(e.target.value)} className="text-[11px] px-2 py-1.5 rounded outline-none" style={{ background: 'var(--bg-card)', color: 'var(--text)', border: '1px solid var(--border)' }}>
             <option value="">Todos</option>
@@ -109,6 +111,13 @@ function PrepInner() {
                 </div>
               </div>
             ))}
+          </div>
+        ) : vista === 'calendario' ? (
+          <div className="animate-fade-up" style={{ animationDelay: '100ms' }}>
+            <CalendarView
+              items={records.filter(r => r.fechaEntrada).map(r => ({ id: r.id, titulo: `${r.nombre}${r.vehiculoNombre ? ' — ' + r.vehiculoNombre : ''}`, fecha: r.fechaEntrada!, estado: r.estado, area: r.tipo }))}
+              typeColors={{ 'En proceso': '#3b82f6', 'Terminado': '#22c55e', 'Bloqueado': '#ef4444' }}
+            />
           </div>
         ) : (
           <div className="card overflow-x-auto animate-fade-up" style={{ animationDelay: '75ms' }}>
@@ -144,18 +153,32 @@ function PrepInner() {
                 <h2 className="text-sm font-semibold" style={{ color: 'var(--text)' }}>{selected.nombre}</h2>
                 <button onClick={() => setSelected(null)} className="text-sm px-2 py-1 rounded" style={{ color: 'var(--text-muted)' }}>✕</button>
               </div>
-              <div className="space-y-1.5 text-xs mb-4">
-                {[['Vehículo', selected.vehiculoNombre], ['Estado', selected.estado], ['Responsable', selected.responsableNombre], ['Entrada', fmtDate(selected.fechaEntrada)]].map(([l, v]) =>
-                  v ? <div key={l} className="flex gap-2"><span className="font-medium shrink-0" style={{ color: 'var(--text-muted)' }}>{l}:</span><span style={{ color: 'var(--text)' }}>{v}</span></div> : null
-                )}
+              <div className="space-y-2 text-xs mb-4">
+                <div className="flex gap-2 items-center">
+                  <span className="font-medium shrink-0" style={{ color: 'var(--text-muted)' }}>Estado:</span>
+                  <select value={selected.estado} onChange={e => setRecords(prev => prev.map(r => r.id === selected.id ? { ...r, estado: e.target.value } : r))} style={selectSx}>
+                    {ESTADOS.map(s => <option key={s} value={s}>{s}</option>)}
+                  </select>
+                </div>
+                <div className="flex gap-2 items-center">
+                  <span className="font-medium shrink-0" style={{ color: 'var(--text-muted)' }}>Responsable:</span>
+                  <select value={selected.responsableId || ''} onChange={e => setRecords(prev => prev.map(r => r.id === selected.id ? { ...r, responsableId: e.target.value || null, responsableNombre: e.target.value ? (employees.find(emp => emp.id === e.target.value)?.name || null) : null } : r))} style={selectSx}>
+                    <option value="">Sin asignar</option>
+                    {employees.map(emp => <option key={emp.id} value={emp.id}>{emp.name}</option>)}
+                  </select>
+                </div>
+                <div className="flex gap-2 items-center">
+                  <span className="font-medium shrink-0" style={{ color: 'var(--text-muted)' }}>Entrada:</span>
+                  <input type="date" value={selected.fechaEntrada?.split('T')[0] || ''} onChange={e => setRecords(prev => prev.map(r => r.id === selected.id ? { ...r, fechaEntrada: e.target.value || null } : r))} style={selectSx} />
+                </div>
                 <div className="mt-3 pt-3 border-t" style={{ borderColor: 'var(--border)' }}>
                   <p className="text-[10px] font-medium mb-1" style={{ color: 'var(--text-muted)' }}>Observaciones:</p>
                   <textarea value={editObs} onChange={e => setEditObs(e.target.value)} rows={3} className="w-full text-xs px-2 py-1.5 rounded outline-none resize-none" style={{ background: 'var(--bg)', color: 'var(--text)', border: '1px solid var(--border)' }} />
-                  <button onClick={async () => {
-                    await fetch(`/api/ordenes-taller/${selected.id}`, { method: 'PATCH', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ observaciones: editObs }) })
-                    setRecords(prev => prev.map(r => r.id === selected.id ? { ...r, observaciones: editObs } : r))
-                  }} className="mt-2 w-full text-[11px] font-semibold py-2 rounded" style={{ background: 'var(--accent-blue)', color: '#fff' }}>💾 Guardar</button>
                 </div>
+                <button onClick={async () => {
+                  await fetch(`/api/ordenes-taller/${selected.id}`, { method: 'PATCH', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ estado: selected.estado, observaciones: editObs }) })
+                  setRecords(prev => prev.map(r => r.id === selected.id ? { ...r, observaciones: editObs } : r))
+                }} className="w-full text-[11px] font-semibold py-2 rounded" style={{ background: 'var(--accent-blue)', color: '#fff' }}>💾 Guardar</button>
               </div>
               <a href={`https://www.notion.so/${selected.id.replace(/-/g, '')}`} target="_blank" rel="noopener noreferrer" className="block w-full text-center text-[10px] font-medium py-2 rounded" style={{ background: 'var(--bg-pill)', color: 'var(--accent-blue)' }}>🔗 Abrir en Notion</a>
             </div>

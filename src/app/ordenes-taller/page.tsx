@@ -36,14 +36,26 @@ function TallerInner() {
   const [filterEstado, setFilterEstado] = useState('')
   const [selected, setSelected] = useState<TallerItem | null>(null)
   const [editObs, setEditObs] = useState('')
+  const [showCreate, setShowCreate] = useState(false)
+  const [employees, setEmployees] = useState<{ id: string; name: string }[]>([])
+  const [vehicles, setVehicles] = useState<{ id: string; name: string; matricula?: string; brand?: string; model?: string; year?: string }[]>([])
+  const [createData, setCreateData] = useState({ vehicleId: '', mecanicoId: '', notes: '', tipoTrabajo: '', fechaEntrada: '' })
 
   const fetchData = useCallback(async () => {
     try {
       const params = new URLSearchParams()
       if (filterEstado) params.set('estado', filterEstado)
-      const res = await fetch(`/api/ordenes-taller${params.toString() ? '?' + params : ''}`)
+      const [res, empRes, vehRes] = await Promise.all([
+        fetch(`/api/ordenes-taller${params.toString() ? '?' + params : ''}`),
+        fetch('/api/employees'),
+        fetch('/api/vehicles?list=true'),
+      ])
       const json = await res.json()
+      const empJson = await empRes.json()
+      const vehJson = await vehRes.json()
       if (json.success) setRecords(json.data)
+      if (empJson.success) setEmployees(empJson.data)
+      if (vehJson.success) setVehicles(vehJson.data)
     } catch {} finally {
       setLoading(false)
     }
@@ -70,7 +82,10 @@ function TallerInner() {
 
         <div className="flex items-center justify-between mb-4 animate-fade-up">
           <h1 className="text-lg sm:text-xl font-bold" style={{ color: 'var(--text)' }}>🔧 Órdenes de Taller</h1>
-          <DarkModeToggle />
+          <div className="flex gap-2">
+            <button onClick={() => setShowCreate(true)} className="text-[11px] font-semibold px-3 py-2 rounded" style={{ background: 'var(--accent-blue)', color: '#fff' }}>+ Nueva</button>
+            <DarkModeToggle />
+          </div>
         </div>
 
         <div className="flex flex-wrap items-center gap-2 mb-4 animate-fade-up" style={{ animationDelay: '50ms' }}>
@@ -162,21 +177,81 @@ function TallerInner() {
                 <h2 className="text-sm font-semibold" style={{ color: 'var(--text)' }}>{selected.nombre}</h2>
                 <button onClick={() => setSelected(null)} className="text-sm px-2 py-1 rounded" style={{ color: 'var(--text-muted)' }}>✕</button>
               </div>
-              <div className="space-y-1.5 text-xs mb-4">
-                {[['Vehículo', selected.vehiculoNombre], ['Tipo', selected.tipo], ['Estado', selected.estado], ['Mecánico', selected.responsableNombre], ['Entrada', fmtDate(selected.fechaEntrada)], ['Salida', fmtDate(selected.fechaSalida)]].map(([l, v]) =>
-                  v ? <div key={l} className="flex gap-2"><span className="font-medium shrink-0" style={{ color: 'var(--text-muted)' }}>{l}:</span><span style={{ color: 'var(--text)' }}>{v}</span></div> : null
-                )}
+              <div className="space-y-2 text-xs mb-4">
+                <div className="flex gap-2 items-center">
+                  <span className="font-medium shrink-0" style={{ color: 'var(--text-muted)' }}>Estado:</span>
+                  <select value={selected.estado} onChange={e => setRecords(prev => prev.map(r => r.id === selected.id ? { ...r, estado: e.target.value } : r))} style={selectSx}>
+                    {ESTADOS.map(s => <option key={s} value={s}>{s}</option>)}
+                  </select>
+                </div>
+                <div className="flex gap-2 items-center">
+                  <span className="font-medium shrink-0" style={{ color: 'var(--text-muted)' }}>Mecánico:</span>
+                  <select value={selected.responsableId || ''} onChange={e => setRecords(prev => prev.map(r => r.id === selected.id ? { ...r, responsableId: e.target.value || null, responsableNombre: e.target.value ? (employees.find(emp => emp.id === e.target.value)?.name || null) : null } : r))} style={selectSx}>
+                    <option value="">Sin asignar</option>
+                    {employees.map(emp => <option key={emp.id} value={emp.id}>{emp.name}</option>)}
+                  </select>
+                </div>
+                <div className="flex gap-2 items-center">
+                  <span className="font-medium shrink-0" style={{ color: 'var(--text-muted)' }}>Tipo:</span>
+                  <input value={selected.tipo} onChange={e => setRecords(prev => prev.map(r => r.id === selected.id ? { ...r, tipo: e.target.value } : r))} style={selectSx} placeholder="Tipo de trabajo" />
+                </div>
+                <div className="flex gap-2 items-center">
+                  <span className="font-medium shrink-0" style={{ color: 'var(--text-muted)' }}>Entrada:</span>
+                  <input type="date" value={selected.fechaEntrada?.split('T')[0] || ''} onChange={e => setRecords(prev => prev.map(r => r.id === selected.id ? { ...r, fechaEntrada: e.target.value || null } : r))} style={selectSx} />
+                </div>
                 <div className="mt-3 pt-3 border-t" style={{ borderColor: 'var(--border)' }}>
                   <p className="text-[10px] font-medium mb-1" style={{ color: 'var(--text-muted)' }}>Observaciones:</p>
                   <textarea value={editObs} onChange={e => setEditObs(e.target.value)} rows={3} className="w-full text-xs px-2 py-1.5 rounded outline-none resize-none" style={{ background: 'var(--bg)', color: 'var(--text)', border: '1px solid var(--border)' }} />
-                  <button onClick={async () => {
-                    await fetch(`/api/ordenes-taller/${selected.id}`, { method: 'PATCH', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ observaciones: editObs }) })
-                    setRecords(prev => prev.map(r => r.id === selected.id ? { ...r, observaciones: editObs } : r))
-                  }} className="mt-2 w-full text-[11px] font-semibold py-2 rounded" style={{ background: 'var(--accent-blue)', color: '#fff' }}>💾 Guardar</button>
                 </div>
+                <button onClick={async () => {
+                  await fetch(`/api/ordenes-taller/${selected.id}`, { method: 'PATCH', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ estado: selected.estado, observaciones: editObs }) })
+                  setRecords(prev => prev.map(r => r.id === selected.id ? { ...r, observaciones: editObs } : r))
+                }} className="w-full text-[11px] font-semibold py-2 rounded" style={{ background: 'var(--accent-blue)', color: '#fff' }}>💾 Guardar</button>
               </div>
               <a href={`https://www.notion.so/${selected.id.replace(/-/g, '')}`} target="_blank" rel="noopener noreferrer" className="block w-full text-center text-[10px] font-medium py-2 rounded" style={{ background: 'var(--bg-pill)', color: 'var(--accent-blue)' }}>🔗 Abrir en Notion</a>
             </div>
+          </div>
+        )}
+
+        {showCreate && (
+          <div className="fixed inset-0 z-50 flex items-center justify-center p-4" style={{ background: 'rgba(0,0,0,0.6)' }} onClick={(e) => { if (e.target === e.currentTarget) setShowCreate(false) }}>
+            <form onSubmit={async (e) => {
+              e.preventDefault()
+              await fetch('/api/workshop/create', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ type: 'Taller', vehicleId: createData.vehicleId, mecanicoId: createData.mecanicoId, notes: createData.notes, tipoTrabajo: createData.tipoTrabajo, fechaEntrada: createData.fechaEntrada }),
+              })
+              setShowCreate(false)
+              setCreateData({ vehicleId: '', mecanicoId: '', notes: '', tipoTrabajo: '', fechaEntrada: '' })
+              fetchData()
+            }} className="card w-full max-w-md animate-fade-up p-5" style={{ background: 'var(--bg-card)' }}>
+              <h2 className="text-sm font-semibold mb-4" style={{ color: 'var(--text)' }}>Nueva orden de Taller</h2>
+              <div className="space-y-3">
+                <select value={createData.vehicleId} onChange={e => setCreateData(p => ({ ...p, vehicleId: e.target.value }))} required style={selectSx}>
+                  <option value="">Seleccionar vehículo</option>
+                  {vehicles.map(v => <option key={v.id} value={v.id}>{v.matricula || v.name} - {v.brand} {v.model}</option>)}
+                </select>
+                <select value={createData.mecanicoId} onChange={e => setCreateData(p => ({ ...p, mecanicoId: e.target.value }))} style={selectSx}>
+                  <option value="">Mecánico (opcional)</option>
+                  {employees.map(e => <option key={e.id} value={e.id}>{e.name}</option>)}
+                </select>
+                <select value={createData.tipoTrabajo} onChange={e => setCreateData(p => ({ ...p, tipoTrabajo: e.target.value }))} style={selectSx}>
+                  <option value="">Tipo de trabajo (opcional)</option>
+                  <option value="Mecánica general">Mecánica general</option>
+                  <option value="Electricidad">Electricidad</option>
+                  <option value="Diagnóstico">Diagnóstico</option>
+                  <option value="Mantenimiento">Mantenimiento</option>
+                  <option value="Presupuesto">Presupuesto</option>
+                </select>
+                <input type="date" value={createData.fechaEntrada} onChange={e => setCreateData(p => ({ ...p, fechaEntrada: e.target.value }))} style={selectSx} placeholder="Fecha entrada" />
+                <textarea value={createData.notes} onChange={e => setCreateData(p => ({ ...p, notes: e.target.value }))} rows={2} className="w-full text-xs px-2 py-1.5 rounded outline-none resize-none" style={{ background: 'var(--bg)', color: 'var(--text)', border: '1px solid var(--border)' }} placeholder="Observaciones (opcional)" />
+              </div>
+              <div className="flex gap-2 mt-4">
+                <button type="submit" className="flex-1 text-[11px] font-semibold py-2.5 rounded" style={{ background: 'var(--accent-blue)', color: '#fff' }}>Crear</button>
+                <button type="button" onClick={() => setShowCreate(false)} className="flex-1 text-[11px] font-semibold py-2.5 rounded" style={{ background: 'var(--bg-pill)', color: 'var(--text-secondary)' }}>Cancelar</button>
+              </div>
+            </form>
           </div>
         )}
 
@@ -184,6 +259,8 @@ function TallerInner() {
     </div>
   )
 }
+
+const selectSx: React.CSSProperties = { background: 'var(--bg-card)', color: 'var(--text)', border: '1px solid var(--border)', fontSize: 11, padding: '6px 8px', borderRadius: 6, width: '100%', outline: 'none' }
 
 export default function TallerPage() {
   return (

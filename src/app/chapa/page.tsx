@@ -154,18 +154,36 @@ function ChapaInner() {
                 <h2 className="text-sm font-semibold" style={{ color: 'var(--text)' }}>{selected.nombre}</h2>
                 <button onClick={() => setSelected(null)} className="text-sm px-2 py-1 rounded" style={{ color: 'var(--text-muted)' }}>✕</button>
               </div>
-              <div className="space-y-1.5 text-xs mb-4">
-                {[['Vehículo', selected.vehiculoNombre], ['Tipo', selected.tipo], ['Estado', selected.estado], ['Responsable', selected.responsableNombre], ['Entrada', fmtDate(selected.fechaEntrada)]].map(([l, v]) =>
-                  v ? <div key={l} className="flex gap-2"><span className="font-medium shrink-0" style={{ color: 'var(--text-muted)' }}>{l}:</span><span style={{ color: 'var(--text)' }}>{v}</span></div> : null
-                )}
+              <div className="space-y-2 text-xs mb-4">
+                <div className="flex gap-2 items-center">
+                  <span className="font-medium shrink-0" style={{ color: 'var(--text-muted)' }}>Estado:</span>
+                  <select value={selected.estado} onChange={e => setRecords(prev => prev.map(r => r.id === selected.id ? { ...r, estado: e.target.value } : r))} style={selectSx}>
+                    {ESTADOS.map(s => <option key={s} value={s}>{s}</option>)}
+                  </select>
+                </div>
+                <div className="flex gap-2 items-center">
+                  <span className="font-medium shrink-0" style={{ color: 'var(--text-muted)' }}>Responsable:</span>
+                  <select value={selected.responsableId || ''} onChange={e => setRecords(prev => prev.map(r => r.id === selected.id ? { ...r, responsableId: e.target.value || null, responsableNombre: e.target.value ? (employees.find(emp => emp.id === e.target.value)?.name || null) : null } : r))} style={selectSx}>
+                    <option value="">Sin asignar</option>
+                    {employees.map(emp => <option key={emp.id} value={emp.id}>{emp.name}</option>)}
+                  </select>
+                </div>
+                <div className="flex gap-2 items-center">
+                  <span className="font-medium shrink-0" style={{ color: 'var(--text-muted)' }}>Tipo:</span>
+                  <input value={selected.tipo} onChange={e => setRecords(prev => prev.map(r => r.id === selected.id ? { ...r, tipo: e.target.value } : r))} style={selectSx} placeholder="Tipo de trabajo" />
+                </div>
+                <div className="flex gap-2 items-center">
+                  <span className="font-medium shrink-0" style={{ color: 'var(--text-muted)' }}>Entrada:</span>
+                  <input type="date" value={selected.fechaEntrada?.split('T')[0] || ''} onChange={e => setRecords(prev => prev.map(r => r.id === selected.id ? { ...r, fechaEntrada: e.target.value || null } : r))} style={selectSx} />
+                </div>
                 <div className="mt-3 pt-3 border-t" style={{ borderColor: 'var(--border)' }}>
                   <p className="text-[10px] font-medium mb-1" style={{ color: 'var(--text-muted)' }}>Observaciones:</p>
                   <textarea value={editObs} onChange={e => setEditObs(e.target.value)} rows={3} className="w-full text-xs px-2 py-1.5 rounded outline-none resize-none" style={{ background: 'var(--bg)', color: 'var(--text)', border: '1px solid var(--border)' }} />
-                  <button onClick={async () => {
-                    await fetch(`/api/ordenes-taller/${selected.id}`, { method: 'PATCH', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ observaciones: editObs }) })
-                    setRecords(prev => prev.map(r => r.id === selected.id ? { ...r, observaciones: editObs } : r))
-                  }} className="mt-2 w-full text-[11px] font-semibold py-2 rounded" style={{ background: 'var(--accent-blue)', color: '#fff' }}>💾 Guardar</button>
                 </div>
+                <button onClick={async () => {
+                  await fetch(`/api/ordenes-taller/${selected.id}`, { method: 'PATCH', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ estado: selected.estado, observaciones: editObs }) })
+                  setRecords(prev => prev.map(r => r.id === selected.id ? { ...r, observaciones: editObs } : r))
+                }} className="w-full text-[11px] font-semibold py-2 rounded" style={{ background: 'var(--accent-blue)', color: '#fff' }}>💾 Guardar</button>
               </div>
               <a href={`https://www.notion.so/${selected.id.replace(/-/g, '')}`} target="_blank" rel="noopener noreferrer" className="block w-full text-center text-[10px] font-medium py-2 rounded" style={{ background: 'var(--bg-pill)', color: 'var(--accent-blue)' }}>🔗 Abrir en Notion</a>
             </div>
