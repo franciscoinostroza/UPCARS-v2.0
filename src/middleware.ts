@@ -17,6 +17,9 @@ export function middleware(request: NextRequest) {
   // Sync endpoint (called from Notion webhook / button)
   if (path.startsWith('/api/sync/')) return NextResponse.next()
 
+  // Comments endpoint (called from frontend to read/write comments)
+  if (path.startsWith('/api/comments')) return NextResponse.next()
+
   const embedToken = process.env.EMBED_TOKEN
   const fromNotion = referer.includes('notion.so')
   const fromApp = referer.includes('pixelarch.dev') || referer.includes('vercel.app')

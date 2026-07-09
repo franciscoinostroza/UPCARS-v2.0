@@ -21,13 +21,15 @@ export default function CommentsSection({ pageId, user }: { pageId: string; user
   const [loading, setLoading] = useState(true)
   const [text, setText] = useState('')
   const [sending, setSending] = useState(false)
+  const [error, setError] = useState('')
 
   const fetchComments = useCallback(async () => {
     try {
       const res = await fetch(`/api/comments?pageId=${pageId}`)
       const json = await res.json()
       if (json.success) setComments(json.data)
-    } catch {} finally { setLoading(false) }
+      else setError(json.error || 'Error al cargar')
+    } catch { setError('Error de red') } finally { setLoading(false) }
   }, [pageId])
 
   useEffect(() => { fetchComments() }, [fetchComments])
@@ -44,9 +46,12 @@ export default function CommentsSection({ pageId, user }: { pageId: string; user
       const json = await res.json()
       if (json.success) {
         setText('')
+        setError('')
         setComments(prev => [...prev, { id: json.data.id, discussionId: '', text: text.trim(), authorName: user, createdTime: new Date().toISOString() }])
+      } else {
+        setError(json.error || 'Error al enviar')
       }
-    } catch {} finally { setSending(false) }
+    } catch { setError('Error de red') } finally { setSending(false) }
   }
 
   return (
@@ -61,6 +66,8 @@ export default function CommentsSection({ pageId, user }: { pageId: string; user
       <div className="space-y-1.5 mb-2 max-h-[150px] overflow-y-auto">
         {loading ? (
           <p className="text-[10px]" style={{ color: 'var(--text-muted)' }}>Cargando...</p>
+        ) : error ? (
+          <p className="text-[10px]" style={{ color: 'var(--error)' }}>{error}</p>
         ) : comments.length === 0 ? (
           <p className="text-[10px]" style={{ color: 'var(--text-muted)' }}>Sin comentarios</p>
         ) : comments.map(c => (
