@@ -115,7 +115,7 @@ function TallerInner() {
           <div className="animate-fade-up" style={{ animationDelay: '100ms' }}>
             <CalendarView
               items={records.filter(r => r.fechaEntrada).map(r => ({ id: r.id, titulo: `${r.nombre}${r.vehiculoNombre ? ' — ' + r.vehiculoNombre : ''}`, fecha: r.fechaEntrada!, estado: r.estado, area: r.tipo }))}
-              typeColors={{ En proceso: '#3b82f6', Terminado: '#22c55e', Bloqueado: '#ef4444' }}
+              typeColors={{ 'En proceso': '#3b82f6', 'Terminado': '#22c55e', 'Bloqueado': '#ef4444' }}
             />
           </div>
         ) : (
