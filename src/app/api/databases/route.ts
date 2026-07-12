@@ -13,12 +13,12 @@ interface DBEntry {
   category: 'Operaciones' | 'Movimiento' | 'Gestión'
 }
 
-const DB_META: Record<string, { name: string; icon: string; desc: string; category: DBEntry['category']; viewId?: string }> = {
+const DB_META: Record<string, { name: string; icon: string; desc: string; category: DBEntry['category']; viewId?: string; pageId?: string }> = {
   vehicles: { name: 'Vehículos', icon: '🚗', desc: 'Base principal de vehículos', category: 'Operaciones', viewId: '36cf70f8470180d9beae000c38931b70' },
-  workshop: { name: 'Taller', icon: '🔧', desc: 'Órdenes de taller mecánico', category: 'Operaciones' },
-  chapa: { name: 'Chapa y Pintura', icon: '🎨', desc: 'Trabajos de chapa y pintura', category: 'Operaciones' },
-  preparacion: { name: 'Preparación', icon: '✨', desc: 'Preparación previa a venta', category: 'Operaciones' },
-  logistics: { name: 'Logística', icon: '🚛', desc: 'Transporte y logística', category: 'Operaciones' },
+  workshop: { name: 'Taller', icon: '🔧', desc: 'Órdenes de taller mecánico', category: 'Operaciones', pageId: '398f70f84701807ca12ad6a08c83be03' },
+  chapa: { name: 'Chapa y Pintura', icon: '🎨', desc: 'Trabajos de chapa y pintura', category: 'Operaciones', pageId: '398f70f847018062adabf1b015444a94' },
+  preparacion: { name: 'Preparación', icon: '✨', desc: 'Preparación previa a venta', category: 'Operaciones', pageId: '398f70f84701801382c8e96333ab4226' },
+  logistics: { name: 'Logística', icon: '🚛', desc: 'Transporte y logística', category: 'Operaciones', pageId: '397f70f8470180c28157c96bbd17b99a' },
   tasks: { name: 'Tareas', icon: '📋', desc: 'Tareas operativas del equipo', category: 'Operaciones' },
   ventas: { name: 'Ventas', icon: '💰', desc: 'Registro de ventas', category: 'Movimiento' },
   calendario_operativo: { name: 'Calendario Operativo', icon: '📅', desc: 'Planificación operativa', category: 'Movimiento' },
@@ -66,7 +66,7 @@ export async function GET() {
 
     if (!id) continue
 
-    const rawId = id.replace(/-/g, '')
+    const rawId = (meta.pageId || id).replace(/-/g, '')
     const url = `notion://notion.so/${rawId}`
     const params = meta.viewId ? `?v=${meta.viewId}` : ''
     const webUrl = `https://app.notion.com/p/${rawId}${params}`
