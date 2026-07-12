@@ -138,8 +138,7 @@ function LogisticaInner() {
     <div style={{ background: 'var(--bg)', minHeight: '100vh' }}>
       <div className="max-w-7xl mx-auto p-3 sm:p-6 lg:p-8">
 
-        <div className="flex items-center justify-between mb-4 animate-fade-up">
-          <h1 className="text-lg sm:text-xl font-bold" style={{ color: 'var(--text)' }}>🚛 Logística</h1>
+        <div className="flex items-center justify-end mb-4 animate-fade-up">
           <div className="flex items-center gap-2">
             <button onClick={() => setShowCreate(true)} className="text-[10px] sm:text-xs px-2 py-1.5 rounded font-medium" style={{ background: 'var(--accent-blue)', color: '#fff', border: 'none' }}>➕ Nuevo</button>
             <DarkModeToggle />
