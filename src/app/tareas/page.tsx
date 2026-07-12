@@ -4,7 +4,6 @@ import { useState, useEffect, useCallback } from 'react'
 import { ThemeProvider, useTheme } from '../dashboard/theme-context'
 import { DarkModeToggle } from '../dashboard/dark-mode'
 import { Skeleton } from '@/components/skeleton'
-import CommentsSection from '@/components/comments-section'
 
 function vehLabel(v: any): string {
   return v.matricula ? v.matricula + ' - ' + v.brand + ' ' + v.model + ' (' + (v.year || '—') + ')' : v.name
@@ -104,10 +103,9 @@ function DraggableTaskCard({ task, onClick }: { task: TaskItem; onClick: () => v
   )
 }
 
-function TaskDetailModal({ task, employees, user, onClose, onMove, onArchive, onUpdate }: {
+function TaskDetailModal({ task, employees, onClose, onMove, onArchive, onUpdate }: {
   task: TaskItem
   employees: { id: string; name: string }[]
-  user: string
   onClose: () => void
   onMove: (id: string, state: string) => void
   onArchive: (id: string) => void
@@ -228,7 +226,6 @@ function TaskDetailModal({ task, employees, user, onClose, onMove, onArchive, on
           {task.deadline && <div className="flex items-center gap-2"><span className="text-[10px] font-medium" style={{ color: 'var(--text-muted)' }}>Vence:</span><span className="text-[10px]" style={{ color: 'var(--text-secondary)' }}>{new Date(task.deadline).toLocaleDateString('es')}</span></div>}
           {task.descripcion && <div className="mt-3 pt-3 border-t" style={{ borderColor: 'var(--border)' }}><span className="text-[10px] font-medium block mb-1" style={{ color: 'var(--text-muted)' }}>Descripción:</span><p className="text-[11px] leading-relaxed" style={{ color: 'var(--text-secondary)', whiteSpace: 'pre-wrap' }}>{task.descripcion}</p></div>}
         </div>
-        <CommentsSection pageId={task.id} user={user} />
          <button onClick={() => onArchive(task.id)}
            className="w-full text-[11px] font-semibold py-2 rounded min-h-[36px] transition-opacity hover:opacity-70 cursor-pointer"
            style={{ background: 'var(--bg-pill)', color: 'var(--text)' }}
@@ -692,7 +689,6 @@ function TareasInner() {
           <TaskDetailModal
             task={selected}
             employees={employees}
-            user={myName}
             onClose={() => setSelected(null)}
             onMove={handleMove}
             onArchive={handleArchive}
