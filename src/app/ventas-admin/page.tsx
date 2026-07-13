@@ -126,31 +126,37 @@ function VentasAdminInner() {
             })}
           </div>
         ) : (
-          <div className="card overflow-x-auto animate-fade-up" style={{ animationDelay: '100ms' }}>
+          <div className="card overflow-hidden rounded-xl animate-fade-up" style={{ background: 'var(--bg-card)' }}>
             {records.length === 0 ? <div className="p-8 text-center"><p className="text-sm" style={{ color: 'var(--text-muted)' }}>Sin ventas</p></div> : (
               <table className="w-full text-xs sm:text-sm">
                 <thead>
-                  <tr style={{ color: 'var(--text-secondary)', borderBottom: '1px solid var(--border)' }}>
-                    <th className="text-left p-2 sm:p-3 font-medium">Venta</th><th className="text-left p-2 sm:p-3 font-medium">Vehículo</th>
-                    <th className="text-right p-2 sm:p-3 font-medium">Precio</th><th className="text-right p-2 sm:p-3 font-medium">Margen</th>
-                    <th className="text-left p-2 sm:p-3 font-medium">Vendedor</th><th className="text-left p-2 sm:p-3 font-medium">Cliente</th>
-                    <th className="text-left p-2 sm:p-3 font-medium">Pago</th><th className="text-right p-2 sm:p-3 font-medium">Fecha</th>
+                  <tr style={{ background: 'var(--bg-pill)' }}>
+                    <th className="text-left p-3 font-semibold text-[10px] uppercase tracking-wider" style={{ color: 'var(--text-secondary)' }}>Venta</th>
+                    <th className="text-left p-3 font-semibold text-[10px] uppercase tracking-wider" style={{ color: 'var(--text-secondary)' }}>Vehículo</th>
+                    <th className="text-right p-3 font-semibold text-[10px] uppercase tracking-wider" style={{ color: 'var(--text-secondary)' }}>Precio</th>
+                    <th className="text-right p-3 font-semibold text-[10px] uppercase tracking-wider" style={{ color: 'var(--text-secondary)' }}>Margen</th>
+                    <th className="text-left p-3 font-semibold text-[10px] uppercase tracking-wider" style={{ color: 'var(--text-secondary)' }}>Vendedor</th>
+                    <th className="text-left p-3 font-semibold text-[10px] uppercase tracking-wider" style={{ color: 'var(--text-secondary)' }}>Cliente</th>
+                    <th className="text-left p-3 font-semibold text-[10px] uppercase tracking-wider" style={{ color: 'var(--text-secondary)' }}>Pago</th>
+                    <th className="text-right p-3 font-semibold text-[10px] uppercase tracking-wider" style={{ color: 'var(--text-secondary)' }}>Fecha</th>
                   </tr>
                 </thead>
                 <tbody>
-                  {records.map(r => (
-                    <tr key={r.id} onClick={() => setSelected(r)} style={{ borderBottom: '1px solid var(--border)', cursor: 'pointer' }} className="hover:opacity-80">
-                      <td className="p-2 sm:p-3 font-medium truncate max-w-[100px]" style={{ color: 'var(--text)' }}>{r.nombre}</td>
-                      <td className="p-2 sm:p-3 truncate max-w-[100px]" style={{ color: 'var(--text-secondary)' }}>{r.vehiculoNombre || '-'}</td>
-                      <td className="text-right p-2 sm:p-3" style={{ color: 'var(--text)' }}>{fmtEuro(r.precioVenta)}</td>
-                      <td className="text-right p-2 sm:p-3" style={{ color: r.margenBruto && r.margenBruto > 0 ? 'var(--accent-emerald)' : 'var(--error)' }}>{fmtEuro(r.margenBruto)}</td>
-                      <td className="p-2 sm:p-3" style={{ color: 'var(--text-secondary)' }}>{r.vendedorNombre || '-'}</td>
-                      <td className="p-2 sm:p-3 truncate max-w-[100px]" style={{ color: 'var(--text-secondary)' }}>{r.clienteNombre || '-'}</td>
-                      <td className="p-2 sm:p-3"><span className="text-[10px] px-1.5 py-0.5 rounded font-medium" style={{
+                  {records.map((r, i) => (
+                    <tr key={r.id} onClick={() => setSelected(r)}
+                      className="cursor-pointer transition-all hover:brightness-95"
+                      style={{ borderBottom: '1px solid var(--border)', background: i % 2 === 0 ? 'transparent' : 'var(--bg-pill)' }}>
+                      <td className="p-3 font-medium" style={{ color: 'var(--text)' }}>{r.nombre}</td>
+                      <td className="p-3" style={{ color: 'var(--text-secondary)' }}>{r.vehiculoNombre || '-'}</td>
+                      <td className="text-right p-3" style={{ color: 'var(--text)' }}>{fmtEuro(r.precioVenta)}</td>
+                      <td className="text-right p-3" style={{ color: r.margenBruto && r.margenBruto > 0 ? 'var(--accent-emerald)' : 'var(--error)' }}>{fmtEuro(r.margenBruto)}</td>
+                      <td className="p-3" style={{ color: 'var(--text-secondary)' }}>{r.vendedorNombre || '-'}</td>
+                      <td className="p-3" style={{ color: 'var(--text-secondary)' }}>{r.clienteNombre || '-'}</td>
+                      <td className="p-3"><span className="text-[10px] px-1.5 py-0.5 rounded font-medium" style={{
                         background: r.financiada ? 'rgba(59,130,246,0.12)' : 'rgba(34,197,94,0.12)',
                         color: r.financiada ? '#3b82f6' : '#22c55e',
                       }}>{r.financiada ? '💰 Financiada' : r.formaPago || 'Contado'}</span></td>
-                      <td className="text-right p-2 sm:p-3" style={{ color: 'var(--text-secondary)' }}>{fmtDate(r.fechaVenta)}</td>
+                      <td className="text-right p-3" style={{ color: 'var(--text-secondary)' }}>{fmtDate(r.fechaVenta)}</td>
                     </tr>
                   ))}
                 </tbody>

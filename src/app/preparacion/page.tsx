@@ -121,31 +121,38 @@ function PrepInner() {
           </div>
           </DndContext>
         ) : (
-          <div className="card overflow-x-auto animate-fade-up" style={{ animationDelay: '75ms' }}>
+          <div className="card overflow-hidden rounded-xl animate-fade-up" style={{ background: 'var(--bg-card)' }}>
             {records.length === 0 ? <div className="p-8 text-center"><p className="text-sm" style={{ color: 'var(--text-muted)' }}>Sin registros</p></div> : (
               <table className="w-full text-xs sm:text-sm">
                 <thead>
-                  <tr style={{ color: 'var(--text-secondary)', borderBottom: '1px solid var(--border)' }}>
-                    <th className="text-left p-2 sm:p-3 font-medium">ID</th><th className="text-left p-2 sm:p-3 font-medium">Vehículo</th>
-                    <th className="text-left p-2 sm:p-3 font-medium">Estado</th><th className="text-left p-2 sm:p-3 font-medium">Tipo limpieza</th>
-                    <th className="text-left p-2 sm:p-3 font-medium">Preparador</th><th className="text-right p-2 sm:p-3 font-medium">Inicio</th>
-                    <th className="text-right p-2 sm:p-3 font-medium">Fin</th><th className="text-right p-2 sm:p-3 font-medium">Horas</th>
+                  <tr style={{ background: 'var(--bg-pill)' }}>
+                    <th className="text-left p-3 font-semibold text-[10px] uppercase tracking-wider" style={{ color: 'var(--text-secondary)' }}>ID</th>
+                    <th className="text-left p-3 font-semibold text-[10px] uppercase tracking-wider" style={{ color: 'var(--text-secondary)' }}>Vehículo</th>
+                    <th className="text-left p-3 font-semibold text-[10px] uppercase tracking-wider" style={{ color: 'var(--text-secondary)' }}>Estado</th>
+                    <th className="text-left p-3 font-semibold text-[10px] uppercase tracking-wider" style={{ color: 'var(--text-secondary)' }}>Tipo limpieza</th>
+                    <th className="text-left p-3 font-semibold text-[10px] uppercase tracking-wider" style={{ color: 'var(--text-secondary)' }}>Preparador</th>
+                    <th className="text-right p-3 font-semibold text-[10px] uppercase tracking-wider" style={{ color: 'var(--text-secondary)' }}>Inicio</th>
+                    <th className="text-right p-3 font-semibold text-[10px] uppercase tracking-wider" style={{ color: 'var(--text-secondary)' }}>Fin</th>
+                    <th className="text-right p-3 font-semibold text-[10px] uppercase tracking-wider" style={{ color: 'var(--text-secondary)' }}>Horas</th>
                   </tr>
                 </thead>
                 <tbody>
-                  {records.map(r => (
-                    <tr key={r.id} onClick={() => { setSelected(r); setEditObs(r.observaciones) }} style={{ borderBottom: '1px solid var(--border)', cursor: 'pointer' }} className="hover:opacity-80">
-                      <td className="p-2 sm:p-3 font-medium truncate max-w-[80px]" style={{ color: 'var(--text)' }}>{r.nombre}</td>
-                      <td className="p-2 sm:p-3 truncate max-w-[100px]" style={{ color: 'var(--text-secondary)' }}>{r.vehiculoNombre || '-'}</td>
-                      <td className="p-2 sm:p-3"><span className="text-[10px] px-1.5 py-0.5 rounded font-medium" style={{
-                        ...stateColor(r.estado),
+                  {records.map((r, i) => (
+                    <tr key={r.id} onClick={() => { setSelected(r); setEditObs(r.observaciones) }}
+                      className="cursor-pointer transition-all hover:brightness-95"
+                      style={{ borderBottom: '1px solid var(--border)', background: i % 2 === 0 ? 'transparent' : 'var(--bg-pill)' }}>
+                      <td className="p-3 font-medium" style={{ color: 'var(--text)' }}>{r.nombre}</td>
+                      <td className="p-3" style={{ color: 'var(--text-secondary)' }}>{r.vehiculoNombre || '-'}</td>
+                      <td className="p-3"><span className="text-[10px] px-1.5 py-0.5 rounded font-medium" style={{
+                        background: stateColor(r.estado).bg,
+                        color: stateColor(r.estado).text,
                         whiteSpace: 'nowrap',
                       }}>{r.estado || 'Sin estado'}</span></td>
-                      <td className="p-2 sm:p-3" style={{ color: 'var(--text-secondary)' }}>{r.tipoLimpieza || '-'}</td>
-                      <td className="p-2 sm:p-3" style={{ color: 'var(--text-secondary)' }}>{r.preparadorNombre || '-'}</td>
-                      <td className="text-right p-2 sm:p-3" style={{ color: 'var(--text-secondary)' }}>{fmtDate(r.fechaInicio)}</td>
-                      <td className="text-right p-2 sm:p-3" style={{ color: 'var(--text-secondary)' }}>{fmtDate(r.fechaFin)}</td>
-                      <td className="text-right p-2 sm:p-3" style={{ color: 'var(--text-secondary)' }}>{r.horasInvertidas ?? '-'}</td>
+                      <td className="p-3" style={{ color: 'var(--text-secondary)' }}>{r.tipoLimpieza || '-'}</td>
+                      <td className="p-3" style={{ color: 'var(--text-secondary)' }}>{r.preparadorNombre || '-'}</td>
+                      <td className="text-right p-3" style={{ color: 'var(--text-secondary)' }}>{fmtDate(r.fechaInicio)}</td>
+                      <td className="text-right p-3" style={{ color: 'var(--text-secondary)' }}>{fmtDate(r.fechaFin)}</td>
+                      <td className="text-right p-3" style={{ color: 'var(--text-secondary)' }}>{r.horasInvertidas ?? '-'}</td>
                     </tr>
                   ))}
                 </tbody>
