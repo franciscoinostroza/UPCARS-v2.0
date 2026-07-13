@@ -5,6 +5,8 @@ import { ThemeProvider, useTheme } from './theme-context'
 import { DarkModeToggle } from './dark-mode'
 import Pipeline from './pipeline'
 import { Skeleton } from '@/components/skeleton'
+import { stateColor } from '@/lib/colors'
+import { fmtDate } from '@/lib/dates'
 
 interface KPIStats {
   slas: Record<string, { avg: number; count: number }>
@@ -44,6 +46,7 @@ function DashboardInner() {
   const [kpis, setKpis] = useState<KPIStats | null>(null)
   const [pipeline, setPipeline] = useState<PipelineData[]>([])
   const [pipelineTotal, setPipelineTotal] = useState(0)
+  const [tasaciones, setTasaciones] = useState<any[]>([])
   const [loading, setLoading] = useState(true)
   const [resolvingId, setResolvingId] = useState<string | null>(null)
   const [employees, setEmployees] = useState<{ id: string; name: string }[]>([])
@@ -57,21 +60,24 @@ function DashboardInner() {
       if (filterMarca) params.set('marca', filterMarca)
       const qs = params.toString()
 
-      const [kpiRes, pipeRes, empRes] = await Promise.all([
+      const [kpiRes, pipeRes, empRes, tasRes] = await Promise.all([
         fetch('/api/kpis'),
         fetch(`/api/vehicles${qs ? '?' + qs : ''}`),
         fetch('/api/employees'),
+        fetch('/api/tasaciones'),
       ])
       const empData = await empRes.json()
       if (empData.success) setEmployees(empData.data)
       const kpiData = await kpiRes.json()
       const pipeData = await pipeRes.json()
+      const tasData = await tasRes.json()
 
       if (kpiData.success) setKpis(kpiData.data)
       if (pipeData.success) {
         setPipeline(pipeData.data.pipeline)
         setPipelineTotal(pipeData.data.total)
       }
+      if (tasData.success) setTasaciones(tasData.data)
     } catch {
       // silent
     } finally {
@@ -373,6 +379,45 @@ function DashboardInner() {
           </section>
         )}
 
+        {/* Tasaciones Widget */}
+        {tasaciones.length > 0 && (
+          <section className="mt-6 animate-fade-up">
+            <div className="flex items-center gap-2 mb-3">
+              <h2 className="text-sm font-bold" style={{ color: 'var(--text)' }}>📋 Tasaciones</h2>
+              <a href="/tasaciones" target="_blank" className="text-[10px] font-medium hover:opacity-70" style={{ color: 'var(--accent-blue)' }}>Ver todas →</a>
+            </div>
+            <div className="flex flex-wrap gap-2 mb-3">
+              {['Sin empezar', 'Seguimiento', 'Vendido', 'Desiste compra'].map(est => {
+                const count = tasaciones.filter((t: any) => t.estado === est).length
+                const c = stateColor(est)
+                return count > 0 ? (
+                  <span key={est} className="text-[10px] font-semibold px-2 py-1 rounded" style={{ background: c.bg, color: c.text }}>
+                    {est}: {count}
+                  </span>
+                ) : null
+              })}
+            </div>
+            <div className="space-y-1.5">
+              {tasaciones.sort((a: any, b: any) => (a.plazo || 'Z') > (b.plazo || 'Z') ? 1 : -1).slice(0, 5).map((t: any) => {
+                const ec = stateColor(t.estado)
+                const overdue = t.plazo && new Date(t.plazo) < new Date()
+                return (
+                  <div key={t.id} className="card p-2.5 flex items-center gap-2" style={{ background: 'var(--bg-card)', borderLeft: `3px solid ${ec.text}` }}>
+                    <div className="w-2 h-2 rounded-full shrink-0" style={{ background: ec.text }} />
+                    <div className="flex-1 min-w-0">
+                      <p className="text-[11px] font-semibold truncate" style={{ color: 'var(--text)' }}>{t.nombre}</p>
+                      <div className="flex items-center gap-1.5 text-[9px]" style={{ color: 'var(--text-muted)' }}>
+                        {t.responsableNombre && <span>👤 {t.responsableNombre}</span>}
+                        {t.plazo && <span style={{ color: overdue ? '#ef4444' : 'inherit' }}>📅 {fmtDate(t.plazo)}</span>}
+                      </div>
+                    </div>
+                    <span className="text-[9px] font-semibold px-1.5 py-0.5 rounded shrink-0" style={{ background: stateColor(t.prioridad).bg, color: stateColor(t.prioridad).text }}>{t.prioridad}</span>
+                  </div>
+                )
+              })}
+            </div>
+          </section>
+        )}
 
       </div>
     </div>
