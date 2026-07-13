@@ -25,6 +25,7 @@ function PrepInner() {
   const [filterEstado, setFilterEstado] = useState('')
   const [selected, setSelected] = useState<PrepItem | null>(null)
   const [editObs, setEditObs] = useState('')
+  const [showCreate, setShowCreate] = useState(false)
   const [employees, setEmployees] = useState<{ id: string; name: string }[]>([])
   const [vehicles, setVehicles] = useState<{ id: string; name: string; matricula?: string; brand?: string; model?: string; year?: string }[]>([])
 
@@ -64,6 +65,7 @@ function PrepInner() {
       <div className="max-w-7xl mx-auto p-3 sm:p-6 lg:p-8">
         <div className="flex items-center justify-end mb-4 animate-fade-up">
           <div className="flex gap-2">
+            <button onClick={() => setShowCreate(true)} className="text-[11px] font-semibold px-3 py-2 rounded" style={{ background: 'var(--accent-blue)', color: '#fff' }}>+ Nueva</button>
             <DarkModeToggle />
           </div>
         </div>
@@ -210,6 +212,95 @@ function PrepInner() {
                 }} className="w-full text-[11px] font-semibold py-2 rounded" style={{ background: 'var(--accent-blue)', color: '#fff' }}>💾 Guardar</button>
               </div>
               <a href={`https://www.notion.so/${selected.id.replace(/-/g, '')}`} target="_blank" rel="noopener noreferrer" className="block w-full text-center text-[10px] font-medium py-2 rounded" style={{ background: 'var(--bg-pill)', color: 'var(--accent-blue)' }}>🔗 Abrir en Notion</a>
+            </div>
+          </div>
+        )}
+
+        {showCreate && (
+          <div className="fixed inset-0 z-50 flex items-center justify-center p-4" style={{ background: 'rgba(0,0,0,0.6)' }} onClick={(e) => { if (e.target === e.currentTarget) setShowCreate(false) }}>
+            <div className="card w-full max-w-md animate-fade-up p-5" style={{ background: 'var(--bg-card)' }}>
+              <h2 className="text-sm font-semibold mb-4" style={{ color: 'var(--text)' }}>Nuevo registro Preparación</h2>
+              <form onSubmit={async (e) => {
+                e.preventDefault()
+                const form = e.target as HTMLFormElement
+                const fd = new FormData(form)
+                await fetch('/api/preparacion', {
+                  method: 'POST',
+                  headers: { 'Content-Type': 'application/json' },
+                  body: JSON.stringify({
+                    nombre: fd.get('nombre'),
+                    vehiculoId: fd.get('vehiculoId') || undefined,
+                    estado: fd.get('estado') || 'Pendiente',
+                    preparadorId: fd.get('preparadorId') || undefined,
+                    tipoLimpieza: fd.get('tipoLimpieza') || undefined,
+                    fechaInicio: fd.get('fechaInicio') || undefined,
+                    fechaFin: fd.get('fechaFin') || undefined,
+                    fechaEntrega: fd.get('fechaEntrega') || undefined,
+                    observaciones: fd.get('observaciones') || '',
+                  }),
+                })
+                setShowCreate(false)
+                fetchData()
+              }} className="space-y-3">
+                <div>
+                  <p className="text-[10px] font-medium mb-0.5" style={{ color: 'var(--text-muted)' }}>Nombre *</p>
+                  <input name="nombre" required style={selectSx} placeholder="Ej: PREP - Toyota" />
+                </div>
+                <div>
+                  <p className="text-[10px] font-medium mb-0.5" style={{ color: 'var(--text-muted)' }}>Vehículo</p>
+                  <select name="vehiculoId" style={selectSx}>
+                    <option value="">Sin vehículo</option>
+                    {vehicles.map(v => <option key={v.id} value={v.id}>{v.name}</option>)}
+                  </select>
+                </div>
+                <div>
+                  <p className="text-[10px] font-medium mb-0.5" style={{ color: 'var(--text-muted)' }}>Estado</p>
+                  <select name="estado" style={selectSx}>
+                    {ESTADOS.filter(Boolean).map(s => <option key={s} value={s}>{s}</option>)}
+                  </select>
+                </div>
+                <div>
+                  <p className="text-[10px] font-medium mb-0.5" style={{ color: 'var(--text-muted)' }}>Tipo de limpieza</p>
+                  <select name="tipoLimpieza" style={selectSx}>
+                    <option value="">Sin tipo</option>
+                    <option value="Entrega cliente">Entrega cliente</option>
+                    <option value="Exposición">Exposición</option>
+                    <option value="Lavado Taller">Lavado Taller</option>
+                    <option value="Repaso - Visita cte.">Repaso - Visita cte.</option>
+                  </select>
+                </div>
+                <div className="grid grid-cols-2 gap-2">
+                  <div>
+                    <p className="text-[10px] font-medium mb-0.5" style={{ color: 'var(--text-muted)' }}>Preparador</p>
+                    <select name="preparadorId" style={selectSx}>
+                      <option value="">Sin asignar</option>
+                      {employees.map(e => <option key={e.id} value={e.id}>{e.name}</option>)}
+                    </select>
+                  </div>
+                  <div>
+                    <p className="text-[10px] font-medium mb-0.5" style={{ color: 'var(--text-muted)' }}>Fecha inicio</p>
+                    <input name="fechaInicio" type="date" style={selectSx} />
+                  </div>
+                </div>
+                <div className="grid grid-cols-2 gap-2">
+                  <div>
+                    <p className="text-[10px] font-medium mb-0.5" style={{ color: 'var(--text-muted)' }}>Fecha fin</p>
+                    <input name="fechaFin" type="date" style={selectSx} />
+                  </div>
+                  <div>
+                    <p className="text-[10px] font-medium mb-0.5" style={{ color: 'var(--text-muted)' }}>Fecha entrega</p>
+                    <input name="fechaEntrega" type="date" style={selectSx} />
+                  </div>
+                </div>
+                <div>
+                  <p className="text-[10px] font-medium mb-0.5" style={{ color: 'var(--text-muted)' }}>Observaciones</p>
+                  <textarea name="observaciones" rows={2} className="w-full text-xs px-2 py-1.5 rounded outline-none resize-none" style={{ background: 'var(--bg)', color: 'var(--text)', border: '1px solid var(--border)' }} placeholder="Opcional" />
+                </div>
+                <div className="flex gap-2 pt-1">
+                  <button type="submit" className="flex-1 text-[11px] font-semibold py-2.5 rounded" style={{ background: 'var(--accent-blue)', color: '#fff' }}>Crear</button>
+                  <button type="button" onClick={() => setShowCreate(false)} className="flex-1 text-[11px] font-semibold py-2.5 rounded" style={{ background: 'var(--bg-pill)', color: 'var(--text-secondary)' }}>Cancelar</button>
+                </div>
+              </form>
             </div>
           </div>
         )}

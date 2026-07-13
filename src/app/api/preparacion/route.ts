@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server'
-import { getPrepRecords } from '@/lib/notion/prep-records'
+import { getPrepRecords, createPrepRecord } from '@/lib/notion/prep-records'
 import { getEmployees } from '@/lib/notion/employees'
 import { getVehicles } from '@/lib/notion/vehicles'
 
@@ -26,6 +26,35 @@ export async function GET(request: NextRequest) {
     return NextResponse.json({ success: true, data })
   } catch (error: any) {
     console.error('Preparación GET error:', error)
+    return NextResponse.json(
+      { success: false, error: error?.message || 'Failed' },
+      { status: 500 }
+    )
+  }
+}
+
+export async function POST(request: NextRequest) {
+  try {
+    const body = await request.json()
+    if (!body.nombre) {
+      return NextResponse.json({ success: false, error: 'nombre required' }, { status: 400 })
+    }
+
+    await createPrepRecord({
+      nombre: body.nombre,
+      vehiculoId: body.vehiculoId || undefined,
+      estado: body.estado || 'Pendiente',
+      preparadorId: body.preparadorId || undefined,
+      tipoLimpieza: body.tipoLimpieza || undefined,
+      fechaInicio: body.fechaInicio || undefined,
+      fechaFin: body.fechaFin || undefined,
+      fechaEntrega: body.fechaEntrega || undefined,
+      observaciones: body.observaciones || '',
+    })
+
+    return NextResponse.json({ success: true })
+  } catch (error: any) {
+    console.error('Preparación POST error:', error)
     return NextResponse.json(
       { success: false, error: error?.message || 'Failed' },
       { status: 500 }
