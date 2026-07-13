@@ -8,7 +8,7 @@ import { fmtDate } from '@/lib/dates'
 
 interface PrepItem {
   id: string; nombre: string; vehiculoId: string | null; vehiculoNombre: string | null
-  estado: string; preparadorId: string | null; preparadorNombre: string | null
+  estado: string; preparadorId: string | null; preparadorNombre: string | null; registrarInicio: boolean; registrarFin: boolean
   tipoLimpieza: string; fechaInicio: string | null; fechaFin: string | null; fechaEntrega: string | null
   horasInvertidas: number | null; limpiezaInterior: boolean; limpiezaExterior: boolean
   fotografiaAnuncio: boolean; registrarInicio: boolean; registrarFin: boolean; observaciones: string

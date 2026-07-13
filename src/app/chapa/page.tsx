@@ -8,7 +8,7 @@ import { fmtDate } from '@/lib/dates'
 
 interface ChapaItem {
   id: string; matricula: string; vehiculoId: string | null; vehiculoNombre: string | null
-  estado: string; proveedorId: string | null; costeTotal: number | null
+  estado: string; proveedorId: string | null; proveedorNombre: string | null; costeTotal: number | null
   fechaSalida: string | null; fechaRetorno: string | null
   trabajosSolicitados: string; observaciones: string; diasFuera: number | null
 }
