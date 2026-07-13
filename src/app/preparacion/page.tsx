@@ -223,6 +223,11 @@ function PrepInner() {
                   await fetch(`/api/preparacion/${selected.id}`, { method: 'PATCH', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ estado: selected.estado, tipoLimpieza: selected.tipoLimpieza, fechaInicio: selected.fechaInicio, fechaFin: selected.fechaFin, fechaEntrega: selected.fechaEntrega, limpiezaInterior: selected.limpiezaInterior, limpiezaExterior: selected.limpiezaExterior, fotografiaAnuncio: selected.fotografiaAnuncio, registrarInicio: selected.registrarInicio, registrarFin: selected.registrarFin, observaciones: editObs }) })
                   setRecords(prev => prev.map(r => r.id === selected.id ? { ...r, observaciones: editObs } : r))
                 }} className="w-full text-[11px] font-semibold py-2 rounded" style={{ background: 'var(--accent-blue)', color: '#fff' }}>💾 Guardar</button>
+                <button onClick={async () => {
+                  if (!confirm('¿Eliminar este registro de preparación?')) return
+                  await fetch(`/api/preparacion/${selected.id}`, { method: 'DELETE' })
+                  setSelected(null); fetchData()
+                }} className="w-full text-[11px] font-semibold py-2 rounded mt-1" style={{ background: 'rgba(239,68,68,0.12)', color: '#ef4444' }}>🗑 Eliminar</button>
               </div>
               <a href={`https://www.notion.so/${selected.id.replace(/-/g, '')}`} target="_blank" rel="noopener noreferrer" className="block w-full text-center text-[10px] font-medium py-2 rounded" style={{ background: 'var(--bg-pill)', color: 'var(--accent-blue)' }}>🔗 Abrir en Notion</a>
             </div>

@@ -303,6 +303,11 @@ function DetailModal({ item, onClose, onEdit }: { item: LogItem; onClose: () => 
           <h2 className="text-sm font-semibold" style={{ color: 'var(--text)' }}>{item.nombre}</h2>
           <div className="flex items-center gap-1">
             <button onClick={onEdit} className="text-[10px] px-2 py-1 rounded" style={{ color: 'var(--accent-blue)' }}>✏️</button>
+            <button onClick={async () => {
+              if (!confirm('¿Eliminar este registro?')) return
+              await fetch(`/api/logistica/${item.id}`, { method: 'DELETE' })
+              window.location.reload()
+            }} className="text-[10px] px-2 py-1 rounded" style={{ color: '#ef4444' }}>🗑</button>
             <button onClick={onClose} className="text-sm px-2 py-1 rounded" style={{ color: 'var(--text-muted)' }}>✕</button>
           </div>
         </div>
