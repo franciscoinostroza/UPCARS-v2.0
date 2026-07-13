@@ -166,14 +166,56 @@ function VentasAdminInner() {
                 <h2 className="text-sm font-semibold" style={{ color: 'var(--text)' }}>{selected.nombre}</h2>
                 <button onClick={() => setSelected(null)} className="text-sm px-2 py-1 rounded" style={{ color: 'var(--text-muted)' }}>✕</button>
               </div>
-              <div className="space-y-1.5 text-xs mb-4">
-                {[['Vehículo', selected.vehiculoNombre], ['Cliente', selected.clienteNombre], ['Contacto', selected.clienteContacto],
-                  ['Precio venta', fmtEuro(selected.precioVenta)], ['Precio compra', fmtEuro(selected.precioCompra)],
-                  ['Margen', selected.margenBruto != null ? `${fmtEuro(selected.margenBruto)} (${selected.margenPorcentaje?.toFixed(1)}%)` : null],
-                  ['Vendedor', selected.vendedorNombre], ['Forma pago', selected.financiada ? '💰 Financiada' : selected.formaPago],
-                  ['Fecha venta', fmtDate(selected.fechaVenta)],
-                ].map(([l, v]) => v ? <div key={l} className="flex gap-2"><span className="font-medium shrink-0" style={{ color: 'var(--text-muted)' }}>{l}:</span><span style={{ color: 'var(--text)' }}>{v}</span></div> : null)}
-                {selected.observaciones && <div className="mt-2 pt-2 border-t" style={{ borderColor: 'var(--border)' }}><p className="text-[10px] font-medium mb-1" style={{ color: 'var(--text-muted)' }}>Observaciones:</p><p className="text-xs" style={{ color: 'var(--text)' }}>{selected.observaciones}</p></div>}
+              <div className="space-y-2 text-xs mb-4">
+                <div className="flex gap-2 items-center">
+                  <span className="font-medium shrink-0" style={{ color: 'var(--text-muted)' }}>Cliente:</span>
+                  <input value={selected.clienteNombre} onChange={e => setRecords(prev => prev.map(r => r.id === selected.id ? { ...r, clienteNombre: e.target.value } : r))} style={selectSx} placeholder="Nombre cliente" />
+                </div>
+                <div className="flex gap-2 items-center">
+                  <span className="font-medium shrink-0" style={{ color: 'var(--text-muted)' }}>Contacto:</span>
+                  <input value={selected.clienteContacto} onChange={e => setRecords(prev => prev.map(r => r.id === selected.id ? { ...r, clienteContacto: e.target.value } : r))} style={selectSx} placeholder="Teléfono/email" />
+                </div>
+                <div className="flex gap-2 items-center">
+                  <span className="font-medium shrink-0" style={{ color: 'var(--text-muted)' }}>Precio venta:</span>
+                  <input type="number" value={selected.precioVenta ?? ''} onChange={e => setRecords(prev => prev.map(r => r.id === selected.id ? { ...r, precioVenta: e.target.value ? parseFloat(e.target.value) : null } : r))} style={selectSx} step="0.01" />
+                </div>
+                <div className="flex gap-2 items-center">
+                  <span className="font-medium shrink-0" style={{ color: 'var(--text-muted)' }}>Precio compra:</span>
+                  <span style={{ color: 'var(--text)' }}>{fmtEuro(selected.precioCompra)}</span>
+                </div>
+                <div className="flex gap-2 items-center">
+                  <span className="font-medium shrink-0" style={{ color: 'var(--text-muted)' }}>Margen:</span>
+                  <span style={{ color: selected.margenBruto && selected.margenBruto > 0 ? 'var(--accent-emerald)' : 'var(--error)' }}>{selected.margenBruto != null ? `${fmtEuro(selected.margenBruto)} (${selected.margenPorcentaje?.toFixed(1)}%)` : '-'}</span>
+                </div>
+                <div className="flex gap-2 items-center">
+                  <span className="font-medium shrink-0" style={{ color: 'var(--text-muted)' }}>Forma pago:</span>
+                  <select value={selected.formaPago} onChange={e => setRecords(prev => prev.map(r => r.id === selected.id ? { ...r, formaPago: e.target.value } : r))} style={selectSx}>
+                    <option value="">Seleccionar</option>
+                    <option value="Transferencia">Transferencia</option>
+                    <option value="Efectivo">Efectivo</option>
+                    <option value="Financiación">Financiación</option>
+                    <option value="Cheque">Cheque</option>
+                  </select>
+                </div>
+                <div className="flex gap-2 items-center">
+                  <span className="font-medium shrink-0" style={{ color: 'var(--text-muted)' }}>Financiada:</span>
+                  <input type="checkbox" checked={selected.financiada} onChange={e => setRecords(prev => prev.map(r => r.id === selected.id ? { ...r, financiada: e.target.checked } : r))} />
+                </div>
+                <div className="flex gap-2 items-center">
+                  <span className="font-medium shrink-0" style={{ color: 'var(--text-muted)' }}>Vendedor:</span>
+                  <span style={{ color: 'var(--text)' }}>{selected.vendedorNombre || '-'}</span>
+                </div>
+                <div className="flex gap-2 items-center">
+                  <span className="font-medium shrink-0" style={{ color: 'var(--text-muted)' }}>Fecha venta:</span>
+                  <span style={{ color: 'var(--text)' }}>{fmtDate(selected.fechaVenta)}</span>
+                </div>
+                <div className="mt-2 pt-2 border-t" style={{ borderColor: 'var(--border)' }}>
+                  <p className="text-[10px] font-medium mb-1" style={{ color: 'var(--text-muted)' }}>Observaciones:</p>
+                  <textarea value={selected.observaciones} onChange={e => setRecords(prev => prev.map(r => r.id === selected.id ? { ...r, observaciones: e.target.value } : r))} rows={2} className="w-full text-xs px-2 py-1.5 rounded outline-none resize-none" style={{ background: 'var(--bg)', color: 'var(--text)', border: '1px solid var(--border)' }} />
+                </div>
+                <button onClick={async () => {
+                  await fetch(`/api/ventas-admin/${selected.id}`, { method: 'PATCH', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ precioVenta: selected.precioVenta, clienteNombre: selected.clienteNombre, clienteContacto: selected.clienteContacto, formaPago: selected.formaPago, financiada: selected.financiada, observaciones: selected.observaciones }) })
+                }} className="w-full text-[11px] font-semibold py-2 rounded" style={{ background: 'var(--accent-blue)', color: '#fff' }}>💾 Guardar</button>
               </div>
               <a href={`https://www.notion.so/${selected.id.replace(/-/g, '')}`} target="_blank" rel="noopener noreferrer" className="block w-full text-center text-[10px] font-medium py-2 rounded" style={{ background: 'var(--bg-pill)', color: 'var(--accent-blue)' }}>🔗 Abrir en Notion</a>
             </div>

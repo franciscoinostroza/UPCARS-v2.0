@@ -5,6 +5,7 @@ import { ThemeProvider, useTheme } from '../dashboard/theme-context'
 import { DarkModeToggle } from '../dashboard/dark-mode'
 import { Skeleton } from '@/components/skeleton'
 import { fmtDate } from '@/lib/dates'
+import CalendarView from '@/components/calendar-view'
 
 function vehLabel(v: any): string {
   return v.matricula ? v.matricula + ' - ' + v.brand + ' ' + v.model + ' (' + (v.year || '—') + ')' : v.name
@@ -47,7 +48,7 @@ function LogisticaInner() {
   const [employees, setEmployees] = useState<{ id: string; name: string }[]>([])
   const [vehicles, setVehicles] = useState<{ id: string; name: string }[]>([])
   const [loading, setLoading] = useState(true)
-  const [vista, setVista] = useState<'tabla' | 'kanban'>('tabla')
+  const [vista, setVista] = useState<'tabla' | 'kanban' | 'calendario'>('tabla')
   const [filterEstado, setFilterEstado] = useState('')
   const [selected, setSelected] = useState<LogItem | null>(null)
   const [editing, setEditing] = useState(false)
@@ -146,6 +147,7 @@ function LogisticaInner() {
           <div className="flex gap-1">
             <button onClick={() => setVista('tabla')} className="px-2 py-1 text-[10px] sm:text-xs rounded font-medium transition-all" style={{ background: vista === 'tabla' ? 'var(--bg-pill)' : 'transparent', color: vista === 'tabla' ? 'var(--text)' : 'var(--text-muted)', border: '1px solid var(--border)' }}>📋 Tabla</button>
             <button onClick={() => setVista('kanban')} className="px-2 py-1 text-[10px] sm:text-xs rounded font-medium transition-all" style={{ background: vista === 'kanban' ? 'var(--bg-pill)' : 'transparent', color: vista === 'kanban' ? 'var(--text)' : 'var(--text-muted)', border: '1px solid var(--border)' }}>📊 Kanban</button>
+            <button onClick={() => setVista('calendario')} className="px-2 py-1 text-[10px] sm:text-xs rounded font-medium transition-all" style={{ background: vista === 'calendario' ? 'var(--bg-pill)' : 'transparent', color: vista === 'calendario' ? 'var(--text)' : 'var(--text-muted)', border: '1px solid var(--border)' }}>📅 Calendario</button>
           </div>
           <select value={filterEstado} onChange={e => setFilterEstado(e.target.value)} className="text-[11px] px-2 py-1.5 rounded outline-none" style={{ background: 'var(--bg-card)', color: 'var(--text)', border: '1px solid var(--border)' }}>
             <option value="">Todos los estados</option>
@@ -184,6 +186,13 @@ function LogisticaInner() {
                 </div>
               </div>
             ))}
+          </div>
+        ) : vista === 'calendario' ? (
+          <div className="animate-fade-up" style={{ animationDelay: '100ms' }}>
+            <CalendarView
+              items={records.filter(r => r.fechaProgramada).map(r => ({ id: r.id, titulo: `${r.nombre}${r.vehiculoNombre ? ' — ' + r.vehiculoNombre : ''}`, fecha: r.fechaProgramada!, estado: r.estado, area: r.ubicacion }))}
+              typeColors={{ 'Pendiente autorización': '#eab308', 'Autorizado': '#3b82f6', 'Completado': '#22c55e', 'Bloqueado': '#ef4444' }}
+            />
           </div>
         ) : (
           /* Tabla */
