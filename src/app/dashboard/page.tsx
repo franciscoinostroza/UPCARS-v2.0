@@ -5,7 +5,7 @@ import { ThemeProvider, useTheme } from './theme-context'
 import { DarkModeToggle } from './dark-mode'
 import Pipeline from './pipeline'
 import { Skeleton } from '@/components/skeleton'
-import { stateColor } from '@/lib/colors'
+import { stateColor, priorityColor } from '@/lib/colors'
 import { fmtDate } from '@/lib/dates'
 
 interface KPIStats {
@@ -411,7 +411,7 @@ function DashboardInner() {
                         {t.plazo && <span style={{ color: overdue ? '#ef4444' : 'inherit' }}>📅 {fmtDate(t.plazo)}</span>}
                       </div>
                     </div>
-                    <span className="text-[9px] font-semibold px-1.5 py-0.5 rounded shrink-0" style={{ background: stateColor(t.prioridad).bg, color: stateColor(t.prioridad).text }}>{t.prioridad}</span>
+                    <span className="text-[9px] font-semibold px-1.5 py-0.5 rounded shrink-0" style={{ background: priorityColor(t.prioridad).bg, color: priorityColor(t.prioridad).text }}>{t.prioridad}</span>
                   </div>
                 )
               })}
