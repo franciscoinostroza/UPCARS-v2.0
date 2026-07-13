@@ -29,9 +29,9 @@ interface LogItem {
   authFileUrl: string | null
 }
 
-const ESTADOS = ['Pendiente autorización', 'Autorizado', 'Completado', 'Bloqueado']
+const ESTADOS = ['', 'Pendiente autorización', 'Autorizado', 'Completado', 'Bloqueado']
 const ESTADO_ICONS: Record<string, string> = {
-  'Pendiente autorización': '⏳', 'Autorizado': '📝', 'Completado': '✅', 'Bloqueado': '🚫',
+  '': '—', 'Pendiente autorización': '⏳', 'Autorizado': '📝', 'Completado': '✅', 'Bloqueado': '🚫',
 }
 const SITUACIONES = ['', 'Vendido', 'Exposición', 'Renting']
 const PRIORIDADES = ['', 'Alta', 'Media', 'Baja']
@@ -77,7 +77,7 @@ function LogisticaInner() {
 
   useEffect(() => { fetchData() }, [fetchData])
 
-  const columns = ESTADOS.map(est => ({ estado: est, items: records.filter(r => r.estado === est) }))
+  const columns = ESTADOS.filter(Boolean).map(est => ({ estado: est, items: records.filter(r => r.estado === est) }))
 
   async function handleSaveEdit() {
     if (!selected) return
@@ -221,9 +221,10 @@ function LogisticaInner() {
                       <td className="p-2 sm:p-3 font-medium truncate max-w-[100px]" style={{ color: 'var(--text)' }}>{r.nombre}</td>
                       <td className="p-2 sm:p-3 truncate max-w-[100px]" style={{ color: 'var(--text-secondary)' }}>{r.vehiculoNombre || '-'}</td>
                       <td className="p-2 sm:p-3"><span className="text-[10px] px-1.5 py-0.5 rounded font-medium" style={{
-                        background: r.estado === 'Completado' ? 'rgba(34,197,94,0.12)' : r.estado === 'Autorizado' ? 'rgba(59,130,246,0.12)' : r.estado === 'Bloqueado' ? 'rgba(239,68,68,0.12)' : 'rgba(234,179,8,0.12)',
-                        color: r.estado === 'Completado' ? '#22c55e' : r.estado === 'Autorizado' ? '#3b82f6' : r.estado === 'Bloqueado' ? '#ef4444' : '#eab308',
-                      }}>{r.estado}</span></td>
+                        background: !r.estado ? 'rgba(156,163,175,0.12)' : r.estado === 'Completado' ? 'rgba(34,197,94,0.12)' : r.estado === 'Autorizado' ? 'rgba(59,130,246,0.12)' : r.estado === 'Bloqueado' ? 'rgba(239,68,68,0.12)' : 'rgba(234,179,8,0.12)',
+
+                        color: !r.estado ? '#9ca3af' : r.estado === 'Completado' ? '#22c55e' : r.estado === 'Autorizado' ? '#3b82f6' : r.estado === 'Bloqueado' ? '#ef4444' : '#eab308',
+                      }}>{r.estado || 'Sin estado'}</span></td>
                       <td className="p-2 sm:p-3 truncate max-w-[120px]" style={{ color: 'var(--text-secondary)' }}>{r.ubicacion || '-'}</td>
                       <td className="p-2 sm:p-3" style={{ color: 'var(--text-secondary)' }}>{r.situacionComercial || '-'}</td>
                       <td className="p-2 sm:p-3"><span style={{ color: r.prioridad === 'Alta' ? '#ef4444' : r.prioridad === 'Media' ? '#eab308' : 'var(--text-secondary)' }}>{r.prioridad || '-'}</span></td>
@@ -307,27 +308,48 @@ function EditModal({ item, editData, setEditData, employees, vehicles, onSave, o
           <button onClick={onCancel} className="text-sm px-2 py-1 rounded" style={{ color: 'var(--text-muted)' }}>✕</button>
         </div>
         <div className="space-y-3">
-          <select value={editData.estado} onChange={e => setEditData({...editData, estado: e.target.value})} style={selectSx}>
-            {ESTADOS.map(e => <option key={e} value={e}>{e}</option>)}
-          </select>
-          <input value={editData.ubicacion} onChange={e => setEditData({...editData, ubicacion: e.target.value})} placeholder="Ubicación" style={selectSx} />
-          <div className="grid grid-cols-2 gap-2">
-            <select value={editData.situacionComercial} onChange={e => setEditData({...editData, situacionComercial: e.target.value})} style={selectSx}>
-              {SITUACIONES.map(s => <option key={s || 'v'} value={s}>{s || 'Sin situación'}</option>)}
-            </select>
-            <select value={editData.prioridad} onChange={e => setEditData({...editData, prioridad: e.target.value})} style={selectSx}>
-              {PRIORIDADES.map(p => <option key={p || 'v'} value={p}>{p || 'Sin prioridad'}</option>)}
+          <div>
+            <p className="text-[10px] font-medium mb-0.5" style={{ color: 'var(--text-muted)' }}>Estado</p>
+            <select value={editData.estado} onChange={e => setEditData({...editData, estado: e.target.value})} style={selectSx}>
+              {ESTADOS.map(e => <option key={e} value={e}>{e || 'Sin estado'}</option>)}
             </select>
           </div>
-          <select value={editData.responsableId} onChange={e => setEditData({...editData, responsableId: e.target.value})} style={selectSx}>
-            <option value="">Sin responsable</option>
-            {employees.map((e: any) => <option key={e.id} value={e.id}>{e.name}</option>)}
-          </select>
-          <select value={editData.vehiculoId} onChange={e => setEditData({...editData, vehiculoId: e.target.value})} style={selectSx}>
-            <option value="">Sin vehículo</option>
-            {vehicles.map((v: any) => <option key={v.id} value={v.id}>{vehLabel(v)}</option>)}
-          </select>
-          <textarea value={editData.observaciones} onChange={e => setEditData({...editData, observaciones: e.target.value})} placeholder="Observaciones" rows={3} style={{...selectSx, resize: 'vertical'}} />
+          <div>
+            <p className="text-[10px] font-medium mb-0.5" style={{ color: 'var(--text-muted)' }}>Ubicación</p>
+            <input value={editData.ubicacion} onChange={e => setEditData({...editData, ubicacion: e.target.value})} placeholder="Ubicación" style={selectSx} />
+          </div>
+          <div className="grid grid-cols-2 gap-2">
+            <div>
+              <p className="text-[10px] font-medium mb-0.5" style={{ color: 'var(--text-muted)' }}>Situación comercial</p>
+              <select value={editData.situacionComercial} onChange={e => setEditData({...editData, situacionComercial: e.target.value})} style={selectSx}>
+                {SITUACIONES.map(s => <option key={s || 'v'} value={s}>{s || 'Sin situación'}</option>)}
+              </select>
+            </div>
+            <div>
+              <p className="text-[10px] font-medium mb-0.5" style={{ color: 'var(--text-muted)' }}>Prioridad</p>
+              <select value={editData.prioridad} onChange={e => setEditData({...editData, prioridad: e.target.value})} style={selectSx}>
+                {PRIORIDADES.map(p => <option key={p || 'v'} value={p}>{p || 'Sin prioridad'}</option>)}
+              </select>
+            </div>
+          </div>
+          <div>
+            <p className="text-[10px] font-medium mb-0.5" style={{ color: 'var(--text-muted)' }}>Responsable</p>
+            <select value={editData.responsableId} onChange={e => setEditData({...editData, responsableId: e.target.value})} style={selectSx}>
+              <option value="">Sin responsable</option>
+              {employees.map((e: any) => <option key={e.id} value={e.id}>{e.name}</option>)}
+            </select>
+          </div>
+          <div>
+            <p className="text-[10px] font-medium mb-0.5" style={{ color: 'var(--text-muted)' }}>Vehículo</p>
+            <select value={editData.vehiculoId} onChange={e => setEditData({...editData, vehiculoId: e.target.value})} style={selectSx}>
+              <option value="">Sin vehículo</option>
+              {vehicles.map((v: any) => <option key={v.id} value={v.id}>{vehLabel(v)}</option>)}
+            </select>
+          </div>
+          <div>
+            <p className="text-[10px] font-medium mb-0.5" style={{ color: 'var(--text-muted)' }}>Observaciones</p>
+            <textarea value={editData.observaciones} onChange={e => setEditData({...editData, observaciones: e.target.value})} placeholder="Opcional" rows={3} style={{...selectSx, resize: 'vertical'}} />
+          </div>
           <div className="flex gap-2 pt-1">
             <button onClick={onCancel} className="flex-1 text-[11px] font-semibold py-2 rounded" style={{ background: 'var(--bg-pill)', color: 'var(--text)' }}>Cancelar</button>
             <button onClick={onSave} className="flex-1 text-[11px] font-semibold py-2 rounded" style={{ background: 'var(--accent-blue)', color: '#fff' }}>💾 Guardar</button>
@@ -367,35 +389,62 @@ function CreateModal({ employees, vehicles, onCreate, onClose, onRefresh }: { em
           <button onClick={onClose} className="text-sm px-2 py-1 rounded" style={{ color: 'var(--text-muted)' }}>✕</button>
         </div>
         <form onSubmit={handleSubmit} className="space-y-3">
-          <input required placeholder="Nombre *" value={name} onChange={e => setName(e.target.value)} style={selectSx} />
-          <select value={estado} onChange={e => setEstado(e.target.value)} style={selectSx}>
-            {ESTADOS.map(e => <option key={e} value={e}>{e}</option>)}
-          </select>
-          <div className="grid grid-cols-2 gap-2">
-            <input type="date" value={fecha} onChange={e => setFecha(e.target.value)} style={selectSx} />
-            <input placeholder="Ubicación" value={ubicacion} onChange={e => setUbicacion(e.target.value)} style={selectSx} />
+          <div>
+            <p className="text-[10px] font-medium mb-0.5" style={{ color: 'var(--text-muted)' }}>Nombre *</p>
+            <input required placeholder="Ej: TRASLADO SEVILLA" value={name} onChange={e => setName(e.target.value)} style={selectSx} />
           </div>
-          <div className="grid grid-cols-2 gap-2">
-            <select value={sitCom} onChange={e => setSitCom(e.target.value)} style={selectSx}>
-              <option value="">Sin situación</option>
-              {SITUACIONES.filter(Boolean).map(s => <option key={s} value={s}>{s}</option>)}
-            </select>
-            <select value={prioridad} onChange={e => setPrioridad(e.target.value)} style={selectSx}>
-              <option value="">Sin prioridad</option>
-              {PRIORIDADES.filter(Boolean).map(p => <option key={p} value={p}>{p}</option>)}
+          <div>
+            <p className="text-[10px] font-medium mb-0.5" style={{ color: 'var(--text-muted)' }}>Estado</p>
+            <select value={estado} onChange={e => setEstado(e.target.value)} style={selectSx}>
+              {ESTADOS.map(e => <option key={e} value={e}>{e || 'Sin estado'}</option>)}
             </select>
           </div>
           <div className="grid grid-cols-2 gap-2">
-            <select value={respId} onChange={e => setRespId(e.target.value)} style={selectSx}>
-              <option value="">Sin responsable</option>
-              {employees.map((e: any) => <option key={e.id} value={e.id}>{e.name}</option>)}
-            </select>
-            <select value={vehId} onChange={e => setVehId(e.target.value)} style={selectSx}>
-              <option value="">Sin vehículo</option>
-              {vehicles.map((v: any) => <option key={v.id} value={v.id}>{vehLabel(v)}</option>)}
-            </select>
+            <div>
+              <p className="text-[10px] font-medium mb-0.5" style={{ color: 'var(--text-muted)' }}>Fecha programada</p>
+              <input type="date" value={fecha} onChange={e => setFecha(e.target.value)} style={selectSx} />
+            </div>
+            <div>
+              <p className="text-[10px] font-medium mb-0.5" style={{ color: 'var(--text-muted)' }}>Ubicación</p>
+              <input placeholder="Ej: Sede Central" value={ubicacion} onChange={e => setUbicacion(e.target.value)} style={selectSx} />
+            </div>
           </div>
-          <textarea placeholder="Observaciones" value={obs} onChange={e => setObs(e.target.value)} rows={3} style={{...selectSx, resize: 'vertical'}} />
+          <div className="grid grid-cols-2 gap-2">
+            <div>
+              <p className="text-[10px] font-medium mb-0.5" style={{ color: 'var(--text-muted)' }}>Situación comercial</p>
+              <select value={sitCom} onChange={e => setSitCom(e.target.value)} style={selectSx}>
+                <option value="">Sin situación</option>
+                {SITUACIONES.filter(Boolean).map(s => <option key={s} value={s}>{s}</option>)}
+              </select>
+            </div>
+            <div>
+              <p className="text-[10px] font-medium mb-0.5" style={{ color: 'var(--text-muted)' }}>Prioridad</p>
+              <select value={prioridad} onChange={e => setPrioridad(e.target.value)} style={selectSx}>
+                <option value="">Sin prioridad</option>
+                {PRIORIDADES.filter(Boolean).map(p => <option key={p} value={p}>{p}</option>)}
+              </select>
+            </div>
+          </div>
+          <div className="grid grid-cols-2 gap-2">
+            <div>
+              <p className="text-[10px] font-medium mb-0.5" style={{ color: 'var(--text-muted)' }}>Responsable</p>
+              <select value={respId} onChange={e => setRespId(e.target.value)} style={selectSx}>
+                <option value="">Sin responsable</option>
+                {employees.map((e: any) => <option key={e.id} value={e.id}>{e.name}</option>)}
+              </select>
+            </div>
+            <div>
+              <p className="text-[10px] font-medium mb-0.5" style={{ color: 'var(--text-muted)' }}>Vehículo</p>
+              <select value={vehId} onChange={e => setVehId(e.target.value)} style={selectSx}>
+                <option value="">Sin vehículo</option>
+                {vehicles.map((v: any) => <option key={v.id} value={v.id}>{vehLabel(v)}</option>)}
+              </select>
+            </div>
+          </div>
+          <div>
+            <p className="text-[10px] font-medium mb-0.5" style={{ color: 'var(--text-muted)' }}>Observaciones</p>
+            <textarea placeholder="Opcional" value={obs} onChange={e => setObs(e.target.value)} rows={3} style={{...selectSx, resize: 'vertical'}} />
+          </div>
           <button type="submit" disabled={saving || !name.trim()} className="w-full text-[11px] font-semibold py-2 rounded transition-opacity disabled:opacity-40" style={{ background: 'var(--accent-blue)', color: '#fff' }}>{saving ? '...' : '✅ Crear'}</button>
         </form>
       </div>

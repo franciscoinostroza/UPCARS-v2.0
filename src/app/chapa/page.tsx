@@ -214,23 +214,46 @@ function ChapaInner() {
             }} className="card w-full max-w-md animate-fade-up p-5" style={{ background: 'var(--bg-card)' }}>
               <h2 className="text-sm font-semibold mb-4" style={{ color: 'var(--text)' }}>Nuevo registro Chapa</h2>
               <div className="space-y-3">
-                <select value={createData.vehiculoId} onChange={e => setCreateData(p => ({ ...p, vehiculoId: e.target.value }))} required style={selectSx}>
-                  <option value="">Seleccionar vehículo</option>
-                  {vehicles.map(v => <option key={v.id} value={v.id}>{v.name}</option>)}
-                </select>
-                <select value={createData.estado} onChange={e => setCreateData(p => ({ ...p, estado: e.target.value }))} style={selectSx}>
-                  {ESTADOS.filter(Boolean).map(s => <option key={s} value={s}>{s}</option>)}
-                </select>
-                <select value={createData.proveedorId} onChange={e => setCreateData(p => ({ ...p, proveedorId: e.target.value }))} style={selectSx}>
-                  <option value="">Proveedor (opcional)</option>
-                  {employees.map(e => <option key={e.id} value={e.id}>{e.name}</option>)}
-                </select>
-                <input type="number" value={createData.costeTotal} onChange={e => setCreateData(p => ({ ...p, costeTotal: e.target.value }))} style={selectSx} placeholder="Coste total (€)" step="0.01" />
-                <input type="date" value={createData.fechaSalida} onChange={e => setCreateData(p => ({ ...p, fechaSalida: e.target.value }))} style={selectSx} placeholder="Fecha salida" />
-                <input type="date" value={createData.fechaRetorno} onChange={e => setCreateData(p => ({ ...p, fechaRetorno: e.target.value }))} style={selectSx} placeholder="Fecha retorno" />
-                <textarea value={createData.trabajosSolicitados} onChange={e => setCreateData(p => ({ ...p, trabajosSolicitados: e.target.value }))} rows={2} className="w-full text-xs px-2 py-1.5 rounded outline-none resize-none" style={{ background: 'var(--bg)', color: 'var(--text)', border: '1px solid var(--border)' }} placeholder="Trabajos solicitados (opcional)" />
-                <textarea value={createData.observaciones} onChange={e => setCreateData(p => ({ ...p, observaciones: e.target.value }))} rows={2} className="w-full text-xs px-2 py-1.5 rounded outline-none resize-none" style={{ background: 'var(--bg)', color: 'var(--text)', border: '1px solid var(--border)' }} placeholder="Observaciones (opcional)" />
-              </div>
+                <div>
+                  <p className="text-[10px] font-medium mb-0.5" style={{ color: 'var(--text-muted)' }}>Vehículo *</p>
+                  <select value={createData.vehiculoId} onChange={e => setCreateData(p => ({ ...p, vehiculoId: e.target.value }))} required style={selectSx}>
+                    <option value="">Seleccionar vehículo</option>
+                    {vehicles.map(v => <option key={v.id} value={v.id}>{v.name}</option>)}
+                  </select>
+                </div>
+                <div>
+                  <p className="text-[10px] font-medium mb-0.5" style={{ color: 'var(--text-muted)' }}>Estado</p>
+                  <select value={createData.estado} onChange={e => setCreateData(p => ({ ...p, estado: e.target.value }))} style={selectSx}>
+                    {ESTADOS.filter(Boolean).map(s => <option key={s} value={s}>{s}</option>)}
+                  </select>
+                </div>
+                <div>
+                  <p className="text-[10px] font-medium mb-0.5" style={{ color: 'var(--text-muted)' }}>Proveedor externo</p>
+                  <select value={createData.proveedorId} onChange={e => setCreateData(p => ({ ...p, proveedorId: e.target.value }))} style={selectSx}>
+                    <option value="">Sin proveedor</option>
+                    {employees.map(e => <option key={e.id} value={e.id}>{e.name}</option>)}
+                  </select>
+                </div>
+                <div>
+                  <p className="text-[10px] font-medium mb-0.5" style={{ color: 'var(--text-muted)' }}>Coste total (€)</p>
+                  <input type="number" value={createData.costeTotal} onChange={e => setCreateData(p => ({ ...p, costeTotal: e.target.value }))} style={selectSx} step="0.01" />
+                </div>
+                <div>
+                  <p className="text-[10px] font-medium mb-0.5" style={{ color: 'var(--text-muted)' }}>Fecha salida</p>
+                  <input type="date" value={createData.fechaSalida} onChange={e => setCreateData(p => ({ ...p, fechaSalida: e.target.value }))} style={selectSx} />
+                </div>
+                <div>
+                  <p className="text-[10px] font-medium mb-0.5" style={{ color: 'var(--text-muted)' }}>Fecha retorno</p>
+                  <input type="date" value={createData.fechaRetorno} onChange={e => setCreateData(p => ({ ...p, fechaRetorno: e.target.value }))} style={selectSx} />
+                </div>
+                <div>
+                  <p className="text-[10px] font-medium mb-0.5" style={{ color: 'var(--text-muted)' }}>Trabajos solicitados</p>
+                  <textarea value={createData.trabajosSolicitados} onChange={e => setCreateData(p => ({ ...p, trabajosSolicitados: e.target.value }))} rows={2} className="w-full text-xs px-2 py-1.5 rounded outline-none resize-none" style={{ background: 'var(--bg)', color: 'var(--text)', border: '1px solid var(--border)' }} placeholder="Opcional" />
+                </div>
+                <div>
+                  <p className="text-[10px] font-medium mb-0.5" style={{ color: 'var(--text-muted)' }}>Observaciones</p>
+                  <textarea value={createData.observaciones} onChange={e => setCreateData(p => ({ ...p, observaciones: e.target.value }))} rows={2} className="w-full text-xs px-2 py-1.5 rounded outline-none resize-none" style={{ background: 'var(--bg)', color: 'var(--text)', border: '1px solid var(--border)' }} placeholder="Opcional" />
+                </div>
               <div className="flex gap-2 mt-4">
                 <button type="submit" className="flex-1 text-[11px] font-semibold py-2.5 rounded" style={{ background: 'var(--accent-blue)', color: '#fff' }}>Crear</button>
                 <button type="button" onClick={() => setShowCreate(false)} className="flex-1 text-[11px] font-semibold py-2.5 rounded" style={{ background: 'var(--bg-pill)', color: 'var(--text-secondary)' }}>Cancelar</button>

@@ -246,27 +246,50 @@ function VentasAdminInner() {
             }} className="card w-full max-w-md animate-fade-up p-5" style={{ background: 'var(--bg-card)' }}>
               <h2 className="text-sm font-semibold mb-4" style={{ color: 'var(--text)' }}>Nueva venta</h2>
               <div className="space-y-3">
-                <select value={createData.vehiculoId} onChange={e => setCreateData(p => ({ ...p, vehiculoId: e.target.value }))} required style={selectSx}>
-                  <option value="">Seleccionar vehículo</option>
-                  {vehicles.map(v => <option key={v.id} value={v.id}>{v.matricula || v.name} - {v.brand} {v.model}</option>)}
-                </select>
-                <input type="date" value={createData.fechaVenta} onChange={e => setCreateData(p => ({ ...p, fechaVenta: e.target.value }))} required style={selectSx} placeholder="Fecha venta" />
-                <input type="number" value={createData.precioVenta} onChange={e => setCreateData(p => ({ ...p, precioVenta: e.target.value }))} style={selectSx} placeholder="Precio venta (€)" step="0.01" />
-                <select value={createData.vendedorId} onChange={e => setCreateData(p => ({ ...p, vendedorId: e.target.value }))} style={selectSx}>
-                  <option value="">Vendedor (opcional)</option>
-                  {employees.map(e => <option key={e.id} value={e.id}>{e.name}</option>)}
-                </select>
-                <input type="text" value={createData.clienteNombre} onChange={e => setCreateData(p => ({ ...p, clienteNombre: e.target.value }))} style={selectSx} placeholder="Nombre cliente (opcional)" />
-                <input type="text" value={createData.clienteContacto} onChange={e => setCreateData(p => ({ ...p, clienteContacto: e.target.value }))} style={selectSx} placeholder="Teléfono/email cliente (opcional)" />
-                <select value={createData.formaPago} onChange={e => setCreateData(p => ({ ...p, formaPago: e.target.value }))} style={selectSx}>
-                  <option value="">Forma de pago (opcional)</option>
-                  <option value="Transferencia">Transferencia</option>
-                  <option value="Efectivo">Efectivo</option>
-                  <option value="Financiación">Financiación</option>
-                  <option value="Cheque">Cheque</option>
-                </select>
-                <textarea value={createData.observaciones} onChange={e => setCreateData(p => ({ ...p, observaciones: e.target.value }))} rows={2} className="w-full text-xs px-2 py-1.5 rounded outline-none resize-none" style={{ background: 'var(--bg)', color: 'var(--text)', border: '1px solid var(--border)' }} placeholder="Observaciones (opcional)" />
-              </div>
+                <div>
+                  <p className="text-[10px] font-medium mb-0.5" style={{ color: 'var(--text-muted)' }}>Vehículo *</p>
+                  <select value={createData.vehiculoId} onChange={e => setCreateData(p => ({ ...p, vehiculoId: e.target.value }))} required style={selectSx}>
+                    <option value="">Seleccionar vehículo</option>
+                    {vehicles.map(v => <option key={v.id} value={v.id}>{v.matricula || v.name} - {v.brand} {v.model}</option>)}
+                  </select>
+                </div>
+                <div>
+                  <p className="text-[10px] font-medium mb-0.5" style={{ color: 'var(--text-muted)' }}>Fecha de venta *</p>
+                  <input type="date" value={createData.fechaVenta} onChange={e => setCreateData(p => ({ ...p, fechaVenta: e.target.value }))} required style={selectSx} />
+                </div>
+                <div>
+                  <p className="text-[10px] font-medium mb-0.5" style={{ color: 'var(--text-muted)' }}>Precio de venta (€)</p>
+                  <input type="number" value={createData.precioVenta} onChange={e => setCreateData(p => ({ ...p, precioVenta: e.target.value }))} style={selectSx} step="0.01" />
+                </div>
+                <div>
+                  <p className="text-[10px] font-medium mb-0.5" style={{ color: 'var(--text-muted)' }}>Vendedor</p>
+                  <select value={createData.vendedorId} onChange={e => setCreateData(p => ({ ...p, vendedorId: e.target.value }))} style={selectSx}>
+                    <option value="">Sin asignar</option>
+                    {employees.map(e => <option key={e.id} value={e.id}>{e.name}</option>)}
+                  </select>
+                </div>
+                <div>
+                  <p className="text-[10px] font-medium mb-0.5" style={{ color: 'var(--text-muted)' }}>Nombre del cliente</p>
+                  <input type="text" value={createData.clienteNombre} onChange={e => setCreateData(p => ({ ...p, clienteNombre: e.target.value }))} style={selectSx} placeholder="Opcional" />
+                </div>
+                <div>
+                  <p className="text-[10px] font-medium mb-0.5" style={{ color: 'var(--text-muted)' }}>Contacto del cliente</p>
+                  <input type="text" value={createData.clienteContacto} onChange={e => setCreateData(p => ({ ...p, clienteContacto: e.target.value }))} style={selectSx} placeholder="Opcional" />
+                </div>
+                <div>
+                  <p className="text-[10px] font-medium mb-0.5" style={{ color: 'var(--text-muted)' }}>Forma de pago</p>
+                  <select value={createData.formaPago} onChange={e => setCreateData(p => ({ ...p, formaPago: e.target.value }))} style={selectSx}>
+                    <option value="">Sin seleccionar</option>
+                    <option value="Transferencia">Transferencia</option>
+                    <option value="Efectivo">Efectivo</option>
+                    <option value="Financiación">Financiación</option>
+                    <option value="Cheque">Cheque</option>
+                  </select>
+                </div>
+                <div>
+                  <p className="text-[10px] font-medium mb-0.5" style={{ color: 'var(--text-muted)' }}>Observaciones</p>
+                  <textarea value={createData.observaciones} onChange={e => setCreateData(p => ({ ...p, observaciones: e.target.value }))} rows={2} className="w-full text-xs px-2 py-1.5 rounded outline-none resize-none" style={{ background: 'var(--bg)', color: 'var(--text)', border: '1px solid var(--border)' }} placeholder="Opcional" />
+                </div>
               <div className="flex gap-2 mt-4">
                 <button type="submit" className="flex-1 text-[11px] font-semibold py-2.5 rounded" style={{ background: 'var(--accent-blue)', color: '#fff' }}>Crear</button>
                 <button type="button" onClick={() => setShowCreate(false)} className="flex-1 text-[11px] font-semibold py-2.5 rounded" style={{ background: 'var(--bg-pill)', color: 'var(--text-secondary)' }}>Cancelar</button>

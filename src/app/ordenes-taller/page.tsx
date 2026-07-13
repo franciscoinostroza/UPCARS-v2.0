@@ -236,25 +236,39 @@ function TallerInner() {
             }} className="card w-full max-w-md animate-fade-up p-5" style={{ background: 'var(--bg-card)' }}>
               <h2 className="text-sm font-semibold mb-4" style={{ color: 'var(--text)' }}>Nueva orden de Taller</h2>
               <div className="space-y-3">
-                <select value={createData.vehicleId} onChange={e => setCreateData(p => ({ ...p, vehicleId: e.target.value }))} required style={selectSx}>
-                  <option value="">Seleccionar vehículo</option>
-                  {vehicles.map(v => <option key={v.id} value={v.id}>{v.matricula || v.name} - {v.brand} {v.model}</option>)}
-                </select>
-                <select value={createData.mecanicoId} onChange={e => setCreateData(p => ({ ...p, mecanicoId: e.target.value }))} style={selectSx}>
-                  <option value="">Mecánico (opcional)</option>
-                  {employees.map(e => <option key={e.id} value={e.id}>{e.name}</option>)}
-                </select>
-                <select value={createData.tipoTrabajo} onChange={e => setCreateData(p => ({ ...p, tipoTrabajo: e.target.value }))} style={selectSx}>
-                  <option value="">Tipo de trabajo (opcional)</option>
-                  <option value="Revisión general">Revisión general</option>
-                  <option value="Frenos">Frenos</option>
-                  <option value="Motor">Motor</option>
-                  <option value="Electricidad">Electricidad</option>
-                  <option value="Otro">Otro</option>
-                </select>
-                <input type="date" value={createData.fechaEntrada} onChange={e => setCreateData(p => ({ ...p, fechaEntrada: e.target.value }))} style={selectSx} placeholder="Fecha entrada" />
-                <textarea value={createData.notes} onChange={e => setCreateData(p => ({ ...p, notes: e.target.value }))} rows={2} className="w-full text-xs px-2 py-1.5 rounded outline-none resize-none" style={{ background: 'var(--bg)', color: 'var(--text)', border: '1px solid var(--border)' }} placeholder="Observaciones (opcional)" />
-              </div>
+                <div>
+                  <p className="text-[10px] font-medium mb-0.5" style={{ color: 'var(--text-muted)' }}>Vehículo *</p>
+                  <select value={createData.vehicleId} onChange={e => setCreateData(p => ({ ...p, vehicleId: e.target.value }))} required style={selectSx}>
+                    <option value="">Seleccionar vehículo</option>
+                    {vehicles.map(v => <option key={v.id} value={v.id}>{v.matricula || v.name} - {v.brand} {v.model}</option>)}
+                  </select>
+                </div>
+                <div>
+                  <p className="text-[10px] font-medium mb-0.5" style={{ color: 'var(--text-muted)' }}>Mecánico</p>
+                  <select value={createData.mecanicoId} onChange={e => setCreateData(p => ({ ...p, mecanicoId: e.target.value }))} style={selectSx}>
+                    <option value="">Sin asignar</option>
+                    {employees.map(e => <option key={e.id} value={e.id}>{e.name}</option>)}
+                  </select>
+                </div>
+                <div>
+                  <p className="text-[10px] font-medium mb-0.5" style={{ color: 'var(--text-muted)' }}>Tipo de trabajo</p>
+                  <select value={createData.tipoTrabajo} onChange={e => setCreateData(p => ({ ...p, tipoTrabajo: e.target.value }))} style={selectSx}>
+                    <option value="">Sin tipo</option>
+                    <option value="Revisión general">Revisión general</option>
+                    <option value="Frenos">Frenos</option>
+                    <option value="Motor">Motor</option>
+                    <option value="Electricidad">Electricidad</option>
+                    <option value="Otro">Otro</option>
+                  </select>
+                </div>
+                <div>
+                  <p className="text-[10px] font-medium mb-0.5" style={{ color: 'var(--text-muted)' }}>Fecha entrada</p>
+                  <input type="date" value={createData.fechaEntrada} onChange={e => setCreateData(p => ({ ...p, fechaEntrada: e.target.value }))} style={selectSx} />
+                </div>
+                <div>
+                  <p className="text-[10px] font-medium mb-0.5" style={{ color: 'var(--text-muted)' }}>Observaciones</p>
+                  <textarea value={createData.notes} onChange={e => setCreateData(p => ({ ...p, notes: e.target.value }))} rows={2} className="w-full text-xs px-2 py-1.5 rounded outline-none resize-none" style={{ background: 'var(--bg)', color: 'var(--text)', border: '1px solid var(--border)' }} placeholder="Opcional" />
+                </div>
               <div className="flex gap-2 mt-4">
                 <button type="submit" className="flex-1 text-[11px] font-semibold py-2.5 rounded" style={{ background: 'var(--accent-blue)', color: '#fff' }}>Crear</button>
                 <button type="button" onClick={() => setShowCreate(false)} className="flex-1 text-[11px] font-semibold py-2.5 rounded" style={{ background: 'var(--bg-pill)', color: 'var(--text-secondary)' }}>Cancelar</button>
