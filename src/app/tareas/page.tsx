@@ -164,35 +164,61 @@ function TaskDetailModal({ task, employees, onClose, onMove, onArchive, onUpdate
             <button onClick={() => setEditing(false)} className="text-sm px-2 py-1 rounded" style={{ color: 'var(--text-muted)' }}>✕</button>
           </div>
           <div className="space-y-3">
-            <input value={name} onChange={e => setName(e.target.value)} style={inputStyle} />
-            <div className="grid grid-cols-2 gap-2">
-              <select value={priority} onChange={e => setPriority(e.target.value as any)} style={inputStyle}>
-                <option value="Alta">🔴 Alta</option><option value="Media">🟡 Media</option><option value="Baja">🟢 Baja</option>
-              </select>
-              <select value={area} onChange={e => setArea(e.target.value)} style={inputStyle}>
-                {AREAS.map(a => <option key={a} value={a}>{a}</option>)}
-              </select>
+            <div>
+              <p className="text-[10px] font-medium mb-0.5" style={{ color: 'var(--text-muted)' }}>Nombre</p>
+              <input value={name} onChange={e => setName(e.target.value)} style={inputStyle} />
             </div>
             <div className="grid grid-cols-2 gap-2">
-              <select value={type} onChange={e => setType(e.target.value)} style={inputStyle}>
-                <option value="">Tipo</option>{TIPOS.map(t => <option key={t} value={t}>{t}</option>)}
-              </select>
-              <select value={tipoTarea} onChange={e => setTipoTarea(e.target.value)} style={inputStyle}>
-                <option value="">Tipo tarea</option>{TIPOS_TAREA.map(t => <option key={t} value={t}>{t}</option>)}
-              </select>
+              <div>
+                <p className="text-[10px] font-medium mb-0.5" style={{ color: 'var(--text-muted)' }}>Prioridad</p>
+                <select value={priority} onChange={e => setPriority(e.target.value as any)} style={inputStyle}>
+                  <option value="Alta">🔴 Alta</option><option value="Media">🟡 Media</option><option value="Baja">🟢 Baja</option>
+                </select>
+              </div>
+              <div>
+                <p className="text-[10px] font-medium mb-0.5" style={{ color: 'var(--text-muted)' }}>Departamento</p>
+                <select value={area} onChange={e => setArea(e.target.value)} style={inputStyle}>
+                  <option value="">Seleccionar</option>
+                  {AREAS.map(a => <option key={a} value={a}>{a}</option>)}
+                </select>
+              </div>
             </div>
             <div className="grid grid-cols-2 gap-2">
-              <select value={areaNegocio} onChange={e => setAreaNegocio(e.target.value)} style={inputStyle}>
-                <option value="">Área negocio</option>{AREAS_NEGOCIO.map(a => <option key={a} value={a}>{a}</option>)}
-              </select>
-              <input type="date" value={deadline} onChange={e => setDeadline(e.target.value)} style={inputStyle} />
+              <div>
+                <p className="text-[10px] font-medium mb-0.5" style={{ color: 'var(--text-muted)' }}>Tipo</p>
+                <select value={type} onChange={e => setType(e.target.value)} style={inputStyle}>
+                  <option value="">Sin tipo</option>{TIPOS.map(t => <option key={t} value={t}>{t}</option>)}
+                </select>
+              </div>
+              <div>
+                <p className="text-[10px] font-medium mb-0.5" style={{ color: 'var(--text-muted)' }}>Tipo tarea</p>
+                <select value={tipoTarea} onChange={e => setTipoTarea(e.target.value)} style={inputStyle}>
+                  <option value="">Sin tipo</option>{TIPOS_TAREA.map(t => <option key={t} value={t}>{t}</option>)}
+                </select>
+              </div>
             </div>
             <div className="grid grid-cols-2 gap-2">
+              <div>
+                <p className="text-[10px] font-medium mb-0.5" style={{ color: 'var(--text-muted)' }}>Área negocio</p>
+                <select value={areaNegocio} onChange={e => setAreaNegocio(e.target.value)} style={inputStyle}>
+                  <option value="">Sin área</option>{AREAS_NEGOCIO.map(a => <option key={a} value={a}>{a}</option>)}
+                </select>
+              </div>
+              <div>
+                <p className="text-[10px] font-medium mb-0.5" style={{ color: 'var(--text-muted)' }}>Fecha límite</p>
+                <input type="date" value={deadline} onChange={e => setDeadline(e.target.value)} style={inputStyle} />
+              </div>
+            </div>
+            <div>
+              <p className="text-[10px] font-medium mb-0.5" style={{ color: 'var(--text-muted)' }}>Responsable</p>
               <select value={responsableId} onChange={e => setResponsableId(e.target.value)} style={inputStyle}>
-                <option value="">Responsable</option>{employees.map(e => <option key={e.id} value={e.id}>{e.name}</option>)}
+                <option value="">Sin asignar</option>{employees.map(e => <option key={e.id} value={e.id}>{e.name}</option>)}
               </select>
             </div>
-            <textarea value={descripcion} onChange={e => setDescripcion(e.target.value)} rows={3} style={{ ...inputStyle, resize: 'vertical' }} />
+            <div>
+              <p className="text-[10px] font-medium mb-0.5" style={{ color: 'var(--text-muted)' }}>Descripción</p>
+              <textarea value={descripcion} onChange={e => setDescripcion(e.target.value)} rows={3} style={{ ...inputStyle, resize: 'vertical' }} />
+            </div>
             <div className="flex gap-2 pt-1">
               <button onClick={() => setEditing(false)} className="flex-1 text-[11px] font-semibold py-2 rounded" style={{ background: 'var(--bg-pill)', color: 'var(--text)' }}>Cancelar</button>
               <button onClick={handleSave} className="flex-1 text-[11px] font-semibold py-2 rounded" style={{ background: 'var(--accent-blue)', color: '#fff' }}>💾 Guardar</button>
@@ -287,46 +313,76 @@ function CreateTaskModal({ employees, vehicles, onClose, onCreate }: {
           <button onClick={onClose} className="text-sm px-2 py-1 rounded" style={{ color: 'var(--text-muted)' }}>✕</button>
         </div>
         <form onSubmit={handleSubmit} className="space-y-3">
-          <input required placeholder="Nombre de la tarea *" value={name} onChange={e => setName(e.target.value)} style={{ ...selectStyle, fontSize: 13 }} />
-          <div className="grid grid-cols-2 gap-2">
-            <select required value={area} onChange={e => setArea(e.target.value)} style={selectStyle}>
-              <option value="">Departamento *</option>
-              {AREAS.map(a => <option key={a} value={a}>{a}</option>)}
-            </select>
-            <select value={priority} onChange={e => setPriority(e.target.value)} style={selectStyle}>
-              <option value="Media">Prioridad: Media</option>
-              <option value="Alta">🔴 Alta</option>
-              <option value="Baja">🟢 Baja</option>
-            </select>
+          <div>
+            <p className="text-[10px] font-medium mb-0.5" style={{ color: 'var(--text-muted)' }}>Nombre de la tarea *</p>
+            <input required placeholder="Ej: Revisar presupuesto" value={name} onChange={e => setName(e.target.value)} style={{ ...selectStyle, fontSize: 13 }} />
           </div>
           <div className="grid grid-cols-2 gap-2">
-            <select value={type} onChange={e => setType(e.target.value)} style={selectStyle}>
-              <option value="">Tipo</option>
-              {TIPOS.map(t => <option key={t} value={t}>{t}</option>)}
-            </select>
-            <select value={tipoTarea} onChange={e => setTipoTarea(e.target.value)} style={selectStyle}>
-              <option value="">Tipo de tarea</option>
-              {TIPOS_TAREA.map(t => <option key={t} value={t}>{t}</option>)}
-            </select>
+            <div>
+              <p className="text-[10px] font-medium mb-0.5" style={{ color: 'var(--text-muted)' }}>Departamento *</p>
+              <select required value={area} onChange={e => setArea(e.target.value)} style={selectStyle}>
+                <option value="">Seleccionar</option>
+                {AREAS.map(a => <option key={a} value={a}>{a}</option>)}
+              </select>
+            </div>
+            <div>
+              <p className="text-[10px] font-medium mb-0.5" style={{ color: 'var(--text-muted)' }}>Prioridad</p>
+              <select value={priority} onChange={e => setPriority(e.target.value)} style={selectStyle}>
+                <option value="Media">Media</option>
+                <option value="Alta">🔴 Alta</option>
+                <option value="Baja">🟢 Baja</option>
+              </select>
+            </div>
           </div>
           <div className="grid grid-cols-2 gap-2">
-            <select value={areaNegocio} onChange={e => setAreaNegocio(e.target.value)} style={selectStyle}>
-              <option value="">Área de negocio</option>
-              {AREAS_NEGOCIO.map(a => <option key={a} value={a}>{a}</option>)}
-            </select>
-            <input type="date" value={deadline} onChange={e => setDeadline(e.target.value)} style={selectStyle} />
+            <div>
+              <p className="text-[10px] font-medium mb-0.5" style={{ color: 'var(--text-muted)' }}>Tipo</p>
+              <select value={type} onChange={e => setType(e.target.value)} style={selectStyle}>
+                <option value="">Sin tipo</option>
+                {TIPOS.map(t => <option key={t} value={t}>{t}</option>)}
+              </select>
+            </div>
+            <div>
+              <p className="text-[10px] font-medium mb-0.5" style={{ color: 'var(--text-muted)' }}>Tipo de tarea</p>
+              <select value={tipoTarea} onChange={e => setTipoTarea(e.target.value)} style={selectStyle}>
+                <option value="">Sin tipo</option>
+                {TIPOS_TAREA.map(t => <option key={t} value={t}>{t}</option>)}
+              </select>
+            </div>
           </div>
           <div className="grid grid-cols-2 gap-2">
-            <select value={responsableId} onChange={e => setResponsableId(e.target.value)} style={selectStyle}>
-              <option value="">Responsable</option>
-              {employees.map(e => <option key={e.id} value={e.id}>{e.name}</option>)}
-            </select>
-            <select value={vehicleId} onChange={e => setVehicleId(e.target.value)} style={selectStyle}>
-              <option value="">Vehículo</option>
-              {vehicles.map(v => <option key={v.id} value={v.id}>{vehLabel(v)}</option>)}
-            </select>
+            <div>
+              <p className="text-[10px] font-medium mb-0.5" style={{ color: 'var(--text-muted)' }}>Área de negocio</p>
+              <select value={areaNegocio} onChange={e => setAreaNegocio(e.target.value)} style={selectStyle}>
+                <option value="">Sin área</option>
+                {AREAS_NEGOCIO.map(a => <option key={a} value={a}>{a}</option>)}
+              </select>
+            </div>
+            <div>
+              <p className="text-[10px] font-medium mb-0.5" style={{ color: 'var(--text-muted)' }}>Fecha límite</p>
+              <input type="date" value={deadline} onChange={e => setDeadline(e.target.value)} style={selectStyle} />
+            </div>
           </div>
-          <textarea placeholder="Descripción" value={descripcion} onChange={e => setDescripcion(e.target.value)} rows={3} style={{ ...selectStyle, resize: 'vertical' }} />
+          <div className="grid grid-cols-2 gap-2">
+            <div>
+              <p className="text-[10px] font-medium mb-0.5" style={{ color: 'var(--text-muted)' }}>Responsable</p>
+              <select value={responsableId} onChange={e => setResponsableId(e.target.value)} style={selectStyle}>
+                <option value="">Sin asignar</option>
+                {employees.map(e => <option key={e.id} value={e.id}>{e.name}</option>)}
+              </select>
+            </div>
+            <div>
+              <p className="text-[10px] font-medium mb-0.5" style={{ color: 'var(--text-muted)' }}>Vehículo</p>
+              <select value={vehicleId} onChange={e => setVehicleId(e.target.value)} style={selectStyle}>
+                <option value="">Sin vehículo</option>
+                {vehicles.map(v => <option key={v.id} value={v.id}>{vehLabel(v)}</option>)}
+              </select>
+            </div>
+          </div>
+          <div>
+            <p className="text-[10px] font-medium mb-0.5" style={{ color: 'var(--text-muted)' }}>Descripción</p>
+            <textarea placeholder="Opcional" value={descripcion} onChange={e => setDescripcion(e.target.value)} rows={3} style={{ ...selectStyle, resize: 'vertical' }} />
+          </div>
           <div className="flex gap-2 pt-1">
             <button type="button" onClick={onClose} className="flex-1 text-[11px] font-semibold py-2 rounded" style={{ background: 'var(--bg-pill)', color: 'var(--text)' }}>Cancelar</button>
             <button type="submit" disabled={submitting || !name.trim() || !area} className="flex-1 text-[11px] font-semibold py-2 rounded transition-opacity disabled:opacity-40" style={{ background: 'var(--accent-blue)', color: '#fff' }}>
