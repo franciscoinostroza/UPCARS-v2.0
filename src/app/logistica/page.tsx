@@ -6,7 +6,7 @@ import { ThemeProvider, useTheme } from '../dashboard/theme-context'
 import { DarkModeToggle } from '../dashboard/dark-mode'
 import { Skeleton } from '@/components/skeleton'
 import { fmtDate } from '@/lib/dates'
-import { stateColor } from '@/lib/colors'
+import { stateColor, priorityColor } from '@/lib/colors'
 import CalendarView from '@/components/calendar-view'
 
 function vehLabel(v: any): string {
