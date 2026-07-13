@@ -10,6 +10,7 @@ import { fmtDate } from '@/lib/dates'
 import { stateColor } from '@/lib/colors'
 
 interface TallerItem {
+  id: string
   nombre: string
   vehicleId: string | null
   vehiculoNombre: string | null

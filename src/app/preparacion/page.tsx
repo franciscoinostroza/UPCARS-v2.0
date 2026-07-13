@@ -9,6 +9,7 @@ import { fmtDate } from '@/lib/dates'
 import { stateColor } from '@/lib/colors'
 
 interface PrepItem {
+  id: string; nombre: string; vehiculoId: string | null; vehiculoNombre: string | null
   estado: string; preparadorId: string | null; preparadorNombre: string | null
   tipoLimpieza: string; fechaInicio: string | null; fechaFin: string | null; fechaEntrega: string | null
   horasInvertidas: number | null; limpiezaInterior: boolean; limpiezaExterior: boolean
