@@ -27,10 +27,10 @@ function parseLogisticaProps(id: string, p: Record<string, any>): LogisticaRecor
     estado: p['Estado']?.select?.name ?? '',
     fechaProgramada: p['Fecha programada']?.date?.start ?? null,
     fechaRealizada: p['Fecha realizada']?.date?.start ?? null,
-    ubicacion: p['UBICACION']?.rich_text?.[0]?.plain_text ?? '',
+    ubicacion: p['UBICACION']?.rich_text?.map((r: any) => r.plain_text).join('') ?? '',
     situacionComercial: p['Situación comercial']?.select?.name ?? '',
     prioridad: p['Prioridad']?.select?.name ?? '',
-    observaciones: p['Observaciones']?.rich_text?.[0]?.plain_text ?? '',
+    observaciones: p['Observaciones']?.rich_text?.map((r: any) => r.plain_text).join('') ?? '',
     authFileName: file?.name ?? null,
     authFileUrl: file?.file?.url ?? file?.external?.url ?? null,
   }

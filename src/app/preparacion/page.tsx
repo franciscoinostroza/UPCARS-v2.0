@@ -5,6 +5,7 @@ import { ThemeProvider, useTheme } from '../dashboard/theme-context'
 import { DarkModeToggle } from '../dashboard/dark-mode'
 import { Skeleton } from '@/components/skeleton'
 import CalendarView from '@/components/calendar-view'
+import { fmtDate } from '@/lib/dates'
 
 interface PrepItem {
   id: string; nombre: string; vehicleId: string | null; vehiculoNombre: string | null
@@ -15,10 +16,7 @@ interface PrepItem {
 const ESTADOS = ['En proceso', 'Terminado', 'Bloqueado']
 const ESTADO_ICONS: Record<string, string> = { 'En proceso': '🔧', 'Terminado': '✅', 'Bloqueado': '🚫' }
 
-function fmtDate(d: string | null) {
-  if (!d) return ''
-  return new Date(d).toLocaleDateString('es-ES', { day: '2-digit', month: '2-digit', year: 'numeric' })
-}
+
 
 function PrepInner() {
   const { dark } = useTheme()

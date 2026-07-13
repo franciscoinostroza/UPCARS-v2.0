@@ -6,7 +6,7 @@ function tv(p: NotionProp | undefined, fallback = ''): string {
   return (p?.title as any[])?.[0]?.plain_text ?? fallback
 }
 function rtv(p: NotionProp | undefined, fallback = ''): string {
-  return (p?.rich_text as any[])?.[0]?.plain_text ?? fallback
+  return (p?.rich_text as any[])?.map((r: any) => r.plain_text).join('') ?? fallback
 }
 function num(p: NotionProp | undefined, fallback: number | null = null): number | null {
   return (p?.number as number) ?? fallback
@@ -123,7 +123,7 @@ export function parseVehicleProps(id: string, p: Record<string, NotionProp>) {
 
   return {
     id,
-    name: autoName || matricula,
+    name: matricula,
     matricula,
     brand: rtv(brandKey ? p[brandKey] : undefined),
     model: rtv(modelKey ? p[modelKey] : undefined),

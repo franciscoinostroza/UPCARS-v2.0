@@ -4,6 +4,7 @@ import { useState, useEffect, useCallback, useRef } from 'react'
 import { ThemeProvider, useTheme } from '../dashboard/theme-context'
 import { DarkModeToggle } from '../dashboard/dark-mode'
 import { Skeleton } from '@/components/skeleton'
+import { fmtDate } from '@/lib/dates'
 
 function vehLabel(v: any): string {
   return v.matricula ? v.matricula + ' - ' + v.brand + ' ' + v.model + ' (' + (v.year || '—') + ')' : v.name
@@ -34,14 +35,9 @@ const ESTADO_ICONS: Record<string, string> = {
 const SITUACIONES = ['', 'Vendido', 'Exposición', 'Renting']
 const PRIORIDADES = ['', 'Alta', 'Media', 'Baja']
 
-function fmtDate(d: string | null): string {
-  if (!d) return ''
-  return new Date(d).toLocaleDateString('es-ES', { day: '2-digit', month: '2-digit', year: 'numeric' })
-}
-function toInputDate(d: string | null): string {
-  if (!d) return ''
-  return d.split('T')[0]
-}
+
+
+
 
 const selectSx = { background: 'var(--bg-card)', color: 'var(--text)', border: '1px solid var(--border)', fontSize: 11, padding: '6px 8px', borderRadius: 6, width: '100%', outline: 'none' }
 

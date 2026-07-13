@@ -11,6 +11,10 @@ export interface WorkshopOrderItem {
   fechaEntrada: string | null
   fechaSalida: string | null
   observaciones: string
+  costeMateriales: number | null
+  costeManoObra: number | null
+  costeTotal: number | null
+  diasTaller: number | null
 }
 
 function parseWorkshopProps(id: string, p: Record<string, any>): WorkshopOrderItem {
@@ -28,7 +32,11 @@ function parseWorkshopProps(id: string, p: Record<string, any>): WorkshopOrderIt
     estado: p['Estado']?.select?.name ?? '',
     fechaEntrada: entradaKey ? (p[entradaKey]?.date?.start ?? null) : null,
     fechaSalida: salidaKey ? (p[salidaKey]?.date?.start ?? null) : null,
-    observaciones: p['Observaciones']?.rich_text?.[0]?.plain_text ?? '',
+    observaciones: p['Observaciones']?.rich_text?.map((r: any) => r.plain_text).join('') ?? '',
+    costeMateriales: p['Coste materiales (€)']?.number ?? null,
+    costeManoObra: p['Coste mano de obra (€)']?.number ?? null,
+    costeTotal: p['Coste total']?.formula?.number ?? null,
+    diasTaller: p['Días en taller']?.formula?.number ?? null,
   }
 }
 

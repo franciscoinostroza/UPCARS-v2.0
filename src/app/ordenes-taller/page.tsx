@@ -5,6 +5,7 @@ import { ThemeProvider, useTheme } from '../dashboard/theme-context'
 import { DarkModeToggle } from '../dashboard/dark-mode'
 import { Skeleton } from '@/components/skeleton'
 import CalendarView from '@/components/calendar-view'
+import { fmtDate } from '@/lib/dates'
 
 interface TallerItem {
   id: string
@@ -20,13 +21,10 @@ interface TallerItem {
   observaciones: string
 }
 
-const ESTADOS = ['En proceso', 'Terminado', 'Bloqueado']
-const ESTADO_ICONS: Record<string, string> = { 'En proceso': '🔧', 'Terminado': '✅', 'Bloqueado': '🚫' }
+const ESTADOS = ['', 'En proceso', 'Terminado', 'Bloqueado']
+const ESTADO_ICONS: Record<string, string> = { '': '—', 'En proceso': '🔧', 'Terminado': '✅', 'Bloqueado': '🚫' }
 
-function fmtDate(d: string | null): string {
-  if (!d) return ''
-  return new Date(d).toLocaleDateString('es-ES', { day: '2-digit', month: '2-digit', year: 'numeric' })
-}
+
 
 function TallerInner() {
   const { dark } = useTheme()
@@ -155,9 +153,10 @@ function TallerInner() {
                       <td className="p-2 sm:p-3 truncate max-w-[100px]" style={{ color: 'var(--text-secondary)' }}>{r.vehiculoNombre || '-'}</td>
                       <td className="p-2 sm:p-3" style={{ color: 'var(--text-secondary)' }}>{r.tipo || '-'}</td>
                       <td className="p-2 sm:p-3"><span className="text-[10px] px-1.5 py-0.5 rounded font-medium" style={{
-                        background: r.estado === 'Terminado' ? 'rgba(34,197,94,0.12)' : r.estado === 'Bloqueado' ? 'rgba(239,68,68,0.12)' : 'rgba(59,130,246,0.12)',
-                        color: r.estado === 'Terminado' ? '#22c55e' : r.estado === 'Bloqueado' ? '#ef4444' : '#3b82f6',
-                      }}>{r.estado}</span></td>
+                        background: !r.estado ? 'rgba(156,163,175,0.12)' : r.estado === 'Terminado' ? 'rgba(34,197,94,0.12)' : r.estado === 'Bloqueado' ? 'rgba(239,68,68,0.12)' : 'rgba(59,130,246,0.12)',
+
+                        color: !r.estado ? '#9ca3af' : r.estado === 'Terminado' ? '#22c55e' : r.estado === 'Bloqueado' ? '#ef4444' : '#3b82f6',
+                      }}>{r.estado || 'Sin estado'}</span></td>
                       <td className="p-2 sm:p-3" style={{ color: 'var(--text-secondary)' }}>{r.responsableNombre || '-'}</td>
                       <td className="text-right p-2 sm:p-3" style={{ color: 'var(--text-secondary)' }}>{fmtDate(r.fechaEntrada)}</td>
                       <td className="text-right p-2 sm:p-3" style={{ color: 'var(--text-secondary)' }}>{fmtDate(r.fechaSalida)}</td>
@@ -198,6 +197,12 @@ function TallerInner() {
                   <span className="font-medium shrink-0" style={{ color: 'var(--text-muted)' }}>Entrada:</span>
                   <input type="date" value={selected.fechaEntrada?.split('T')[0] || ''} onChange={e => setRecords(prev => prev.map(r => r.id === selected.id ? { ...r, fechaEntrada: e.target.value || null } : r))} style={selectSx} />
                 </div>
+                <div className="mt-2 pt-2 border-t grid grid-cols-2 gap-2 text-[10px]" style={{ borderColor: 'var(--border)' }}>
+                  {selected.costeMateriales != null && <div><span style={{ color: 'var(--text-muted)' }}>Coste materiales:</span> <span style={{ color: 'var(--text)' }}>{selected.costeMateriales.toLocaleString('es-ES', { style: 'currency', currency: 'EUR' })}</span></div>}
+                  {selected.costeManoObra != null && <div><span style={{ color: 'var(--text-muted)' }}>Coste mano obra:</span> <span style={{ color: 'var(--text)' }}>{selected.costeManoObra.toLocaleString('es-ES', { style: 'currency', currency: 'EUR' })}</span></div>}
+                  {selected.costeTotal != null && <div><span style={{ color: 'var(--text-muted)' }}>Coste total:</span> <span style={{ color: 'var(--accent-blue)' }}>{selected.costeTotal.toLocaleString('es-ES', { style: 'currency', currency: 'EUR' })}</span></div>}
+                  {selected.diasTaller != null && <div><span style={{ color: 'var(--text-muted)' }}>Días en taller:</span> <span style={{ color: 'var(--text)' }}>{selected.diasTaller}</span></div>}
+                </div>
                 <div className="mt-3 pt-3 border-t" style={{ borderColor: 'var(--border)' }}>
                   <p className="text-[10px] font-medium mb-1" style={{ color: 'var(--text-muted)' }}>Observaciones:</p>
                   <textarea value={editObs} onChange={e => setEditObs(e.target.value)} rows={3} className="w-full text-xs px-2 py-1.5 rounded outline-none resize-none" style={{ background: 'var(--bg)', color: 'var(--text)', border: '1px solid var(--border)' }} />
@@ -237,11 +242,11 @@ function TallerInner() {
                 </select>
                 <select value={createData.tipoTrabajo} onChange={e => setCreateData(p => ({ ...p, tipoTrabajo: e.target.value }))} style={selectSx}>
                   <option value="">Tipo de trabajo (opcional)</option>
-                  <option value="Mecánica general">Mecánica general</option>
+                  <option value="Revisión general">Revisión general</option>
+                  <option value="Frenos">Frenos</option>
+                  <option value="Motor">Motor</option>
                   <option value="Electricidad">Electricidad</option>
-                  <option value="Diagnóstico">Diagnóstico</option>
-                  <option value="Mantenimiento">Mantenimiento</option>
-                  <option value="Presupuesto">Presupuesto</option>
+                  <option value="Otro">Otro</option>
                 </select>
                 <input type="date" value={createData.fechaEntrada} onChange={e => setCreateData(p => ({ ...p, fechaEntrada: e.target.value }))} style={selectSx} placeholder="Fecha entrada" />
                 <textarea value={createData.notes} onChange={e => setCreateData(p => ({ ...p, notes: e.target.value }))} rows={2} className="w-full text-xs px-2 py-1.5 rounded outline-none resize-none" style={{ background: 'var(--bg)', color: 'var(--text)', border: '1px solid var(--border)' }} placeholder="Observaciones (opcional)" />

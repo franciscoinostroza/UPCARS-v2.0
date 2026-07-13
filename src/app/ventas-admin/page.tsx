@@ -4,6 +4,7 @@ import { useState, useEffect, useCallback } from 'react'
 import { ThemeProvider, useTheme } from '../dashboard/theme-context'
 import { DarkModeToggle } from '../dashboard/dark-mode'
 import { Skeleton } from '@/components/skeleton'
+import { fmtDate } from '@/lib/dates'
 
 interface VentaAdminItem {
   id: string; nombre: string; vehiculoId: string | null; vehiculoNombre: string | null
@@ -11,11 +12,6 @@ interface VentaAdminItem {
   margenPorcentaje: number | null; fechaVenta: string | null
   vendedorId: string | null; vendedorNombre: string | null
   clienteNombre: string; clienteContacto: string; formaPago: string; financiada: boolean; observaciones: string
-}
-
-function fmtDate(d: string | null) {
-  if (!d) return ''
-  return new Date(d).toLocaleDateString('es-ES', { day: '2-digit', month: '2-digit', year: 'numeric' })
 }
 
 function fmtEuro(n: number | null) { return n != null ? n.toLocaleString('es-ES', { style: 'currency', currency: 'EUR' }) : '-' }
