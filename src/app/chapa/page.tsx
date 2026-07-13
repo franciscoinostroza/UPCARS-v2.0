@@ -11,6 +11,7 @@ interface ChapaItem {
   id: string; nombre: string; vehicleId: string | null; vehiculoNombre: string | null
   responsableId: string | null; responsableNombre: string | null; tipo: string; estado: string
   fechaEntrada: string | null; fechaSalida: string | null; observaciones: string
+  costeMateriales: number | null; costeManoObra: number | null; costeTotal: number | null; diasTaller: number | null
 }
 
 const ESTADOS = ['En proceso', 'Terminado', 'Bloqueado']

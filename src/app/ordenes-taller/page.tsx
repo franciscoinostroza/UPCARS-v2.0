@@ -19,6 +19,10 @@ interface TallerItem {
   fechaEntrada: string | null
   fechaSalida: string | null
   observaciones: string
+  costeMateriales: number | null
+  costeManoObra: number | null
+  costeTotal: number | null
+  diasTaller: number | null
 }
 
 const ESTADOS = ['', 'En proceso', 'Terminado', 'Bloqueado']
