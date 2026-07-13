@@ -6,6 +6,7 @@ import { ThemeProvider, useTheme } from '../dashboard/theme-context'
 import { DarkModeToggle } from '../dashboard/dark-mode'
 import { Skeleton } from '@/components/skeleton'
 import { fmtDate } from '@/lib/dates'
+import { stateColor } from '@/lib/colors'
 import CalendarView from '@/components/calendar-view'
 
 function vehLabel(v: any): string {
@@ -255,9 +256,7 @@ function LogisticaInner() {
                       <td className="p-2 sm:p-3 font-medium truncate max-w-[100px]" style={{ color: 'var(--text)' }}>{r.nombre}</td>
                       <td className="p-2 sm:p-3 truncate max-w-[100px]" style={{ color: 'var(--text-secondary)' }}>{r.vehiculoNombre || '-'}</td>
                       <td className="p-2 sm:p-3"><span className="text-[10px] px-1.5 py-0.5 rounded font-medium" style={{
-                        background: !r.estado ? 'rgba(156,163,175,0.12)' : r.estado === 'Completado' ? 'rgba(34,197,94,0.12)' : r.estado === 'Autorizado' ? 'rgba(59,130,246,0.12)' : r.estado === 'Bloqueado' ? 'rgba(239,68,68,0.12)' : 'rgba(234,179,8,0.12)',
-
-                        color: !r.estado ? '#9ca3af' : r.estado === 'Completado' ? '#22c55e' : r.estado === 'Autorizado' ? '#3b82f6' : r.estado === 'Bloqueado' ? '#ef4444' : '#eab308',
+                        ...stateColor(r.estado),
                         whiteSpace: 'nowrap',
                       }}>{r.estado || 'Sin estado'}</span></td>
                       <td className="p-2 sm:p-3 truncate max-w-[120px]" style={{ color: 'var(--text-secondary)' }}>{r.ubicacion || '-'}</td>

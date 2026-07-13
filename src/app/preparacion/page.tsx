@@ -6,9 +6,9 @@ import { ThemeProvider, useTheme } from '../dashboard/theme-context'
 import { DarkModeToggle } from '../dashboard/dark-mode'
 import { Skeleton } from '@/components/skeleton'
 import { fmtDate } from '@/lib/dates'
+import { stateColor } from '@/lib/colors'
 
 interface PrepItem {
-  id: string; nombre: string; vehiculoId: string | null; vehiculoNombre: string | null
   estado: string; preparadorId: string | null; preparadorNombre: string | null
   tipoLimpieza: string; fechaInicio: string | null; fechaFin: string | null; fechaEntrega: string | null
   horasInvertidas: number | null; limpiezaInterior: boolean; limpiezaExterior: boolean
@@ -137,8 +137,7 @@ function PrepInner() {
                       <td className="p-2 sm:p-3 font-medium truncate max-w-[80px]" style={{ color: 'var(--text)' }}>{r.nombre}</td>
                       <td className="p-2 sm:p-3 truncate max-w-[100px]" style={{ color: 'var(--text-secondary)' }}>{r.vehiculoNombre || '-'}</td>
                       <td className="p-2 sm:p-3"><span className="text-[10px] px-1.5 py-0.5 rounded font-medium" style={{
-                        background: !r.estado ? 'rgba(156,163,175,0.12)' : r.estado === 'Listo para stock' ? 'rgba(34,197,94,0.12)' : r.estado === 'En preparación' ? 'rgba(59,130,246,0.12)' : 'rgba(234,179,8,0.12)',
-                        color: !r.estado ? '#9ca3af' : r.estado === 'Listo para stock' ? '#22c55e' : r.estado === 'En preparación' ? '#3b82f6' : '#eab308',
+                        ...stateColor(r.estado),
                         whiteSpace: 'nowrap',
                       }}>{r.estado || 'Sin estado'}</span></td>
                       <td className="p-2 sm:p-3" style={{ color: 'var(--text-secondary)' }}>{r.tipoLimpieza || '-'}</td>

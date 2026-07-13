@@ -7,9 +7,9 @@ import { DarkModeToggle } from '../dashboard/dark-mode'
 import { Skeleton } from '@/components/skeleton'
 import CalendarView from '@/components/calendar-view'
 import { fmtDate } from '@/lib/dates'
+import { stateColor } from '@/lib/colors'
 
 interface TallerItem {
-  id: string
   nombre: string
   vehicleId: string | null
   vehiculoNombre: string | null
@@ -168,9 +168,7 @@ function TallerInner() {
                       <td className="p-2 sm:p-3 truncate max-w-[100px]" style={{ color: 'var(--text-secondary)' }}>{r.vehiculoNombre || '-'}</td>
                       <td className="p-2 sm:p-3" style={{ color: 'var(--text-secondary)' }}>{r.tipo || '-'}</td>
                       <td className="p-2 sm:p-3"><span className="text-[10px] px-1.5 py-0.5 rounded font-medium" style={{
-                        background: !r.estado ? 'rgba(156,163,175,0.12)' : r.estado === 'Terminado' ? 'rgba(34,197,94,0.12)' : r.estado === 'Bloqueado' ? 'rgba(239,68,68,0.12)' : 'rgba(59,130,246,0.12)',
-
-                        color: !r.estado ? '#9ca3af' : r.estado === 'Terminado' ? '#22c55e' : r.estado === 'Bloqueado' ? '#ef4444' : '#3b82f6',
+                        ...stateColor(r.estado),
                         whiteSpace: 'nowrap',
                       }}>{r.estado || 'Sin estado'}</span></td>
                       <td className="p-2 sm:p-3" style={{ color: 'var(--text-secondary)' }}>{r.responsableNombre || '-'}</td>

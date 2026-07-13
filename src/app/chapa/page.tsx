@@ -6,9 +6,9 @@ import { ThemeProvider, useTheme } from '../dashboard/theme-context'
 import { DarkModeToggle } from '../dashboard/dark-mode'
 import { Skeleton } from '@/components/skeleton'
 import { fmtDate } from '@/lib/dates'
+import { stateColor } from '@/lib/colors'
 
 interface ChapaItem {
-  id: string; matricula: string; vehiculoId: string | null; vehiculoNombre: string | null
   estado: string; proveedorId: string | null; proveedorNombre: string | null; costeTotal: number | null
   fechaSalida: string | null; fechaRetorno: string | null
   trabajosSolicitados: string; observaciones: string; diasFuera: number | null
@@ -144,8 +144,7 @@ function ChapaInner() {
                       <td className="p-2 sm:p-3 font-medium" style={{ color: 'var(--text)' }}>{r.matricula || '-'}</td>
                       <td className="p-2 sm:p-3 truncate max-w-[100px]" style={{ color: 'var(--text-secondary)' }}>{r.vehiculoNombre || '-'}</td>
                       <td className="p-2 sm:p-3"><span className="text-[10px] px-1.5 py-0.5 rounded font-medium" style={{
-                        background: !r.estado ? 'rgba(156,163,175,0.12)' : r.estado === 'Terminado' ? 'rgba(34,197,94,0.12)' : r.estado === 'En taller' ? 'rgba(59,130,246,0.12)' : 'rgba(234,179,8,0.12)',
-                        color: !r.estado ? '#9ca3af' : r.estado === 'Terminado' ? '#22c55e' : r.estado === 'En taller' ? '#3b82f6' : '#eab308',
+                        ...stateColor(r.estado),
                         whiteSpace: 'nowrap',
                       }}>{r.estado || 'Sin estado'}</span></td>
                       <td className="p-2 sm:p-3" style={{ color: 'var(--text-secondary)' }}>{r.proveedorNombre || '-'}</td>
