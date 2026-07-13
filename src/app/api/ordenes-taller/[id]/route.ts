@@ -15,6 +15,8 @@ export async function PATCH(
 
     if (body.estado) props['Estado'] = { select: { name: body.estado } }
     if (body.observaciones !== undefined) props['Observaciones'] = { rich_text: [{ text: { content: body.observaciones } }] }
+    if (body.costeMateriales !== undefined) props['Coste materiales (€)'] = { number: body.costeMateriales }
+    if (body.costeManoObra !== undefined) props['Coste mano de obra (€)'] = { number: body.costeManoObra }
 
     if (Object.keys(props).length === 0) {
       return NextResponse.json({ success: true, message: 'Nothing to update' })

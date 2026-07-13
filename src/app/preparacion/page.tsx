@@ -11,7 +11,7 @@ interface PrepItem {
   estado: string; preparadorId: string | null; preparadorNombre: string | null
   tipoLimpieza: string; fechaInicio: string | null; fechaFin: string | null; fechaEntrega: string | null
   horasInvertidas: number | null; limpiezaInterior: boolean; limpiezaExterior: boolean
-  fotografiaAnuncio: boolean; observaciones: string
+  fotografiaAnuncio: boolean; registrarInicio: boolean; registrarFin: boolean; observaciones: string
 }
 
 const ESTADOS = ['', 'Pendiente', 'En preparación', 'Listo para stock']
@@ -191,13 +191,21 @@ function PrepInner() {
                     <input type="checkbox" checked={selected.fotografiaAnuncio} onChange={e => setRecords(prev => prev.map(r => r.id === selected.id ? { ...r, fotografiaAnuncio: e.target.checked } : r))} />
                     📸 Foto anuncio
                   </label>
+                  <label className="flex items-center gap-1.5 text-[11px]" style={{ color: 'var(--text-secondary)' }}>
+                    <input type="checkbox" checked={selected.registrarInicio} onChange={e => setRecords(prev => prev.map(r => r.id === selected.id ? { ...r, registrarInicio: e.target.checked } : r))} />
+                    🟢 Registrar inicio
+                  </label>
+                  <label className="flex items-center gap-1.5 text-[11px]" style={{ color: 'var(--text-secondary)' }}>
+                    <input type="checkbox" checked={selected.registrarFin} onChange={e => setRecords(prev => prev.map(r => r.id === selected.id ? { ...r, registrarFin: e.target.checked } : r))} />
+                    🔴 Registrar fin
+                  </label>
                 </div>
                 <div className="mt-2 pt-2 border-t" style={{ borderColor: 'var(--border)' }}>
                   <p className="text-[10px] font-medium mb-1" style={{ color: 'var(--text-muted)' }}>Observaciones:</p>
                   <textarea value={editObs} onChange={e => setEditObs(e.target.value)} rows={2} className="w-full text-xs px-2 py-1.5 rounded outline-none resize-none" style={{ background: 'var(--bg)', color: 'var(--text)', border: '1px solid var(--border)' }} />
                 </div>
                 <button onClick={async () => {
-                  await fetch(`/api/preparacion/${selected.id}`, { method: 'PATCH', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ estado: selected.estado, tipoLimpieza: selected.tipoLimpieza, fechaInicio: selected.fechaInicio, fechaFin: selected.fechaFin, fechaEntrega: selected.fechaEntrega, limpiezaInterior: selected.limpiezaInterior, limpiezaExterior: selected.limpiezaExterior, fotografiaAnuncio: selected.fotografiaAnuncio, observaciones: editObs }) })
+                  await fetch(`/api/preparacion/${selected.id}`, { method: 'PATCH', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ estado: selected.estado, tipoLimpieza: selected.tipoLimpieza, fechaInicio: selected.fechaInicio, fechaFin: selected.fechaFin, fechaEntrega: selected.fechaEntrega, limpiezaInterior: selected.limpiezaInterior, limpiezaExterior: selected.limpiezaExterior, fotografiaAnuncio: selected.fotografiaAnuncio, registrarInicio: selected.registrarInicio, registrarFin: selected.registrarFin, observaciones: editObs }) })
                   setRecords(prev => prev.map(r => r.id === selected.id ? { ...r, observaciones: editObs } : r))
                 }} className="w-full text-[11px] font-semibold py-2 rounded" style={{ background: 'var(--accent-blue)', color: '#fff' }}>💾 Guardar</button>
               </div>

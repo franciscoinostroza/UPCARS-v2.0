@@ -202,8 +202,12 @@ function TallerInner() {
                   <input type="date" value={selected.fechaEntrada?.split('T')[0] || ''} onChange={e => setRecords(prev => prev.map(r => r.id === selected.id ? { ...r, fechaEntrada: e.target.value || null } : r))} style={selectSx} />
                 </div>
                 <div className="mt-2 pt-2 border-t grid grid-cols-2 gap-2 text-[10px]" style={{ borderColor: 'var(--border)' }}>
-                  {selected.costeMateriales != null && <div><span style={{ color: 'var(--text-muted)' }}>Coste materiales:</span> <span style={{ color: 'var(--text)' }}>{selected.costeMateriales.toLocaleString('es-ES', { style: 'currency', currency: 'EUR' })}</span></div>}
-                  {selected.costeManoObra != null && <div><span style={{ color: 'var(--text-muted)' }}>Coste mano obra:</span> <span style={{ color: 'var(--text)' }}>{selected.costeManoObra.toLocaleString('es-ES', { style: 'currency', currency: 'EUR' })}</span></div>}
+                  <div><span style={{ color: 'var(--text-muted)' }}>Coste materiales:</span>
+                    <input type="number" value={selected.costeMateriales ?? ''} onChange={e => setRecords(prev => prev.map(r => r.id === selected.id ? { ...r, costeMateriales: e.target.value ? parseFloat(e.target.value) : null } : r))} style={{...selectSx, fontSize: 10}} step="0.01" />
+                  </div>
+                  <div><span style={{ color: 'var(--text-muted)' }}>Coste mano obra:</span>
+                    <input type="number" value={selected.costeManoObra ?? ''} onChange={e => setRecords(prev => prev.map(r => r.id === selected.id ? { ...r, costeManoObra: e.target.value ? parseFloat(e.target.value) : null } : r))} style={{...selectSx, fontSize: 10}} step="0.01" />
+                  </div>
                   {selected.costeTotal != null && <div><span style={{ color: 'var(--text-muted)' }}>Coste total:</span> <span style={{ color: 'var(--accent-blue)' }}>{selected.costeTotal.toLocaleString('es-ES', { style: 'currency', currency: 'EUR' })}</span></div>}
                   {selected.diasTaller != null && <div><span style={{ color: 'var(--text-muted)' }}>Días en taller:</span> <span style={{ color: 'var(--text)' }}>{selected.diasTaller}</span></div>}
                 </div>
@@ -212,7 +216,7 @@ function TallerInner() {
                   <textarea value={editObs} onChange={e => setEditObs(e.target.value)} rows={3} className="w-full text-xs px-2 py-1.5 rounded outline-none resize-none" style={{ background: 'var(--bg)', color: 'var(--text)', border: '1px solid var(--border)' }} />
                 </div>
                 <button onClick={async () => {
-                  await fetch(`/api/ordenes-taller/${selected.id}`, { method: 'PATCH', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ estado: selected.estado, observaciones: editObs }) })
+                  await fetch(`/api/ordenes-taller/${selected.id}`, { method: 'PATCH', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ estado: selected.estado, observaciones: editObs, costeMateriales: selected.costeMateriales, costeManoObra: selected.costeManoObra }) })
                   setRecords(prev => prev.map(r => r.id === selected.id ? { ...r, observaciones: editObs } : r))
                 }} className="w-full text-[11px] font-semibold py-2 rounded" style={{ background: 'var(--accent-blue)', color: '#fff' }}>💾 Guardar</button>
               </div>

@@ -28,6 +28,7 @@ function ChapaInner() {
   const [editObs, setEditObs] = useState('')
   const [editTrabajos, setEditTrabajos] = useState('')
   const [showCreate, setShowCreate] = useState(false)
+  const [providers, setProviders] = useState<{ id: string; name: string }[]>([])
   const [employees, setEmployees] = useState<{ id: string; name: string }[]>([])
   const [vehicles, setVehicles] = useState<{ id: string; name: string; matricula?: string; brand?: string; model?: string; year?: string }[]>([])
   const [createData, setCreateData] = useState({ vehiculoId: '', estado: 'Pendiente de Chapa', proveedorId: '', costeTotal: '', fechaSalida: '', fechaRetorno: '', trabajosSolicitados: '', observaciones: '' })
@@ -36,17 +37,20 @@ function ChapaInner() {
     try {
       const params = new URLSearchParams()
       if (filterEstado) params.set('estado', filterEstado)
-      const [res, empRes, vehRes] = await Promise.all([
+      const [res, empRes, vehRes, provRes] = await Promise.all([
         fetch(`/api/chapa${params.toString() ? '?' + params : ''}`),
         fetch('/api/employees'),
         fetch('/api/vehicles?list=true'),
+        fetch('/api/providers'),
       ])
       const json = await res.json()
       const empJson = await empRes.json()
       const vehJson = await vehRes.json()
+      const provJson = await provRes.json()
       if (json.success) setRecords(json.data)
       if (empJson.success) setEmployees(empJson.data)
       if (vehJson.success) setVehicles(vehJson.data)
+      if (provJson.success) setProviders(provJson.data)
     } catch {} finally { setLoading(false) }
   }, [filterEstado])
 
@@ -117,7 +121,7 @@ function ChapaInner() {
                 <thead>
                   <tr style={{ color: 'var(--text-secondary)', borderBottom: '1px solid var(--border)' }}>
                     <th className="text-left p-2 sm:p-3 font-medium">Matrícula</th><th className="text-left p-2 sm:p-3 font-medium">Vehículo</th>
-                    <th className="text-left p-2 sm:p-3 font-medium">Estado</th><th className="text-right p-2 sm:p-3 font-medium">Coste</th>
+                    <th className="text-left p-2 sm:p-3 font-medium">Estado</th><th className="text-left p-2 sm:p-3 font-medium">Proveedor</th><th className="text-right p-2 sm:p-3 font-medium">Coste</th>
                     <th className="text-right p-2 sm:p-3 font-medium">Salida</th><th className="text-right p-2 sm:p-3 font-medium">Retorno</th>
                     <th className="text-right p-2 sm:p-3 font-medium">Días</th>
                   </tr>
@@ -131,6 +135,7 @@ function ChapaInner() {
                         background: !r.estado ? 'rgba(156,163,175,0.12)' : r.estado === 'Terminado' ? 'rgba(34,197,94,0.12)' : r.estado === 'En taller' ? 'rgba(59,130,246,0.12)' : 'rgba(234,179,8,0.12)',
                         color: !r.estado ? '#9ca3af' : r.estado === 'Terminado' ? '#22c55e' : r.estado === 'En taller' ? '#3b82f6' : '#eab308',
                       }}>{r.estado || 'Sin estado'}</span></td>
+                      <td className="p-2 sm:p-3" style={{ color: 'var(--text-secondary)' }}>{r.proveedorNombre || '-'}</td>
                       <td className="text-right p-2 sm:p-3" style={{ color: 'var(--text)' }}>{fmtEuro(r.costeTotal)}</td>
                       <td className="text-right p-2 sm:p-3" style={{ color: 'var(--text-secondary)' }}>{fmtDate(r.fechaSalida)}</td>
                       <td className="text-right p-2 sm:p-3" style={{ color: 'var(--text-secondary)' }}>{fmtDate(r.fechaRetorno)}</td>
@@ -156,6 +161,10 @@ function ChapaInner() {
                   <select value={selected.estado} onChange={e => setRecords(prev => prev.map(r => r.id === selected.id ? { ...r, estado: e.target.value } : r))} style={selectSx}>
                     {ESTADOS.map(s => <option key={s} value={s}>{s || 'Sin estado'}</option>)}
                   </select>
+                </div>
+                <div className="flex gap-2 items-center">
+                  <span className="font-medium shrink-0" style={{ color: 'var(--text-muted)' }}>Proveedor:</span>
+                  <span style={{ color: 'var(--text)' }}>{selected.proveedorNombre || '-'}</span>
                 </div>
                 <div className="flex gap-2 items-center">
                   <span className="font-medium shrink-0" style={{ color: 'var(--text-muted)' }}>Coste total:</span>
@@ -231,7 +240,7 @@ function ChapaInner() {
                   <p className="text-[10px] font-medium mb-0.5" style={{ color: 'var(--text-muted)' }}>Proveedor externo</p>
                   <select value={createData.proveedorId} onChange={e => setCreateData(p => ({ ...p, proveedorId: e.target.value }))} style={selectSx}>
                     <option value="">Sin proveedor</option>
-                    {employees.map(e => <option key={e.id} value={e.id}>{e.name}</option>)}
+                    {providers.map(p => <option key={p.id} value={p.id}>{p.name}</option>)}
                   </select>
                 </div>
                 <div>

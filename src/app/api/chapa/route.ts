@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from 'next/server'
 import { getChapaRecords, createChapaRecord } from '@/lib/notion/chapa-records'
 import { getEmployees } from '@/lib/notion/employees'
 import { getVehicles } from '@/lib/notion/vehicles'
+import { getProviders } from '@/lib/notion/providers'
 
 export const dynamic = 'force-dynamic'
 
@@ -11,15 +12,17 @@ export async function GET(request: NextRequest) {
     const filterEstado = searchParams.get('estado')
 
     let records = await getChapaRecords()
-    const [employees, vehicles] = await Promise.all([getEmployees(), getVehicles()])
+    const [employees, vehicles, providers] = await Promise.all([getEmployees(), getVehicles(), getProviders()])
     const empMap = new Map(employees.map(e => [e.id, e.name]))
     const vehMap = new Map(vehicles.map(v => [v.id, v.name]))
+    const provMap = new Map(providers.map((p: any) => [p.id, p.name]))
 
     if (filterEstado) records = records.filter(r => r.estado === filterEstado)
 
     const data = records.map(r => ({
       ...r,
       vehiculoNombre: r.vehiculoId ? (vehMap.get(r.vehiculoId) || 'Desconocido') : null,
+      proveedorNombre: r.proveedorId ? (provMap.get(r.proveedorId) || 'Desconocido') : null,
     }))
 
     return NextResponse.json({ success: true, data })

@@ -16,6 +16,8 @@ export interface PrepRecord {
   limpiezaInterior: boolean
   limpiezaExterior: boolean
   fotografiaAnuncio: boolean
+  registrarInicio: boolean
+  registrarFin: boolean
   observaciones: string
 }
 
@@ -35,6 +37,8 @@ function parsePrepProps(id: string, p: Record<string, any>): PrepRecord {
     limpiezaInterior: p['Limpieza interior']?.checkbox ?? false,
     limpiezaExterior: p['Limpieza exterior']?.checkbox ?? false,
     fotografiaAnuncio: p['Fotografía para anuncio']?.checkbox ?? false,
+    registrarInicio: p['Registrar inicio']?.checkbox ?? false,
+    registrarFin: p['registrar fin']?.checkbox ?? false,
     observaciones: p['Observaciones']?.rich_text?.map((r: any) => r.plain_text).join('') ?? '',
   }
 }
@@ -55,6 +59,8 @@ export async function updatePrepRecord(id: string, data: Record<string, any>) {
   if (data.limpiezaInterior !== undefined) props['Limpieza interior'] = { checkbox: data.limpiezaInterior }
   if (data.limpiezaExterior !== undefined) props['Limpieza exterior'] = { checkbox: data.limpiezaExterior }
   if (data.fotografiaAnuncio !== undefined) props['Fotografía para anuncio'] = { checkbox: data.fotografiaAnuncio }
+  if (data.registrarInicio !== undefined) props['Registrar inicio'] = { checkbox: data.registrarInicio }
+  if (data.registrarFin !== undefined) props['registrar fin'] = { checkbox: data.registrarFin }
   if (data.observaciones !== undefined) props['Observaciones'] = { rich_text: [{ text: { content: data.observaciones } }] }
 
   if (Object.keys(props).length === 0) return
