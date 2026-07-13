@@ -86,7 +86,7 @@ export async function createTasacion(data: {
     props[relations[0].name] = { relation: [{ id: data.responsableId }] }
   }
 
-  await notionPost('/pages', { parent: { database_id: dbId }, properties })
+  await notionPost('/pages', { parent: { database_id: dbId }, properties: props })
 }
 
 export async function updateTasacion(id: string, data: Record<string, any>) {
