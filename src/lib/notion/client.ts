@@ -61,6 +61,7 @@ export function getDatabaseId(name: string): string {
     buzon_mejora: process.env.BUZON_MEJORA_DB_ID,
     noticias: process.env.NOTICIAS_DB_ID,
     notificaciones: process.env.NOTIFICACIONES_DB_ID,
+    tasaciones: process.env.TASACIONES_DB_ID,
   }
   const id = ids[name]
   if (!id) throw new Error(`Database ID not found for: ${name}`)

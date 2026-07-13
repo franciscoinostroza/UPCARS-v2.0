@@ -31,6 +31,7 @@ const DB_META: Record<string, { name: string; icon: string; desc: string; catego
   operaciones_financiadas: { name: 'Op. Financiadas', icon: '💳', desc: 'Operaciones con financiación', category: 'Gestión' },
   finanzas: { name: 'Finanzas', icon: '📊', desc: 'Control financiero', category: 'Gestión' },
   buzon_mejora: { name: 'Buzón Mejoras', icon: '💡', desc: 'Propuestas de mejora', category: 'Gestión' },
+  tasaciones: { name: 'Tasaciones', icon: '📋', desc: 'Tasaciones y clientes externos', category: 'Operaciones' },
 }
 
 const ENV_KEYS: Record<string, string> = {
@@ -51,6 +52,7 @@ const ENV_KEYS: Record<string, string> = {
   operaciones_financiadas: 'OPERACIONES_FINANCIADAS_DB_ID',
   finanzas: 'FINANZAS_DB_ID',
   buzon_mejora: 'BUZON_MEJORA_DB_ID',
+  tasaciones: 'TASACIONES_DB_ID',
 }
 
 export async function GET() {
