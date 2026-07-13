@@ -6,7 +6,7 @@ import { ThemeProvider, useTheme } from '../dashboard/theme-context'
 import { DarkModeToggle } from '../dashboard/dark-mode'
 import { Skeleton } from '@/components/skeleton'
 import { fmtDate } from '@/lib/dates'
-import { stateColor, priorityColor } from '@/lib/colors'
+import { stateColor } from '@/lib/colors'
 import CalendarView from '@/components/calendar-view'
 
 function vehLabel(v: any): string {
@@ -231,35 +231,46 @@ function LogisticaInner() {
           </div>
         ) : (
           /* Tabla */
-          <div className="space-y-2 animate-fade-up">
+          <div className="card overflow-x-auto animate-fade-up" style={{ animationDelay: '75ms' }}>
             {records.length === 0 ? (
-              <div className="card p-8 text-center"><p className="text-sm" style={{ color: 'var(--text-muted)' }}>Sin registros</p></div>
-            ) : records.map(r => {
-              const ec = stateColor(r.estado)
-              const pc = priorityColor(r.prioridad)
-              return (
-                <div key={r.id} onClick={() => { setSelected(r); setEditing(false) }}
-                  className="card p-3 sm:p-4 cursor-pointer transition-all hover:opacity-90 flex items-start gap-3"
-                  style={{ background: 'var(--bg-card)', borderLeft: `4px solid ${ec.text}` }}>
-                  <div className="flex-1 min-w-0">
-                    <div className="flex items-center gap-2 mb-1 flex-wrap">
-                      <h3 className="text-sm font-semibold truncate" style={{ color: 'var(--text)' }}>{r.nombre}</h3>
-                      <span className="text-[10px] font-semibold px-2 py-0.5 rounded" style={{ background: ec.bg, color: ec.text }}>{r.estado || 'Sin estado'}</span>
-                      {r.prioridad && <span className="text-[9px] font-semibold px-2 py-0.5 rounded" style={{ background: pc.bg, color: pc.text }}>{r.prioridad}</span>}
-                      {r.authFileName && <span className="text-[10px]" style={{ color: 'var(--accent-blue)' }}>📎</span>}
-                    </div>
-                    <div className="flex flex-wrap gap-x-3 gap-y-1 text-[11px]" style={{ color: 'var(--text-secondary)' }}>
-                      {r.vehiculoNombre && <span>🚗 {r.vehiculoNombre}</span>}
-                      {r.ubicacion && <span>📍 {r.ubicacion}</span>}
-                      {r.situacionComercial && <span>💼 {r.situacionComercial}</span>}
-                      {r.responsableNombre && <span>👤 {r.responsableNombre}</span>}
-                      {r.fechaProgramada && <span>📅 Prog: {fmtDate(r.fechaProgramada)}</span>}
-                      {r.fechaRealizada && <span>📅 Real: {fmtDate(r.fechaRealizada)}</span>}
-                    </div>
-                  </div>
-                </div>
-              )
-            })}
+              <div className="p-8 text-center"><p className="text-sm" style={{ color: 'var(--text-muted)' }}>Sin registros</p></div>
+            ) : (
+              <table className="w-full text-xs sm:text-sm">
+                <thead>
+                  <tr style={{ color: 'var(--text-secondary)', borderBottom: '1px solid var(--border)' }}>
+                    <th className="text-left p-2 sm:p-3 font-medium">ID</th>
+                    <th className="text-left p-2 sm:p-3 font-medium">Vehículo</th>
+                    <th className="text-left p-2 sm:p-3 font-medium">Estado</th>
+                    <th className="text-left p-2 sm:p-3 font-medium">Ubicación</th>
+                    <th className="text-left p-2 sm:p-3 font-medium">Situación</th>
+                    <th className="text-left p-2 sm:p-3 font-medium">Prioridad</th>
+                    <th className="text-left p-2 sm:p-3 font-medium">Responsable</th>
+                    <th className="text-right p-2 sm:p-3 font-medium">Fecha prog.</th>
+                    <th className="text-right p-2 sm:p-3 font-medium">Fecha real.</th>
+                    <th className="text-center p-2 sm:p-3 font-medium">📎</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {records.map(r => (
+                    <tr key={r.id} onClick={() => { setSelected(r); setEditing(false) }} style={{ borderBottom: '1px solid var(--border)', cursor: 'pointer' }} className="hover:opacity-80">
+                      <td className="p-2 sm:p-3 font-medium truncate max-w-[100px]" style={{ color: 'var(--text)' }}>{r.nombre}</td>
+                      <td className="p-2 sm:p-3 truncate max-w-[100px]" style={{ color: 'var(--text-secondary)' }}>{r.vehiculoNombre || '-'}</td>
+                      <td className="p-2 sm:p-3"><span className="text-[10px] px-1.5 py-0.5 rounded font-medium" style={{
+                        ...stateColor(r.estado),
+                        whiteSpace: 'nowrap',
+                      }}>{r.estado || 'Sin estado'}</span></td>
+                      <td className="p-2 sm:p-3 truncate max-w-[120px]" style={{ color: 'var(--text-secondary)' }}>{r.ubicacion || '-'}</td>
+                      <td className="p-2 sm:p-3" style={{ color: 'var(--text-secondary)' }}>{r.situacionComercial || '-'}</td>
+                      <td className="p-2 sm:p-3"><span style={{ color: r.prioridad === 'Alta' ? '#ef4444' : r.prioridad === 'Media' ? '#eab308' : 'var(--text-secondary)' }}>{r.prioridad || '-'}</span></td>
+                      <td className="p-2 sm:p-3" style={{ color: 'var(--text-secondary)' }}>{r.responsableNombre || '-'}</td>
+                      <td className="text-right p-2 sm:p-3" style={{ color: 'var(--text-secondary)' }}>{fmtDate(r.fechaProgramada)}</td>
+                      <td className="text-right p-2 sm:p-3" style={{ color: 'var(--text-secondary)' }}>{fmtDate(r.fechaRealizada)}</td>
+                      <td className="text-center p-2 sm:p-3" style={{ color: r.authFileName ? 'var(--accent-blue)' : 'var(--text-muted)' }}>{r.authFileName ? '📎' : '-'}</td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            )}
           </div>
         )}
 

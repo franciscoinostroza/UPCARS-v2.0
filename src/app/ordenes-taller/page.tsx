@@ -147,32 +147,39 @@ function TallerInner() {
             />
           </div>
         ) : (
-          <div className="space-y-2 animate-fade-up">
-            {records.length === 0 ? <div className="card p-8 text-center"><p className="text-sm" style={{ color: 'var(--text-muted)' }}>Sin registros</p></div>
-            : records.map(r => {
-              const ec = stateColor(r.estado)
-              return (
-                <div key={r.id} onClick={() => { setSelected(r); setEditObs(r.observaciones) }}
-                  className="card p-3 sm:p-4 cursor-pointer transition-all hover:opacity-90 flex items-start gap-3"
-                  style={{ background: 'var(--bg-card)', borderLeft: `4px solid ${ec.text}` }}>
-                  <div className="flex-1 min-w-0">
-                    <div className="flex items-center gap-2 mb-1 flex-wrap">
-                      <h3 className="text-sm font-semibold truncate" style={{ color: 'var(--text)' }}>{r.nombre}</h3>
-                      <span className="text-[10px] font-semibold px-2 py-0.5 rounded" style={{ background: ec.bg, color: ec.text }}>{r.estado || 'Sin estado'}</span>
-                      {r.tipo && <span className="text-[9px] px-1.5 py-0.5 rounded" style={{ background: 'rgba(59,130,246,0.1)', color: '#3b82f6' }}>{r.tipo}</span>}
-                    </div>
-                    <div className="flex flex-wrap gap-x-3 gap-y-1 text-[11px]" style={{ color: 'var(--text-secondary)' }}>
-                      {r.vehiculoNombre && <span>🚗 {r.vehiculoNombre}</span>}
-                      {r.responsableNombre && <span>👤 {r.responsableNombre}</span>}
-                      {r.fechaEntrada && <span>📅 Ent: {fmtDate(r.fechaEntrada)}</span>}
-                      {r.fechaSalida && <span>📅 Sal: {fmtDate(r.fechaSalida)}</span>}
-                      {r.costeTotal != null && <span style={{ color: 'var(--accent-blue)' }}>💰 {r.costeTotal.toLocaleString('es-ES', { style: 'currency', currency: 'EUR' })}</span>}
-                      {r.diasTaller != null && <span>⏱ {r.diasTaller}d</span>}
-                    </div>
-                  </div>
-                </div>
-              )
-            })}
+          <div className="card overflow-x-auto animate-fade-up" style={{ animationDelay: '75ms' }}>
+            {records.length === 0 ? <div className="p-8 text-center"><p className="text-sm" style={{ color: 'var(--text-muted)' }}>Sin registros</p></div>
+            : (
+              <table className="w-full text-xs sm:text-sm">
+                <thead>
+                  <tr style={{ color: 'var(--text-secondary)', borderBottom: '1px solid var(--border)' }}>
+                    <th className="text-left p-2 sm:p-3 font-medium">Orden</th>
+                    <th className="text-left p-2 sm:p-3 font-medium">Vehículo</th>
+                    <th className="text-left p-2 sm:p-3 font-medium">Tipo</th>
+                    <th className="text-left p-2 sm:p-3 font-medium">Estado</th>
+                    <th className="text-left p-2 sm:p-3 font-medium">Mecánico</th>
+                    <th className="text-right p-2 sm:p-3 font-medium">Entrada</th>
+                    <th className="text-right p-2 sm:p-3 font-medium">Salida</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {records.map(r => (
+                    <tr key={r.id} onClick={() => { setSelected(r); setEditObs(r.observaciones) }} style={{ borderBottom: '1px solid var(--border)', cursor: 'pointer' }} className="hover:opacity-80">
+                      <td className="p-2 sm:p-3 font-medium truncate max-w-[120px]" style={{ color: 'var(--text)' }}>{r.nombre}</td>
+                      <td className="p-2 sm:p-3 truncate max-w-[100px]" style={{ color: 'var(--text-secondary)' }}>{r.vehiculoNombre || '-'}</td>
+                      <td className="p-2 sm:p-3" style={{ color: 'var(--text-secondary)' }}>{r.tipo || '-'}</td>
+                      <td className="p-2 sm:p-3"><span className="text-[10px] px-1.5 py-0.5 rounded font-medium" style={{
+                        ...stateColor(r.estado),
+                        whiteSpace: 'nowrap',
+                      }}>{r.estado || 'Sin estado'}</span></td>
+                      <td className="p-2 sm:p-3" style={{ color: 'var(--text-secondary)' }}>{r.responsableNombre || '-'}</td>
+                      <td className="text-right p-2 sm:p-3" style={{ color: 'var(--text-secondary)' }}>{fmtDate(r.fechaEntrada)}</td>
+                      <td className="text-right p-2 sm:p-3" style={{ color: 'var(--text-secondary)' }}>{fmtDate(r.fechaSalida)}</td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            )}
           </div>
         )}
 
