@@ -1,6 +1,7 @@
 'use client'
 
 import { useState, useEffect, useCallback } from 'react'
+import { DndContext, MouseSensor, TouchSensor, useSensor, useSensors, useDroppable, useDraggable } from '@dnd-kit/core'
 import { ThemeProvider, useTheme } from '../dashboard/theme-context'
 import { DarkModeToggle } from '../dashboard/dark-mode'
 import { Skeleton } from '@/components/skeleton'
@@ -51,6 +52,22 @@ function PrepInner() {
 
   const columns = ESTADOS.filter(Boolean).map(est => ({ estado: est, items: records.filter(r => r.estado === est) }))
 
+  const sensors = useSensors(
+    useSensor(MouseSensor, { activationConstraint: { distance: 8 } }),
+    useSensor(TouchSensor, { activationConstraint: { delay: 250, tolerance: 5 } }),
+  )
+
+  function handleDragEnd(event: any) {
+    const { active, over } = event
+    if (!over || active.id === over.id) return
+    const record = records.find(r => r.id === active.id)
+    if (!record) return
+    const newEstado = over.id as string
+    if (newEstado === record.estado) return
+    setRecords(prev => prev.map(r => r.id === record.id ? { ...r, estado: newEstado } : r))
+    fetch(`/api/preparacion/${record.id}`, { method: 'PATCH', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ estado: newEstado }) }).catch(() => {})
+  }
+
   if (loading) {
     return <div style={{ background: 'var(--bg)', minHeight: '100vh' }}>
       <div className="max-w-7xl mx-auto p-3 sm:p-6 lg:p-8">
@@ -83,9 +100,10 @@ function PrepInner() {
         </div>
 
         {vista === 'kanban' ? (
+          <DndContext sensors={sensors} onDragEnd={handleDragEnd}>
           <div className="flex gap-2 overflow-x-auto pb-1 animate-fade-up" style={{ animationDelay: '75ms' }}>
             {columns.map(col => (
-              <div key={col.estado} className="pipeline-column p-2 sm:p-3" style={{ minWidth: 200, flex: 1, maxHeight: '60vh', display: 'flex', flexDirection: 'column' }}>
+              <DroppableColumn key={col.estado} id={col.estado}>
                 <div className="flex items-center gap-1.5 mb-2 shrink-0">
                   <span className="text-xs">{ESTADO_ICONS[col.estado]}</span>
                   <h3 className="text-[10px] font-semibold uppercase tracking-wider" style={{ color: 'var(--text-secondary)' }}>{col.estado}</h3>
@@ -94,19 +112,13 @@ function PrepInner() {
                 <div className="space-y-1.5 overflow-y-auto flex-1">
                   {col.items.length === 0 ? <p className="text-[11px] py-4 text-center" style={{ color: 'var(--text-muted)' }}>Vacío</p>
                   : col.items.map(item => (
-                    <button key={item.id} onClick={() => { setSelected(item); setEditObs(item.observaciones) }} className="vehicle-card w-full text-left p-2 cursor-pointer">
-                      <p className="text-[11px] font-semibold truncate" style={{ color: 'var(--text)' }}>{item.nombre}</p>
-                      <div className="text-[10px] mt-0.5 flex flex-wrap gap-1" style={{ color: 'var(--text-muted)' }}>
-                        {item.vehiculoNombre && <span>🚗 {item.vehiculoNombre}</span>}
-                        {item.tipoLimpieza && <span>🧹 {item.tipoLimpieza}</span>}
-                        {item.horasInvertidas != null && <span>⏱ {item.horasInvertidas}h</span>}
-                      </div>
-                    </button>
+                    <DraggablePrepCard key={item.id} item={item} onClick={() => { setSelected(item); setEditObs(item.observaciones) }} />
                   ))}
                 </div>
-              </div>
+              </DroppableColumn>
             ))}
           </div>
+          </DndContext>
         ) : (
           <div className="card overflow-x-auto animate-fade-up" style={{ animationDelay: '75ms' }}>
             {records.length === 0 ? <div className="p-8 text-center"><p className="text-sm" style={{ color: 'var(--text-muted)' }}>Sin registros</p></div> : (
@@ -311,6 +323,33 @@ function PrepInner() {
 }
 
 const selectSx: React.CSSProperties = { background: 'var(--bg-card)', color: 'var(--text)', border: '1px solid var(--border)', fontSize: 11, padding: '6px 8px', borderRadius: 6, width: '100%', outline: 'none' }
+
+function DroppableColumn({ id, children }: { id: string; children: React.ReactNode }) {
+  const { isOver, setNodeRef } = useDroppable({ id })
+  return (
+    <div ref={setNodeRef} className="pipeline-column p-2 sm:p-3" style={{ minWidth: 200, flex: 1, display: 'flex', flexDirection: 'column', maxHeight: '60vh', outline: isOver ? '2px solid var(--accent-blue)' : 'none', outlineOffset: -2 }}>
+      {children}
+    </div>
+  )
+}
+
+function DraggablePrepCard({ item, onClick }: { item: PrepItem; onClick: () => void }) {
+  const { attributes, listeners, setNodeRef, transform, isDragging } = useDraggable({ id: item.id })
+  const style = transform ? { transform: `translate(${transform.x}px, ${transform.y}px)`, zIndex: 999, opacity: 0.8 } : {}
+  return (
+    <button ref={setNodeRef} style={style} {...attributes} {...listeners}
+      onClick={onClick}
+      className="vehicle-card w-full text-left cursor-grab active:cursor-grabbing transition-shadow duration-150 touch-none"
+    >
+      <p className="text-[11px] font-semibold truncate" style={{ color: 'var(--text)' }}>{item.nombre}</p>
+      <div className="text-[10px] mt-0.5 flex flex-wrap gap-1" style={{ color: 'var(--text-muted)' }}>
+        {item.vehiculoNombre && <span>🚗 {item.vehiculoNombre}</span>}
+        {item.tipoLimpieza && <span>🧹 {item.tipoLimpieza}</span>}
+        {item.horasInvertidas != null && <span>⏱ {item.horasInvertidas}h</span>}
+      </div>
+    </button>
+  )
+}
 
 export default function PrepPage() {
   return <ThemeProvider><PrepInner /></ThemeProvider>
