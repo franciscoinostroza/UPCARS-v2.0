@@ -1,10 +1,12 @@
 'use client'
 
 import { useState, useEffect } from 'react'
+import { ThemeProvider, useTheme } from '../../dashboard/theme-context'
 import { stateColor, priorityColor } from '@/lib/colors'
 import { fmtDate } from '@/lib/dates'
 
-export default function TasacionesWidget() {
+function WidgetInner() {
+  const { dark } = useTheme()
   const [records, setRecords] = useState<any[]>([])
   const [loading, setLoading] = useState(true)
 
@@ -24,16 +26,7 @@ export default function TasacionesWidget() {
     .slice(0, 5)
 
   return (
-    <div style={{ background: 'var(--bg)', minHeight: '100vh', padding: 16, fontFamily: 'system-ui, sans-serif' }}>
-      <style>{`
-        :root { --bg: #f8f9fa; --bg-card: #fff; --bg-pill: #f1f3f5; --text: #1a1a2e; --text-secondary: #6c757d; --text-muted: #adb5bd; --border: #e9ecef; --accent-blue: #3b82f6; --accent-emerald: #22c55e; --error: #ef4444; }
-        @media (prefers-color-scheme: dark) {
-          :root { --bg: #0f0f23; --bg-card: #1a1a2e; --bg-pill: #16213e; --text: #e4e4e7; --text-secondary: #a1a1aa; --text-muted: #71717a; --border: #27272a; --accent-blue: #60a5fa; --accent-emerald: #4ade80; --error: #f87171; }
-        }
-        * { margin: 0; padding: 0; box-sizing: border-box; }
-        body { background: var(--bg); }
-      `}</style>
-
+    <div style={{ background: 'var(--bg)', minHeight: '100vh', padding: 16 }}>
       <div style={{ maxWidth: 480, margin: '0 auto' }}>
         <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 12 }}>
           <span style={{ fontSize: 16 }}>📋</span>
@@ -89,5 +82,13 @@ export default function TasacionesWidget() {
         )}
       </div>
     </div>
+  )
+}
+
+export default function TasacionesWidgetPage() {
+  return (
+    <ThemeProvider>
+      <WidgetInner />
+    </ThemeProvider>
   )
 }
