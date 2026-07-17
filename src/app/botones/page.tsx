@@ -659,25 +659,13 @@ function TaskForm({ vehicles, employees, onSuccess, onError }: { vehicles: Vehic
         <Select label="Área de negocio" value={areaNegocio} onChange={setAreaNegocio}
           options={[{ value: '', label: 'Seleccionar...' }, ...AREAS_NEGOCIO.map(a => ({ value: a, label: a }))]}
         />
-        <div>
-          <label className="block text-xs font-medium mb-1" style={{ color: 'var(--text-secondary)' }}>Fecha límite</label>
-          <input type="date" value={deadline} onChange={e => setDeadline(e.target.value)}
-            className="w-full text-sm px-3 py-2 rounded outline-none"
-            style={{ background: 'var(--bg)', color: 'var(--text)', border: '1px solid var(--border)' }}
-          />
-        </div>
+        <Input label="Fecha límite" value={deadline} onChange={setDeadline} type="date" />
       </div>
       <Select label="Responsable" value={responsableId} onChange={setResponsableId}
         options={[{ value: '', label: 'Seleccionar...' }, ...employees.map(e => ({ value: e.id, label: e.name }))]}
       />
       <VehicleAutocomplete vehicles={vehicles} value={vehicleId} onChange={setVehicleId} label="Vehículo" placeholder="Buscar vehículo..." />
-      <div>
-        <label className="block text-xs font-medium mb-1" style={{ color: 'var(--text-secondary)' }}>Descripción</label>
-        <textarea value={descripcion} onChange={e => setDescripcion(e.target.value)} rows={3}
-          className="w-full text-sm px-3 py-2 rounded outline-none resize-none"
-          style={{ background: 'var(--bg)', color: 'var(--text)', border: '1px solid var(--border)' }}
-        />
-      </div>
+      <Input label="Descripción" value={descripcion} onChange={setDescripcion} textarea />
       <button
         type="submit"
         disabled={saving || !name.trim() || !area}
