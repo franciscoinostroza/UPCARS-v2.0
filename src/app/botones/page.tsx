@@ -4,6 +4,7 @@ import { useState, useEffect, useCallback } from 'react'
 import { ThemeProvider, useTheme } from '../dashboard/theme-context'
 import { DarkModeToggle } from '../dashboard/dark-mode'
 import { Skeleton } from '@/components/skeleton'
+import VehicleAutocomplete from '@/components/vehicle-autocomplete'
 
 function vehLabel(v: any): string {
   return v.matricula ? v.matricula + ' - ' + v.brand + ' ' + v.model + ' (' + (v.year || '—') + ')' : v.name
@@ -386,10 +387,8 @@ function MoverVehiculoForm({ vehicles, onSuccess, onError }: { vehicles: Vehicle
 
   return (
     <form onSubmit={handleSubmit} className="space-y-3">
-      <Select
-        label="Vehículo" value={vehicleId} onChange={(v) => { setVehicleId(v); setToState('') }}
-        options={vehicles.map((v) => ({ value: v.id, label: vehLabel(v) + ' — ' + (STATE_LABELS[v.state] || v.state) }))}
-      />
+      <VehicleAutocomplete vehicles={vehicles} value={vehicleId} onChange={(v) => { setVehicleId(v); setToState('') }}
+        label="Vehículo" placeholder="Buscar vehículo..." />
       {vehicle && (
         <div className="text-xs px-2 py-1.5 rounded" style={{ background: 'var(--bg-pill)', color: 'var(--text-secondary)' }}>
           Estado actual: <strong style={{ color: 'var(--text)' }}>{STATE_LABELS[vehicle.state] || vehicle.state}</strong>
@@ -445,7 +444,7 @@ function AsignarForm({ vehicles, employees, onSuccess, onError }: { vehicles: Ve
   const vehOpts = vehicles.map(function(v: any) { return { value: v.id, label: vehLabel(v) } })
   return (
     <form onSubmit={handleSubmit} className="space-y-3">
-      <Select label="Vehículo" value={vehicleId} onChange={setVehicleId} options={vehOpts} />
+      <VehicleAutocomplete vehicles={vehicles} value={vehicleId} onChange={setVehicleId} label="Vehículo" placeholder="Buscar vehículo..." />
       <Select label="Responsable" value={employeeId} onChange={setEmployeeId}
         options={employees.map((e: any) => ({ value: e.id, label: e.name }))}
       />
@@ -509,9 +508,7 @@ function OrdenForm({ vehicles, employees, onSuccess, onError }: { vehicles: Vehi
           { value: 'Logistica', label: '📦 Logística' },
         ]}
       />
-      <Select label="Vehículo *" value={vehicleId} onChange={setVehicleId}
-        options={vehicles.map(v => ({ value: v.id, label: vehLabel(v) }))}
-      />
+      <VehicleAutocomplete vehicles={vehicles} value={vehicleId} onChange={setVehicleId} label="Vehículo *" required placeholder="Buscar vehículo..." />
       {vehicleId && (
         <div className="text-xs px-2 py-1.5 rounded" style={{ background: 'var(--bg-pill)', color: 'var(--text-secondary)' }}>
           Estado actual: <strong style={{ color: 'var(--text)' }}>Listo para venta</strong>
@@ -573,9 +570,7 @@ function VenderForm({ vehicles, onSuccess, onError }: { vehicles: VehicleItem[];
           No hay vehículos en "Listo para venta".
         </p>
       ) : (
-        <Select label="Vehículo" value={vehicleId} onChange={setVehicleId}
-          options={listos.map((v) => ({ value: v.id, label: vehLabel(v) }))}
-        />
+        <VehicleAutocomplete vehicles={listos} value={vehicleId} onChange={setVehicleId} label="Vehículo" placeholder="Buscar vehículo..." />
       )}
       <button type="submit" disabled={saving || !vehicleId || listos.length === 0}
         className="w-full text-sm font-semibold py-2.5 rounded min-h-[44px] transition-opacity disabled:opacity-40"
@@ -675,9 +670,7 @@ function TaskForm({ vehicles, employees, onSuccess, onError }: { vehicles: Vehic
       <Select label="Responsable" value={responsableId} onChange={setResponsableId}
         options={[{ value: '', label: 'Seleccionar...' }, ...employees.map(e => ({ value: e.id, label: e.name }))]}
       />
-      <Select label="Vehículo" value={vehicleId} onChange={setVehicleId}
-        options={[{ value: '', label: 'Seleccionar...' }, ...vehicles.map(v => ({ value: v.id, label: vehLabel(v) }))]}
-      />
+      <VehicleAutocomplete vehicles={vehicles} value={vehicleId} onChange={setVehicleId} label="Vehículo" placeholder="Buscar vehículo..." />
       <div>
         <label className="block text-xs font-medium mb-1" style={{ color: 'var(--text-secondary)' }}>Descripción</label>
         <textarea value={descripcion} onChange={e => setDescripcion(e.target.value)} rows={3}

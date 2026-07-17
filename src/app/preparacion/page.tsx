@@ -7,6 +7,7 @@ import { DarkModeToggle } from '../dashboard/dark-mode'
 import { Skeleton } from '@/components/skeleton'
 import { fmtDate } from '@/lib/dates'
 import { stateColor } from '@/lib/colors'
+import VehicleAutocomplete from '@/components/vehicle-autocomplete'
 
 interface PrepItem {
   id: string; nombre: string; vehiculoId: string | null; vehiculoNombre: string | null
@@ -28,6 +29,7 @@ function PrepInner() {
   const [selected, setSelected] = useState<PrepItem | null>(null)
   const [editObs, setEditObs] = useState('')
   const [showCreate, setShowCreate] = useState(false)
+  const [vehiculoId, setVehiculoId] = useState('')
   const [employees, setEmployees] = useState<{ id: string; name: string }[]>([])
   const [vehicles, setVehicles] = useState<{ id: string; name: string; matricula?: string; brand?: string; model?: string; year?: string }[]>([])
 
@@ -254,7 +256,7 @@ function PrepInner() {
                   headers: { 'Content-Type': 'application/json' },
                   body: JSON.stringify({
                     nombre: fd.get('nombre'),
-                    vehiculoId: fd.get('vehiculoId') || undefined,
+                    vehiculoId: vehiculoId || undefined,
                     estado: fd.get('estado') || 'Pendiente',
                     preparadorId: fd.get('preparadorId') || undefined,
                     tipoLimpieza: fd.get('tipoLimpieza') || undefined,
@@ -265,6 +267,7 @@ function PrepInner() {
                   }),
                 })
                 setShowCreate(false)
+                setVehiculoId('')
                 fetchData()
               }} className="space-y-3">
                 <div>
@@ -273,10 +276,7 @@ function PrepInner() {
                 </div>
                 <div>
                   <p className="text-[10px] font-medium mb-0.5" style={{ color: 'var(--text-muted)' }}>Vehículo</p>
-                  <select name="vehiculoId" style={selectSx}>
-                    <option value="">Sin vehículo</option>
-                    {vehicles.map(v => <option key={v.id} value={v.id}>{v.name}</option>)}
-                  </select>
+                  <VehicleAutocomplete vehicles={vehicles} value={vehiculoId} onChange={setVehiculoId} placeholder="Buscar vehículo..." />
                 </div>
                 <div>
                   <p className="text-[10px] font-medium mb-0.5" style={{ color: 'var(--text-muted)' }}>Estado</p>

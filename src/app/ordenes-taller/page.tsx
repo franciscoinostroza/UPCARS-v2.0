@@ -8,6 +8,7 @@ import { Skeleton } from '@/components/skeleton'
 import CalendarView from '@/components/calendar-view'
 import { fmtDate } from '@/lib/dates'
 import { stateColor } from '@/lib/colors'
+import VehicleAutocomplete from '@/components/vehicle-autocomplete'
 
 interface TallerItem {
   id: string
@@ -261,10 +262,7 @@ function TallerInner() {
               <div className="space-y-3">
                 <div>
                   <p className="text-[10px] font-medium mb-0.5" style={{ color: 'var(--text-muted)' }}>Vehículo *</p>
-                  <select value={createData.vehicleId} onChange={e => setCreateData(p => ({ ...p, vehicleId: e.target.value }))} required style={selectSx}>
-                    <option value="">Seleccionar vehículo</option>
-                    {vehicles.map(v => <option key={v.id} value={v.id}>{v.matricula || v.name} - {v.brand} {v.model}</option>)}
-                  </select>
+                  <VehicleAutocomplete vehicles={vehicles} value={createData.vehicleId} onChange={(id) => setCreateData(p => ({ ...p, vehicleId: id }))} required placeholder="Buscar vehículo..." />
                 </div>
                 <div>
                   <p className="text-[10px] font-medium mb-0.5" style={{ color: 'var(--text-muted)' }}>Mecánico</p>

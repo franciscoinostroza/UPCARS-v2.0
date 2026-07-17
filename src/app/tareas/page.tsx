@@ -4,6 +4,7 @@ import { useState, useEffect, useCallback } from 'react'
 import { ThemeProvider, useTheme } from '../dashboard/theme-context'
 import { DarkModeToggle } from '../dashboard/dark-mode'
 import { Skeleton } from '@/components/skeleton'
+import VehicleAutocomplete from '@/components/vehicle-autocomplete'
 
 function vehLabel(v: any): string {
   return v.matricula ? v.matricula + ' - ' + v.brand + ' ' + v.model + ' (' + (v.year || '—') + ')' : v.name
@@ -373,10 +374,7 @@ function CreateTaskModal({ employees, vehicles, onClose, onCreate }: {
             </div>
             <div>
               <p className="text-[10px] font-medium mb-0.5" style={{ color: 'var(--text-muted)' }}>Vehículo</p>
-              <select value={vehicleId} onChange={e => setVehicleId(e.target.value)} style={selectStyle}>
-                <option value="">Sin vehículo</option>
-                {vehicles.map(v => <option key={v.id} value={v.id}>{vehLabel(v)}</option>)}
-              </select>
+              <VehicleAutocomplete vehicles={vehicles} value={vehicleId} onChange={setVehicleId} placeholder="Buscar vehículo..." />
             </div>
           </div>
           <div>

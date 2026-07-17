@@ -8,6 +8,7 @@ import { Skeleton } from '@/components/skeleton'
 import { fmtDate } from '@/lib/dates'
 import { stateColor, priorityColor } from '@/lib/colors'
 import CalendarView from '@/components/calendar-view'
+import VehicleAutocomplete from '@/components/vehicle-autocomplete'
 
 function vehLabel(v: any): string {
   return v.matricula ? v.matricula + ' - ' + v.brand + ' ' + v.model + ' (' + (v.year || '—') + ')' : v.name
@@ -383,10 +384,7 @@ function EditModal({ item, editData, setEditData, employees, vehicles, onSave, o
           </div>
           <div>
             <p className="text-[10px] font-medium mb-0.5" style={{ color: 'var(--text-muted)' }}>Vehículo</p>
-            <select value={editData.vehiculoId} onChange={e => setEditData({...editData, vehiculoId: e.target.value})} style={selectSx}>
-              <option value="">Sin vehículo</option>
-              {vehicles.map((v: any) => <option key={v.id} value={v.id}>{vehLabel(v)}</option>)}
-            </select>
+            <VehicleAutocomplete vehicles={vehicles} value={editData.vehiculoId || ''} onChange={(id) => setEditData({...editData, vehiculoId: id})} placeholder="Buscar vehículo..." />
           </div>
           <div>
             <p className="text-[10px] font-medium mb-0.5" style={{ color: 'var(--text-muted)' }}>Observaciones</p>
@@ -477,10 +475,7 @@ function CreateModal({ employees, vehicles, onCreate, onClose, onRefresh }: { em
             </div>
             <div>
               <p className="text-[10px] font-medium mb-0.5" style={{ color: 'var(--text-muted)' }}>Vehículo</p>
-              <select value={vehId} onChange={e => setVehId(e.target.value)} style={selectSx}>
-                <option value="">Sin vehículo</option>
-                {vehicles.map((v: any) => <option key={v.id} value={v.id}>{vehLabel(v)}</option>)}
-              </select>
+              <VehicleAutocomplete vehicles={vehicles} value={vehId} onChange={setVehId} placeholder="Buscar vehículo..." />
             </div>
           </div>
           <div>

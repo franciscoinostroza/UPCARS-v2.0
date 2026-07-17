@@ -5,6 +5,7 @@ import { ThemeProvider, useTheme } from '../dashboard/theme-context'
 import { DarkModeToggle } from '../dashboard/dark-mode'
 import { Skeleton } from '@/components/skeleton'
 import { fmtDate } from '@/lib/dates'
+import VehicleAutocomplete from '@/components/vehicle-autocomplete'
 
 interface VentaAdminItem {
   id: string; nombre: string; vehiculoId: string | null; vehiculoNombre: string | null
@@ -259,10 +260,7 @@ function VentasAdminInner() {
               <div className="space-y-3">
                 <div>
                   <p className="text-[10px] font-medium mb-0.5" style={{ color: 'var(--text-muted)' }}>Vehículo *</p>
-                  <select value={createData.vehiculoId} onChange={e => setCreateData(p => ({ ...p, vehiculoId: e.target.value }))} required style={selectSx}>
-                    <option value="">Seleccionar vehículo</option>
-                    {vehicles.map(v => <option key={v.id} value={v.id}>{v.matricula || v.name} - {v.brand} {v.model}</option>)}
-                  </select>
+                  <VehicleAutocomplete vehicles={vehicles} value={createData.vehiculoId} onChange={(id) => setCreateData(p => ({ ...p, vehiculoId: id }))} required placeholder="Buscar vehículo..." />
                 </div>
                 <div>
                   <p className="text-[10px] font-medium mb-0.5" style={{ color: 'var(--text-muted)' }}>Fecha de venta *</p>
