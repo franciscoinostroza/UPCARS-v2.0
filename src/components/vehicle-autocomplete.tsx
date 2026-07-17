@@ -12,7 +12,7 @@ interface VehicleAutocompleteProps {
   vehicles: { id: string; name: string; matricula?: string; brand?: string; model?: string; year?: string | number }[]
   value: string
   onChange: (id: string) => void
-  label: string
+  label?: string
   placeholder?: string
   required?: boolean
   error?: string
@@ -92,7 +92,7 @@ export default function VehicleAutocomplete({
 
   return (
     <div ref={containerRef} style={{ position: 'relative' }}>
-      <p className="text-[10px] font-medium mb-0.5" style={{ color: error ? '#ef4444' : 'var(--text-muted)' }}>{label}</p>
+      {label && <p className="text-[10px] font-medium mb-0.5" style={{ color: error ? '#ef4444' : 'var(--text-muted)' }}>{label}</p>}
       <input
         ref={inputRef}
         type="text"
