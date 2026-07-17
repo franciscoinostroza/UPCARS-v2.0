@@ -9,7 +9,7 @@ function vehLabel(v: any): string {
 }
 
 interface VehicleAutocompleteProps {
-  vehicles: { id: string; name: string; matricula?: string; brand?: string; model?: string; year?: string }[]
+  vehicles: { id: string; name: string; matricula?: string; brand?: string; model?: string; year?: string | number }[]
   value: string
   onChange: (id: string) => void
   label: string
