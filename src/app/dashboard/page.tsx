@@ -232,7 +232,7 @@ function DashboardInner() {
 
         {/* SLA + Bottlenecks + Alerts */}
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-3 sm:gap-4">
-          <div className="card p-3 sm:p-5 animate-fade-up" style={{ animationDelay: '200ms' }}>
+          <div className="card p-3 sm:p-5 rounded-xl animate-fade-up" style={{ animationDelay: '200ms', background: 'var(--bg-card)' }}>
             <h2 className="text-[11px] font-semibold uppercase tracking-wider mb-3 sm:mb-4" style={{ color: 'var(--text-secondary)' }}>
               Cumplimiento de SLA
             </h2>
@@ -270,7 +270,7 @@ function DashboardInner() {
             </div>
           </div>
 
-          <div className="card p-3 sm:p-5 animate-fade-up" style={{ animationDelay: '225ms' }}>
+          <div className="card p-3 sm:p-5 rounded-xl animate-fade-up" style={{ animationDelay: '225ms', background: 'var(--bg-card)' }}>
             <h2 className="text-[11px] font-semibold uppercase tracking-wider mb-3 sm:mb-4" style={{ color: 'var(--text-secondary)' }}>
               Cuellos de botella
             </h2>
@@ -301,13 +301,13 @@ function DashboardInner() {
             )}
           </div>
 
-          <div className="card p-3 sm:p-5 animate-fade-up" style={{ animationDelay: '250ms' }}>
+          <div className="card p-3 sm:p-5 rounded-xl animate-fade-up" style={{ animationDelay: '250ms', background: 'var(--bg-card)' }}>
             <div className="flex items-center justify-between mb-3 sm:mb-4">
               <h2 className="text-[11px] font-semibold uppercase tracking-wider" style={{ color: 'var(--text-secondary)' }}>
                 Alertas activas
               </h2>
               {alerts.length > 0 && (
-                <span className="pill" style={{ background: 'rgba(235, 87, 87, 0.1)', color: 'var(--accent-red)' }}>
+                <span className="text-[10px] font-semibold px-2 py-0.5 rounded" style={{ background: 'rgba(235, 87, 87, 0.12)', color: '#ef4444' }}>
                   {alerts.length}
                 </span>
               )}
@@ -320,8 +320,10 @@ function DashboardInner() {
               </div>
             ) : (
               <div className="space-y-1.5 max-h-48 sm:max-h-64 overflow-y-auto pr-1">
-                {alerts.map((alert) => (
-                  <div key={alert.id} className="vehicle-card flex items-start gap-2 min-h-[44px]">
+                {alerts.map((alert) => {
+                  const alertColor = alert.type.startsWith('stuck_in') ? '#ef4444' : alert.type === 'sla_violation' ? '#eab308' : alert.type === 'task_overdue' ? '#ef4444' : '#3b82f6'
+                  return (
+                  <div key={alert.id} className="flex items-start gap-2 min-h-[44px] p-2 rounded-lg" style={{ background: 'var(--bg-card)', borderLeft: `3px solid ${alertColor}` }}>
                     <span className="mt-0.5">{getAlertIcon(alert.type)}</span>
                     <div className="min-w-0 flex-1">
                       <p className="text-xs sm:text-sm font-medium truncate" style={{ color: 'var(--text)' }}>
@@ -340,7 +342,7 @@ function DashboardInner() {
                       {resolvingId === alert.id ? '...' : '✓'}
                     </button>
                   </div>
-                ))}
+                )})}
               </div>
             )}
           </div>
