@@ -13,7 +13,12 @@ interface DBEntry {
   category: 'Operaciones' | 'Movimiento' | 'Gestión'
 }
 
-const DB_META: Record<string, { name: string; icon: string; desc: string; category: DBEntry['category']; viewId?: string; pageId?: string }> = {
+type DBMetaEntry = {
+  name: string; icon: string; desc: string; category: DBEntry['category']
+  viewId?: string; pageId?: string; customUrl?: string
+}
+
+const DB_META: Record<string, DBMetaEntry> = {
   vehicles: { name: 'Vehículos', icon: '🚗', desc: 'Base principal de vehículos', category: 'Operaciones', viewId: '36cf70f8470180d9beae000c38931b70' },
   workshop: { name: 'Taller', icon: '🔧', desc: 'Órdenes de taller mecánico', category: 'Operaciones', pageId: '398f70f84701807ca12ad6a08c83be03' },
   chapa: { name: 'Chapa y Pintura', icon: '🎨', desc: 'Trabajos de chapa y pintura', category: 'Operaciones', pageId: '398f70f847018062adabf1b015444a94' },
@@ -31,7 +36,7 @@ const DB_META: Record<string, { name: string; icon: string; desc: string; catego
   operaciones_financiadas: { name: 'Op. Financiadas', icon: '💳', desc: 'Operaciones con financiación', category: 'Gestión' },
   finanzas: { name: 'Finanzas', icon: '📊', desc: 'Control financiero', category: 'Gestión' },
   buzon_mejora: { name: 'Buzón Mejoras', icon: '💡', desc: 'Propuestas de mejora', category: 'Gestión' },
-  tasaciones: { name: 'Tasaciones', icon: '📋', desc: 'Tasaciones y clientes externos', category: 'Operaciones' },
+  tasaciones: { name: 'Tasaciones', icon: '📋', desc: 'Tasaciones y clientes externos', category: 'Operaciones', customUrl: 'https://upcars.pixelarch.dev/tasaciones' },
 }
 
 const ENV_KEYS: Record<string, string> = {
@@ -59,6 +64,14 @@ export async function GET() {
   const dbs: DBEntry[] = []
 
   for (const [key, meta] of Object.entries(DB_META)) {
+    if (meta.customUrl) {
+      dbs.push({
+        key, name: meta.name, icon: meta.icon, desc: meta.desc,
+        url: meta.customUrl, webUrl: meta.customUrl, category: meta.category,
+      })
+      continue
+    }
+
     const envKey = ENV_KEYS[key]
     let id = process.env[envKey]
 
