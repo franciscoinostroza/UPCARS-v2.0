@@ -476,7 +476,7 @@ function OrdenForm({ vehicles, employees, onSuccess, onError }: { vehicles: Vehi
     if (!vehicleId || !type) return
     setSaving(true)
     try {
-      const res = await fetch('/api/workshop-orders', {
+      const res = await fetch('/api/workshop/create', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
@@ -501,7 +501,15 @@ function OrdenForm({ vehicles, employees, onSuccess, onError }: { vehicles: Vehi
 
   return (
     <form onSubmit={handleSubmit} className="space-y-3">
-      <Select label="Vehículo" value={vehicleId} onChange={setVehicleId}
+      <Select label="Tipo de orden *" value={type} onChange={setType}
+        options={[
+          { value: 'Taller', label: '🔧 Taller' },
+          { value: 'Chapa', label: '🔩 Chapa y Pintura' },
+          { value: 'Preparacion', label: '🧹 Preparación' },
+          { value: 'Logistica', label: '📦 Logística' },
+        ]}
+      />
+      <Select label="Vehículo *" value={vehicleId} onChange={setVehicleId}
         options={vehicles.map(v => ({ value: v.id, label: vehLabel(v) }))}
       />
       {vehicleId && (
@@ -509,13 +517,23 @@ function OrdenForm({ vehicles, employees, onSuccess, onError }: { vehicles: Vehi
           Estado actual: <strong style={{ color: 'var(--text)' }}>Listo para venta</strong>
         </div>
       )}
+      <Select label="Tipo de trabajo" value={tipoTrabajo} onChange={setTipoTrabajo}
+        options={[{ value: '', label: 'Sin tipo' }, ...TIPOS_TRABAJO.map(t => ({ value: t, label: t }))]}
+      />
+      <Select label="Mecánico asignado" value={mecanicoId} onChange={setMecanicoId}
+        options={[{ value: '', label: 'Sin asignar' }, ...employees.map(e => ({ value: e.id, label: e.name }))]}
+      />
+      <Input label="Fecha entrada" type="date" value={fechaEntrada} onChange={setFechaEntrada} />
+      <Input label="Coste materiales (€)" type="number" value={costeMateriales} onChange={setCosteMateriales} step="0.01" />
+      <Input label="Coste mano de obra (€)" type="number" value={costeManoObra} onChange={setCosteManoObra} step="0.01" />
+      <Input label="Observaciones" value={notes} onChange={setNotes} textarea />
       <button
         type="submit"
-        disabled={saving || !vehicleId}
+        disabled={saving || !vehicleId || !type}
         className="w-full text-sm font-semibold py-2.5 rounded min-h-[44px] transition-opacity disabled:opacity-40"
         style={{ background: 'var(--accent-blue)', color: '#fff' }}
       >
-        {saving ? 'Marcando...' : '🏷️ Marcar como Vendido'}
+        {saving ? 'Creando...' : '🔧 Crear orden'}
       </button>
     </form>
   )
@@ -681,8 +699,8 @@ function TaskForm({ vehicles, employees, onSuccess, onError }: { vehicles: Vehic
 
 /* ─── UI helpers ─── */
 
-function Input({ label, value, onChange, required, type, inputMode, textarea }: {
-  label: string; value: string; onChange: (v: string) => void; required?: boolean; type?: string; inputMode?: string; textarea?: boolean
+function Input({ label, value, onChange, required, type, inputMode, textarea, step }: {
+  label: string; value: string; onChange: (v: string) => void; required?: boolean; type?: string; inputMode?: string; textarea?: boolean; step?: string
 }) {
   if (textarea) {
     return (
@@ -707,6 +725,7 @@ function Input({ label, value, onChange, required, type, inputMode, textarea }: 
         value={value}
         onChange={(e) => onChange(e.target.value)}
         required={required}
+        step={step}
         className="w-full text-sm px-3 py-2 rounded outline-none"
         style={{ background: 'var(--bg)', color: 'var(--text)', border: '1px solid var(--border)' }}
       />
