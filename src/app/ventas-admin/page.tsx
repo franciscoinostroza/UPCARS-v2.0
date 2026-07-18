@@ -6,6 +6,7 @@ import { DarkModeToggle } from '../dashboard/dark-mode'
 import { Skeleton } from '@/components/skeleton'
 import { fmtDate } from '@/lib/dates'
 import VehicleAutocomplete from '@/components/vehicle-autocomplete'
+import SearchableSelect from '@/components/searchable-select'
 
 interface VentaAdminItem {
   id: string; nombre: string; vehiculoId: string | null; vehiculoNombre: string | null
@@ -272,10 +273,7 @@ function VentasAdminInner() {
                 </div>
                 <div>
                   <p className="text-[10px] font-medium mb-0.5" style={{ color: 'var(--text-muted)' }}>Vendedor</p>
-                  <select value={createData.vendedorId} onChange={e => setCreateData(p => ({ ...p, vendedorId: e.target.value }))} style={selectSx}>
-                    <option value="">Sin asignar</option>
-                    {employees.map(e => <option key={e.id} value={e.id}>{e.name}</option>)}
-                  </select>
+                  <SearchableSelect items={employees} value={createData.vendedorId || ''} onChange={(id) => setCreateData(p => ({ ...p, vendedorId: id }))} placeholder="Buscar empleado..." displayFn={(e: any) => e.name} />
                 </div>
                 <div>
                   <p className="text-[10px] font-medium mb-0.5" style={{ color: 'var(--text-muted)' }}>Nombre del cliente</p>

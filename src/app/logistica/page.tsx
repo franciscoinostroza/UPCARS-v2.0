@@ -9,6 +9,7 @@ import { fmtDate } from '@/lib/dates'
 import { stateColor, priorityColor } from '@/lib/colors'
 import CalendarView from '@/components/calendar-view'
 import VehicleAutocomplete from '@/components/vehicle-autocomplete'
+import SearchableSelect from '@/components/searchable-select'
 
 function vehLabel(v: any): string {
   return v.matricula ? v.matricula + ' - ' + v.brand + ' ' + v.model + ' (' + (v.year || '—') + ')' : v.name
@@ -377,10 +378,7 @@ function EditModal({ item, editData, setEditData, employees, vehicles, onSave, o
           </div>
           <div>
             <p className="text-[10px] font-medium mb-0.5" style={{ color: 'var(--text-muted)' }}>Responsable</p>
-            <select value={editData.responsableId} onChange={e => setEditData({...editData, responsableId: e.target.value})} style={selectSx}>
-              <option value="">Sin responsable</option>
-              {employees.map((e: any) => <option key={e.id} value={e.id}>{e.name}</option>)}
-            </select>
+            <SearchableSelect items={employees} value={editData.responsableId || ''} onChange={(id) => setEditData({...editData, responsableId: id})} placeholder="Buscar empleado..." displayFn={(e: any) => e.name} />
           </div>
           <div>
             <p className="text-[10px] font-medium mb-0.5" style={{ color: 'var(--text-muted)' }}>Vehículo</p>
@@ -468,10 +466,7 @@ function CreateModal({ employees, vehicles, onCreate, onClose, onRefresh }: { em
           <div className="grid grid-cols-2 gap-2">
             <div>
               <p className="text-[10px] font-medium mb-0.5" style={{ color: 'var(--text-muted)' }}>Responsable</p>
-              <select value={respId} onChange={e => setRespId(e.target.value)} style={selectSx}>
-                <option value="">Sin responsable</option>
-                {employees.map((e: any) => <option key={e.id} value={e.id}>{e.name}</option>)}
-              </select>
+              <SearchableSelect items={employees} value={respId} onChange={setRespId} placeholder="Buscar empleado..." displayFn={(e: any) => e.name} />
             </div>
             <div>
               <p className="text-[10px] font-medium mb-0.5" style={{ color: 'var(--text-muted)' }}>Vehículo</p>

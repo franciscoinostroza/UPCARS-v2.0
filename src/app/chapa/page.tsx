@@ -8,6 +8,7 @@ import { Skeleton } from '@/components/skeleton'
 import { fmtDate } from '@/lib/dates'
 import { stateColor } from '@/lib/colors'
 import VehicleAutocomplete from '@/components/vehicle-autocomplete'
+import SearchableSelect from '@/components/searchable-select'
 
 interface ChapaItem {
   id: string; matricula: string; vehiculoId: string | null; vehiculoNombre: string | null
@@ -261,10 +262,7 @@ function ChapaInner() {
                 </div>
                 <div>
                   <p className="text-[10px] font-medium mb-0.5" style={{ color: 'var(--text-muted)' }}>Proveedor externo</p>
-                  <select value={createData.proveedorId} onChange={e => setCreateData(p => ({ ...p, proveedorId: e.target.value }))} style={selectSx}>
-                    <option value="">Sin proveedor</option>
-                    {providers.map(p => <option key={p.id} value={p.id}>{p.name}</option>)}
-                  </select>
+                  <SearchableSelect items={providers} value={createData.proveedorId || ''} onChange={(id) => setCreateData(p => ({ ...p, proveedorId: id }))} placeholder="Buscar proveedor..." displayFn={(p: any) => p.name} />
                 </div>
                 <div>
                   <p className="text-[10px] font-medium mb-0.5" style={{ color: 'var(--text-muted)' }}>Coste total (€)</p>

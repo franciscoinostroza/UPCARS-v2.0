@@ -5,6 +5,7 @@ import { ThemeProvider, useTheme } from '../dashboard/theme-context'
 import { DarkModeToggle } from '../dashboard/dark-mode'
 import { Skeleton } from '@/components/skeleton'
 import VehicleAutocomplete from '@/components/vehicle-autocomplete'
+import SearchableSelect from '@/components/searchable-select'
 
 function vehLabel(v: any): string {
   return v.matricula ? v.matricula + ' - ' + v.brand + ' ' + v.model + ' (' + (v.year || '—') + ')' : v.name
@@ -445,9 +446,7 @@ function AsignarForm({ vehicles, employees, onSuccess, onError }: { vehicles: Ve
   return (
     <form onSubmit={handleSubmit} className="space-y-3">
       <VehicleAutocomplete vehicles={vehicles} value={vehicleId} onChange={setVehicleId} label="Vehículo" placeholder="Buscar vehículo..." />
-      <Select label="Responsable" value={employeeId} onChange={setEmployeeId}
-        options={employees.map((e: any) => ({ value: e.id, label: e.name }))}
-      />
+      <SearchableSelect items={employees} value={employeeId} onChange={setEmployeeId} label="Responsable" placeholder="Buscar empleado..." displayFn={(e) => e.name} />
       <button type="submit" disabled={saving || !vehicleId || !employeeId}
         className="w-full text-sm font-semibold py-2.5 rounded min-h-[44px] transition-opacity disabled:opacity-40"
         style={{ background: 'var(--accent-blue)', color: '#fff' }}>
@@ -661,9 +660,7 @@ function TaskForm({ vehicles, employees, onSuccess, onError }: { vehicles: Vehic
         />
         <Input label="Fecha límite" value={deadline} onChange={setDeadline} type="date" />
       </div>
-      <Select label="Responsable" value={responsableId} onChange={setResponsableId}
-        options={[{ value: '', label: 'Seleccionar...' }, ...employees.map(e => ({ value: e.id, label: e.name }))]}
-      />
+      <SearchableSelect items={employees} value={responsableId} onChange={setResponsableId} label="Responsable" placeholder="Buscar empleado..." displayFn={(e) => e.name} />
       <VehicleAutocomplete vehicles={vehicles} value={vehicleId} onChange={setVehicleId} label="Vehículo" placeholder="Buscar vehículo..." />
       <Input label="Descripción" value={descripcion} onChange={setDescripcion} textarea />
       <button

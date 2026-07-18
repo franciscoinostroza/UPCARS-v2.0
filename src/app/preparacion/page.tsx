@@ -8,6 +8,7 @@ import { Skeleton } from '@/components/skeleton'
 import { fmtDate } from '@/lib/dates'
 import { stateColor } from '@/lib/colors'
 import VehicleAutocomplete from '@/components/vehicle-autocomplete'
+import SearchableSelect from '@/components/searchable-select'
 
 interface PrepItem {
   id: string; nombre: string; vehiculoId: string | null; vehiculoNombre: string | null
@@ -30,6 +31,7 @@ function PrepInner() {
   const [editObs, setEditObs] = useState('')
   const [showCreate, setShowCreate] = useState(false)
   const [vehiculoId, setVehiculoId] = useState('')
+  const [preparadorId, setPreparadorId] = useState('')
   const [employees, setEmployees] = useState<{ id: string; name: string }[]>([])
   const [vehicles, setVehicles] = useState<{ id: string; name: string; matricula?: string; brand?: string; model?: string; year?: string }[]>([])
 
@@ -258,7 +260,7 @@ function PrepInner() {
                     nombre: fd.get('nombre'),
                     vehiculoId: vehiculoId || undefined,
                     estado: fd.get('estado') || 'Pendiente',
-                    preparadorId: fd.get('preparadorId') || undefined,
+                    preparadorId: preparadorId || undefined,
                     tipoLimpieza: fd.get('tipoLimpieza') || undefined,
                     fechaInicio: fd.get('fechaInicio') || undefined,
                     fechaFin: fd.get('fechaFin') || undefined,
@@ -268,6 +270,7 @@ function PrepInner() {
                 })
                 setShowCreate(false)
                 setVehiculoId('')
+                setPreparadorId('')
                 fetchData()
               }} className="space-y-3">
                 <div>
@@ -297,10 +300,7 @@ function PrepInner() {
                 <div className="grid grid-cols-2 gap-2">
                   <div>
                     <p className="text-[10px] font-medium mb-0.5" style={{ color: 'var(--text-muted)' }}>Preparador</p>
-                    <select name="preparadorId" style={selectSx}>
-                      <option value="">Sin asignar</option>
-                      {employees.map(e => <option key={e.id} value={e.id}>{e.name}</option>)}
-                    </select>
+                    <SearchableSelect items={employees} value={preparadorId} onChange={setPreparadorId} placeholder="Buscar empleado..." displayFn={(e: any) => e.name} />
                   </div>
                   <div>
                     <p className="text-[10px] font-medium mb-0.5" style={{ color: 'var(--text-muted)' }}>Fecha inicio</p>

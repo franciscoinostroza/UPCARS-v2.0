@@ -5,6 +5,7 @@ import { ThemeProvider, useTheme } from '../dashboard/theme-context'
 import { DarkModeToggle } from '../dashboard/dark-mode'
 import { Skeleton } from '@/components/skeleton'
 import VehicleAutocomplete from '@/components/vehicle-autocomplete'
+import SearchableSelect from '@/components/searchable-select'
 
 function vehLabel(v: any): string {
   return v.matricula ? v.matricula + ' - ' + v.brand + ' ' + v.model + ' (' + (v.year || '—') + ')' : v.name
@@ -212,9 +213,7 @@ function TaskDetailModal({ task, employees, onClose, onMove, onArchive, onUpdate
             </div>
             <div>
               <p className="text-[10px] font-medium mb-0.5" style={{ color: 'var(--text-muted)' }}>Responsable</p>
-              <select value={responsableId} onChange={e => setResponsableId(e.target.value)} style={inputStyle}>
-                <option value="">Sin asignar</option>{employees.map(e => <option key={e.id} value={e.id}>{e.name}</option>)}
-              </select>
+              <SearchableSelect items={employees} value={responsableId} onChange={setResponsableId} placeholder="Buscar empleado..." displayFn={(e: any) => e.name} />
             </div>
             <div>
               <p className="text-[10px] font-medium mb-0.5" style={{ color: 'var(--text-muted)' }}>Descripción</p>
@@ -367,10 +366,7 @@ function CreateTaskModal({ employees, vehicles, onClose, onCreate }: {
           <div className="grid grid-cols-2 gap-2">
             <div>
               <p className="text-[10px] font-medium mb-0.5" style={{ color: 'var(--text-muted)' }}>Responsable</p>
-              <select value={responsableId} onChange={e => setResponsableId(e.target.value)} style={selectStyle}>
-                <option value="">Sin asignar</option>
-                {employees.map(e => <option key={e.id} value={e.id}>{e.name}</option>)}
-              </select>
+              <SearchableSelect items={employees} value={responsableId} onChange={setResponsableId} placeholder="Buscar empleado..." displayFn={(e: any) => e.name} />
             </div>
             <div>
               <p className="text-[10px] font-medium mb-0.5" style={{ color: 'var(--text-muted)' }}>Vehículo</p>

@@ -9,6 +9,7 @@ import CalendarView from '@/components/calendar-view'
 import { fmtDate } from '@/lib/dates'
 import { stateColor } from '@/lib/colors'
 import VehicleAutocomplete from '@/components/vehicle-autocomplete'
+import SearchableSelect from '@/components/searchable-select'
 
 interface TallerItem {
   id: string
@@ -266,10 +267,7 @@ function TallerInner() {
                 </div>
                 <div>
                   <p className="text-[10px] font-medium mb-0.5" style={{ color: 'var(--text-muted)' }}>Mecánico</p>
-                  <select value={createData.mecanicoId} onChange={e => setCreateData(p => ({ ...p, mecanicoId: e.target.value }))} style={selectSx}>
-                    <option value="">Sin asignar</option>
-                    {employees.map(e => <option key={e.id} value={e.id}>{e.name}</option>)}
-                  </select>
+                  <SearchableSelect items={employees} value={createData.mecanicoId || ''} onChange={(id) => setCreateData(p => ({ ...p, mecanicoId: id }))} placeholder="Buscar empleado..." displayFn={(e: any) => e.name} />
                 </div>
                 <div>
                   <p className="text-[10px] font-medium mb-0.5" style={{ color: 'var(--text-muted)' }}>Tipo de trabajo</p>
