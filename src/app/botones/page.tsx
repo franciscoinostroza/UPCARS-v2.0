@@ -754,8 +754,8 @@ function TaskForm({ vehicles, employees, onSuccess, onError }: { vehicles: Vehic
 
 /* ─── UI helpers ─── */
 
-function Input({ label, value, onChange, required, type, inputMode, textarea, step }: {
-  label: string; value: string; onChange: (v: string) => void; required?: boolean; type?: string; inputMode?: string; textarea?: boolean; step?: string
+function Input({ label, value, onChange, required, type, inputMode, textarea, step, placeholder }: {
+  label: string; value: string; onChange: (v: string) => void; required?: boolean; type?: string; inputMode?: string; textarea?: boolean; step?: string; placeholder?: string
 }) {
   if (textarea) {
     return (
@@ -764,6 +764,7 @@ function Input({ label, value, onChange, required, type, inputMode, textarea, st
         <textarea
           value={value}
           onChange={(e) => onChange(e.target.value)}
+          placeholder={placeholder}
           rows={3}
           className="w-full text-sm px-3 py-2 rounded outline-none resize-none"
           style={{ background: 'var(--bg)', color: 'var(--text)', border: '1px solid var(--border)' }}
@@ -779,6 +780,7 @@ function Input({ label, value, onChange, required, type, inputMode, textarea, st
         inputMode={(inputMode || 'text') as any}
         value={value}
         onChange={(e) => onChange(e.target.value)}
+        placeholder={placeholder}
         required={required}
         step={step}
         className="w-full text-sm px-3 py-2 rounded outline-none"
