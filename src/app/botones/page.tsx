@@ -457,44 +457,160 @@ function AsignarForm({ vehicles, employees, onSuccess, onError }: { vehicles: Ve
 }
 
 function OrdenForm({ vehicles, employees, onSuccess, onError }: { vehicles: VehicleItem[]; employees: EmployeeItem[]; onSuccess: () => void; onError: (msg: string) => void }) {
-  const [vehicleId, setVehicleId] = useState('')
   const [type, setType] = useState('')
+  const [vehicleId, setVehicleId] = useState('')
+  const [saving, setSaving] = useState(false)
+
+  // Taller
   const [tipoTrabajo, setTipoTrabajo] = useState('')
   const [mecanicoId, setMecanicoId] = useState('')
   const [fechaEntrada, setFechaEntrada] = useState('')
   const [costeMateriales, setCosteMateriales] = useState('')
   const [costeManoObra, setCosteManoObra] = useState('')
   const [notes, setNotes] = useState('')
-  const [saving, setSaving] = useState(false)
+
+  // Chapa
+  const [proveedorId, setProveedorId] = useState('')
+  const [costeTotal, setCosteTotal] = useState('')
+  const [fechaSalida, setFechaSalida] = useState('')
+  const [fechaRetorno, setFechaRetorno] = useState('')
+  const [trabajos, setTrabajos] = useState('')
+
+  // Preparación
+  const [tipoLimpieza, setTipoLimpieza] = useState('')
+  const [preparadorId, setPreparadorId] = useState('')
+  const [fechaInicio, setFechaInicio] = useState('')
+  const [fechaFin, setFechaFin] = useState('')
+  const [fechaEntrega, setFechaEntrega] = useState('')
+  const [obsPrep, setObsPrep] = useState('')
+
+  // Logística
+  const [fechaProgramada, setFechaProgramada] = useState('')
+  const [ubicacion, setUbicacion] = useState('')
+  const [situacionComercial, setSituacionComercial] = useState('')
+  const [prioridad, setPrioridad] = useState('')
+  const [responsableId, setResponsableId] = useState('')
+  const [obsLog, setObsLog] = useState('')
 
   const TIPOS_TRABAJO = ['Revisión general', 'Frenos', 'Motor', 'Electricidad', 'Otro']
+  const TIPOS_LIMPIEZA = ['Entrega cliente', 'Exposición', 'Lavado Taller', 'Repaso - Visita cte.']
+  const SITUACIONES = ['Vendido', 'Exposición', 'Renting']
+  const PRIORIDADES = ['Alta', 'Media', 'Baja']
+
+  function resetAll() {
+    setType(''); setVehicleId(''); setSaving(false)
+    setTipoTrabajo(''); setMecanicoId(''); setFechaEntrada(''); setCosteMateriales(''); setCosteManoObra(''); setNotes('')
+    setProveedorId(''); setCosteTotal(''); setFechaSalida(''); setFechaRetorno(''); setTrabajos('')
+    setTipoLimpieza(''); setPreparadorId(''); setFechaInicio(''); setFechaFin(''); setFechaEntrega(''); setObsPrep('')
+    setFechaProgramada(''); setUbicacion(''); setSituacionComercial(''); setPrioridad(''); setResponsableId(''); setObsLog('')
+  }
 
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault()
-    if (!vehicleId || !type) return
+    if (!type || !vehicleId) return
     setSaving(true)
     try {
-      const res = await fetch('/api/workshop/create', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          type, vehicleId,
-          tipoTrabajo: tipoTrabajo || undefined,
-          mecanicoId: mecanicoId || undefined,
-          fechaEntrada: fechaEntrada || undefined,
-          costeMateriales: costeMateriales ? parseFloat(costeMateriales) : undefined,
-          costeManoObra: costeManoObra ? parseFloat(costeManoObra) : undefined,
-          notes: notes.trim() || undefined,
-        }),
-      })
-      const data = await res.json()
-      if (res.ok) onSuccess()
-      else onError(data.error || 'Error al crear orden')
-    } catch (err: any) {
-      onError(err?.message || 'Error de red')
-    } finally {
-      setSaving(false)
-    }
+      let res: Response
+      if (type === 'Taller') {
+        res = await fetch('/api/workshop/create', {
+          method: 'POST', headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ type: 'Taller', vehicleId, tipoTrabajo: tipoTrabajo || undefined, mecanicoId: mecanicoId || undefined, fechaEntrada: fechaEntrada || undefined, costeMateriales: costeMateriales ? parseFloat(costeMateriales) : undefined, costeManoObra: costeManoObra ? parseFloat(costeManoObra) : undefined, notes: notes.trim() || undefined }),
+        })
+      } else if (type === 'Chapa') {
+        res = await fetch('/api/chapa', {
+          method: 'POST', headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ vehiculoId: vehicleId, estado: 'Pendiente de Chapa', proveedorId: proveedorId || null, costeTotal: costeTotal ? parseFloat(costeTotal) : null, fechaSalida: fechaSalida || null, fechaRetorno: fechaRetorno || null, trabajosSolicitados: trabajos || '', observaciones: notes || '' }),
+        })
+      } else if (type === 'Preparacion') {
+        res = await fetch('/api/preparacion', {
+          method: 'POST', headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ nombre: `PREP - ${vehicles.find(v => v.id === vehicleId)?.matricula || vehicleId}`, vehiculoId: vehicleId, estado: 'Pendiente', preparadorId: preparadorId || undefined, tipoLimpieza: tipoLimpieza || undefined, fechaInicio: fechaInicio || undefined, fechaFin: fechaFin || undefined, fechaEntrega: fechaEntrega || undefined, observaciones: obsPrep || '' }),
+        })
+      } else {
+        res = await fetch('/api/logistica', {
+          method: 'POST', headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ nombre: `LOG - ${vehicles.find(v => v.id === vehicleId)?.matricula || vehicleId}`, vehiculoId: vehicleId, estado: 'Pendiente autorización', responsableId: responsableId || undefined, fechaProgramada: fechaProgramada || undefined, ubicacion: ubicacion || undefined, situacionComercial: situacionComercial || undefined, prioridad: prioridad || undefined, observaciones: obsLog || '' }),
+        })
+      }
+      if (res.ok) { onSuccess(); resetAll() }
+      else { const data = await res.json(); onError(data.error || 'Error al crear') }
+    } catch (err: any) { onError(err?.message || 'Error de red') }
+    finally { setSaving(false) }
+  }
+
+  return (
+    <form onSubmit={handleSubmit} className="space-y-3">
+      <Select label="Tipo de orden *" value={type} onChange={(v) => { resetAll(); setType(v) }}
+        options={[
+          { value: '', label: 'Seleccionar...' },
+          { value: 'Taller', label: '🔧 Taller' },
+          { value: 'Chapa', label: '🔩 Chapa y Pintura' },
+          { value: 'Preparacion', label: '🧹 Preparación' },
+          { value: 'Logistica', label: '📦 Logística' },
+        ]}
+      />
+      <VehicleAutocomplete vehicles={vehicles} value={vehicleId} onChange={setVehicleId} label="Vehículo *" required placeholder="Buscar vehículo..." />
+
+      {type === 'Taller' && (
+        <>
+          <Select label="Tipo de trabajo" value={tipoTrabajo} onChange={setTipoTrabajo}
+            options={[{ value: '', label: 'Sin tipo' }, ...TIPOS_TRABAJO.map(t => ({ value: t, label: t }))]} />
+          <SearchableSelect items={employees} value={mecanicoId} onChange={setMecanicoId} label="Mecánico asignado" placeholder="Buscar empleado..." displayFn={(e: any) => e.name} />
+          <Input label="Fecha entrada" type="date" value={fechaEntrada} onChange={setFechaEntrada} />
+          <Input label="Coste materiales (€)" type="number" value={costeMateriales} onChange={setCosteMateriales} step="0.01" />
+          <Input label="Coste mano de obra (€)" type="number" value={costeManoObra} onChange={setCosteManoObra} step="0.01" />
+          <Input label="Observaciones" value={notes} onChange={setNotes} textarea />
+        </>
+      )}
+
+      {type === 'Chapa' && (
+        <>
+          <SearchableSelect items={employees} value={proveedorId} onChange={setProveedorId} label="Proveedor externo" placeholder="Buscar proveedor..." displayFn={(e: any) => e.name} />
+          <Input label="Coste total (€)" type="number" value={costeTotal} onChange={setCosteTotal} step="0.01" />
+          <Input label="Fecha salida" type="date" value={fechaSalida} onChange={setFechaSalida} />
+          <Input label="Fecha retorno" type="date" value={fechaRetorno} onChange={setFechaRetorno} />
+          <Input label="Trabajos solicitados" value={trabajos} onChange={setTrabajos} textarea />
+          <Input label="Observaciones" value={notes} onChange={setNotes} textarea />
+        </>
+      )}
+
+      {type === 'Preparacion' && (
+        <>
+          <Select label="Tipo de limpieza" value={tipoLimpieza} onChange={setTipoLimpieza}
+            options={[{ value: '', label: 'Sin tipo' }, ...TIPOS_LIMPIEZA.map(t => ({ value: t, label: t }))]} />
+          <SearchableSelect items={employees} value={preparadorId} onChange={setPreparadorId} label="Preparador" placeholder="Buscar empleado..." displayFn={(e: any) => e.name} />
+          <div className="grid grid-cols-2 gap-2">
+            <Input label="Fecha inicio" type="date" value={fechaInicio} onChange={setFechaInicio} />
+            <Input label="Fecha fin" type="date" value={fechaFin} onChange={setFechaFin} />
+          </div>
+          <Input label="Fecha entrega" type="date" value={fechaEntrega} onChange={setFechaEntrega} />
+          <Input label="Observaciones" value={obsPrep} onChange={setObsPrep} textarea />
+        </>
+      )}
+
+      {type === 'Logistica' && (
+        <>
+          <Input label="Fecha programada" type="date" value={fechaProgramada} onChange={setFechaProgramada} />
+          <Input label="Ubicación" value={ubicacion} onChange={setUbicacion} placeholder="Ej: Sede Central" />
+          <Select label="Situación comercial" value={situacionComercial} onChange={setSituacionComercial}
+            options={[{ value: '', label: 'Sin situación' }, ...SITUACIONES.map(s => ({ value: s, label: s }))]} />
+          <Select label="Prioridad" value={prioridad} onChange={setPrioridad}
+            options={[{ value: '', label: 'Sin prioridad' }, ...PRIORIDADES.map(p => ({ value: p, label: p }))]} />
+          <SearchableSelect items={employees} value={responsableId} onChange={setResponsableId} label="Responsable" placeholder="Buscar empleado..." displayFn={(e: any) => e.name} />
+          <Input label="Observaciones" value={obsLog} onChange={setObsLog} textarea />
+        </>
+      )}
+
+      {type && (
+        <button type="submit" disabled={saving || !vehicleId}
+          className="w-full text-sm font-semibold py-2.5 rounded min-h-[44px] transition-opacity disabled:opacity-40"
+          style={{ background: 'var(--accent-blue)', color: '#fff' }}>
+          {saving ? 'Creando...' : `🔧 Crear orden de ${type}`}
+        </button>
+      )}
+    </form>
+  )
+}
   }
 
   return (
