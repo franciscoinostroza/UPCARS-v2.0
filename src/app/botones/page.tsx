@@ -98,8 +98,7 @@ function BotonesInner() {
                 { key: 'nuevo' as ModalType, icon: '➕', label: 'Nuevo vehículo', desc: 'Crear en Notion' },
                 { key: 'mover' as ModalType, icon: '🚀', label: 'Mover vehículo', desc: 'Cambiar estado' },
                 { key: 'asignar' as ModalType, icon: '👤', label: 'Asignar responsable', desc: 'Vehículo → empleado' },
-                { key: 'orden' as ModalType, icon: '📋', label: 'Nueva orden taller', desc: 'Taller / Chapa / Prep / Log' },
-                { key: 'vender' as ModalType, icon: '🏷️', label: 'Marcar como Vendido', desc: 'Desde Listo para venta' },
+                { key: 'orden' as ModalType, icon: '📋', label: 'Nueva Orden', desc: 'Taller / Chapa / Prep / Log' },
                 { key: 'task' as ModalType, icon: '📝', label: 'Crear tarea rápida', desc: 'En Tareas del Equipo' },
               ].map((btn) => (
                 <button
@@ -200,15 +199,6 @@ function BotonesInner() {
             vehicles={vehicles}
             employees={employees}
             onSuccess={() => { setModal(null); showToast('Orden creada ✓'); fetchData() }}
-            onError={(msg) => showToast(msg, true)}
-          />
-        </Modal>
-      )}
-      {modal === 'vender' && (
-        <Modal onClose={() => setModal(null)} title="🏷️ Marcar como Vendido">
-          <VenderForm
-            vehicles={vehicles}
-            onSuccess={() => { setModal(null); showToast('Vehículo marcado como Vendido ✓'); fetchData() }}
             onError={(msg) => showToast(msg, true)}
           />
         </Modal>
@@ -612,51 +602,6 @@ function OrdenForm({ vehicles, employees, onSuccess, onError }: { vehicles: Vehi
   )
 }
 
-/* ─── Form: Marcar como Vendido ─── */
-
-function VenderForm({ vehicles, onSuccess, onError }: { vehicles: VehicleItem[]; onSuccess: () => void; onError: (msg: string) => void }) {
-  const [vehicleId, setVehicleId] = useState('')
-  const [saving, setSaving] = useState(false)
-  const listos = vehicles.filter((v) => v.state === 'Listo para venta')
-
-  async function handleSubmit(e: React.FormEvent) {
-    e.preventDefault()
-    if (!vehicleId) return
-    setSaving(true)
-    try {
-      const res = await fetch(`/api/vehicles/${vehicleId}`, {
-        method: 'PATCH',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ state: 'Vendido' }),
-      })
-      const data = await res.json()
-      if (res.ok) onSuccess()
-      else onError(data.error || 'Error al marcar como vendido')
-    } catch (err: any) {
-      onError(err?.message || 'Error de red')
-    } finally {
-      setSaving(false)
-    }
-  }
-
-  return (
-    <form onSubmit={handleSubmit} className="space-y-3">
-      {listos.length === 0 ? (
-        <p className="text-sm py-4 text-center" style={{ color: 'var(--text-muted)' }}>
-          No hay vehículos en "Listo para venta".
-        </p>
-      ) : (
-        <VehicleAutocomplete vehicles={listos} value={vehicleId} onChange={setVehicleId} label="Vehículo" placeholder="Buscar vehículo..." />
-      )}
-      <button type="submit" disabled={saving || !vehicleId || listos.length === 0}
-        className="w-full text-sm font-semibold py-2.5 rounded min-h-[44px] transition-opacity disabled:opacity-40"
-        style={{ background: 'var(--accent-blue)', color: '#fff' }}>
-        {saving ? 'Marcando...' : '🏷️ Marcar como Vendido'}
-      </button>
-    </form>
-  )
-}
-
 /* ─── Form: Crear tarea rápida ─── */
 
 function TaskForm({ vehicles, employees, onSuccess, onError }: { vehicles: VehicleItem[]; employees: EmployeeItem[]; onSuccess: () => void; onError: (msg: string) => void }) {
@@ -760,21 +705,20 @@ function Input({ label, value, onChange, required, type, inputMode, textarea, st
   if (textarea) {
     return (
       <div>
-        <label className="block text-xs font-medium mb-1" style={{ color: 'var(--text-secondary)' }}>{label}</label>
+        <p className="text-[10px] font-medium mb-0.5" style={{ color: 'var(--text-muted)' }}>{label}</p>
         <textarea
           value={value}
           onChange={(e) => onChange(e.target.value)}
           placeholder={placeholder}
           rows={3}
-          className="w-full text-sm px-3 py-2 rounded outline-none resize-none"
-          style={{ background: 'var(--bg)', color: 'var(--text)', border: '1px solid var(--border)' }}
+          style={{ width: '100%', fontSize: 11, padding: '6px 8px', borderRadius: 6, background: 'var(--bg-card)', color: 'var(--text)', border: '1px solid var(--border)', outline: 'none', resize: 'vertical' }}
         />
       </div>
     )
   }
   return (
     <div>
-      <label className="block text-xs font-medium mb-1" style={{ color: 'var(--text-secondary)' }}>{label}</label>
+      <p className="text-[10px] font-medium mb-0.5" style={{ color: 'var(--text-muted)' }}>{label}</p>
       <input
         type={type || 'text'}
         inputMode={(inputMode || 'text') as any}
@@ -783,8 +727,7 @@ function Input({ label, value, onChange, required, type, inputMode, textarea, st
         placeholder={placeholder}
         required={required}
         step={step}
-        className="w-full text-sm px-3 py-2 rounded outline-none"
-        style={{ background: 'var(--bg)', color: 'var(--text)', border: '1px solid var(--border)' }}
+        style={{ width: '100%', fontSize: 11, padding: '6px 8px', borderRadius: 6, background: 'var(--bg-card)', color: 'var(--text)', border: '1px solid var(--border)', outline: 'none' }}
       />
     </div>
   )
@@ -795,12 +738,11 @@ function Select({ label, value, onChange, options }: {
 }) {
   return (
     <div>
-      <label className="block text-xs font-medium mb-1" style={{ color: 'var(--text-secondary)' }}>{label}</label>
+      <p className="text-[10px] font-medium mb-0.5" style={{ color: 'var(--text-muted)' }}>{label}</p>
       <select
         value={value}
         onChange={(e) => onChange(e.target.value)}
-        className="w-full text-sm px-3 py-2 rounded outline-none appearance-none"
-        style={{ background: 'var(--bg)', color: 'var(--text)', border: '1px solid var(--border)' }}
+        style={{ width: '100%', fontSize: 11, padding: '6px 8px', borderRadius: 6, background: 'var(--bg-card)', color: 'var(--text)', border: '1px solid var(--border)', outline: 'none' }}
       >
         <option value="">Seleccionar...</option>
         {options.map((o) => (
