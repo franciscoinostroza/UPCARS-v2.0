@@ -611,45 +611,6 @@ function OrdenForm({ vehicles, employees, onSuccess, onError }: { vehicles: Vehi
     </form>
   )
 }
-  }
-
-  return (
-    <form onSubmit={handleSubmit} className="space-y-3">
-      <Select label="Tipo de orden *" value={type} onChange={setType}
-        options={[
-          { value: 'Taller', label: '🔧 Taller' },
-          { value: 'Chapa', label: '🔩 Chapa y Pintura' },
-          { value: 'Preparacion', label: '🧹 Preparación' },
-          { value: 'Logistica', label: '📦 Logística' },
-        ]}
-      />
-      <VehicleAutocomplete vehicles={vehicles} value={vehicleId} onChange={setVehicleId} label="Vehículo *" required placeholder="Buscar vehículo..." />
-      {vehicleId && (
-        <div className="text-xs px-2 py-1.5 rounded" style={{ background: 'var(--bg-pill)', color: 'var(--text-secondary)' }}>
-          Estado actual: <strong style={{ color: 'var(--text)' }}>Listo para venta</strong>
-        </div>
-      )}
-      <Select label="Tipo de trabajo" value={tipoTrabajo} onChange={setTipoTrabajo}
-        options={[{ value: '', label: 'Sin tipo' }, ...TIPOS_TRABAJO.map(t => ({ value: t, label: t }))]}
-      />
-      <Select label="Mecánico asignado" value={mecanicoId} onChange={setMecanicoId}
-        options={[{ value: '', label: 'Sin asignar' }, ...employees.map(e => ({ value: e.id, label: e.name }))]}
-      />
-      <Input label="Fecha entrada" type="date" value={fechaEntrada} onChange={setFechaEntrada} />
-      <Input label="Coste materiales (€)" type="number" value={costeMateriales} onChange={setCosteMateriales} step="0.01" />
-      <Input label="Coste mano de obra (€)" type="number" value={costeManoObra} onChange={setCosteManoObra} step="0.01" />
-      <Input label="Observaciones" value={notes} onChange={setNotes} textarea />
-      <button
-        type="submit"
-        disabled={saving || !vehicleId || !type}
-        className="w-full text-sm font-semibold py-2.5 rounded min-h-[44px] transition-opacity disabled:opacity-40"
-        style={{ background: 'var(--accent-blue)', color: '#fff' }}
-      >
-        {saving ? 'Creando...' : '🔧 Crear orden'}
-      </button>
-    </form>
-  )
-}
 
 /* ─── Form: Marcar como Vendido ─── */
 
