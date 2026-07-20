@@ -253,12 +253,19 @@ function FinancierasInner() {
                 <div className="flex gap-2 pt-2">
                   <button onClick={async () => {
                     setSaving(true)
-                    const tk = new URLSearchParams(window.location.search).get('token') || ''
-                    const body: any = { estado: selected.estado, personaContacto: selected.personaContacto, telefono: selected.telefono, email: selected.email, enlaceAcceso: selected.enlaceAcceso, datosAcceso: selected.datosAcceso, notas: editData.notas }
-                    if (imagenUrl) body.tarifasLeasingUrl = imagenUrl
-                    await fetch(`/api/financieras/${selected.id}?token=${tk}`, { method: 'PATCH', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(body) })
-                    setRecords(prev => prev.map(r => r.id === selected.id ? { ...r, notas: editData.notas } : r))
-                    setSaving(false); setEditing(false)
+                    try {
+                      const tk = new URLSearchParams(window.location.search).get('token') || ''
+                      const body: any = { estado: selected.estado, personaContacto: selected.personaContacto, telefono: selected.telefono, email: selected.email, enlaceAcceso: selected.enlaceAcceso, datosAcceso: selected.datosAcceso, notas: editData.notas }
+                      if (imagenUrl) body.tarifasLeasingUrl = imagenUrl
+                      const patchRes = await fetch(`/api/financieras/${selected.id}?token=${tk}`, { method: 'PATCH', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(body) })
+                      if (!patchRes.ok) { const d = await patchRes.json(); alert(d.error || 'Error al guardar'); setSaving(false); return }
+                      if (imagenUrl) {
+                        setRecords(prev => prev.map(r => r.id === selected.id ? { ...r, notas: editData.notas, tarifasLeasing: [{ name: 'Imagen', url: imagenUrl }] } : r))
+                      } else {
+                        setRecords(prev => prev.map(r => r.id === selected.id ? { ...r, notas: editData.notas } : r))
+                      }
+                      setSaving(false); setEditing(false)
+                    } catch (e) { alert('Error de red al guardar'); setSaving(false) }
                   }} className="flex-1 text-[11px] font-semibold py-2 rounded" style={{ background: 'var(--accent-blue)', color: '#fff' }} disabled={saving}>{saving ? 'Guardando...' : '💾 Guardar'}</button>
                   <button onClick={async () => {
                     if (!confirm('¿Eliminar esta financiera?')) return
