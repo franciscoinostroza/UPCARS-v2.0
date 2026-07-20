@@ -432,6 +432,10 @@ function CreateModal({ employees, vehicles, onCreate, onClose, onRefresh }: { em
             <input required placeholder="Ej: TRASLADO SEVILLA" value={name} onChange={e => setName(e.target.value)} style={selectSx} />
           </div>
           <div>
+            <p className="text-[10px] font-medium mb-0.5" style={{ color: 'var(--text-muted)' }}>Vehículo</p>
+            <VehicleAutocomplete vehicles={vehicles} value={vehId} onChange={setVehId} placeholder="Buscar vehículo..." />
+          </div>
+          <div>
             <p className="text-[10px] font-medium mb-0.5" style={{ color: 'var(--text-muted)' }}>Estado</p>
             <select value={estado} onChange={e => setEstado(e.target.value)} style={selectSx}>
               {ESTADOS.map(e => <option key={e} value={e}>{e || 'Sin estado'}</option>)}
@@ -463,15 +467,9 @@ function CreateModal({ employees, vehicles, onCreate, onClose, onRefresh }: { em
               </select>
             </div>
           </div>
-          <div className="grid grid-cols-2 gap-2">
-            <div>
-              <p className="text-[10px] font-medium mb-0.5" style={{ color: 'var(--text-muted)' }}>Responsable</p>
-              <SearchableSelect items={employees} value={respId} onChange={setRespId} placeholder="Buscar empleado..." displayFn={(e: any) => e.name} />
-            </div>
-            <div>
-              <p className="text-[10px] font-medium mb-0.5" style={{ color: 'var(--text-muted)' }}>Vehículo</p>
-              <VehicleAutocomplete vehicles={vehicles} value={vehId} onChange={setVehId} placeholder="Buscar vehículo..." />
-            </div>
+          <div>
+            <p className="text-[10px] font-medium mb-0.5" style={{ color: 'var(--text-muted)' }}>Responsable</p>
+            <SearchableSelect items={employees} value={respId} onChange={setRespId} placeholder="Buscar empleado..." displayFn={(e: any) => e.name} />
           </div>
           <div>
             <p className="text-[10px] font-medium mb-0.5" style={{ color: 'var(--text-muted)' }}>Observaciones</p>
