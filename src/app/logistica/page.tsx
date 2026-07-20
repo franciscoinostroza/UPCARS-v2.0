@@ -130,7 +130,7 @@ function LogisticaInner() {
   async function handleSaveEdit() {
     if (!selected) return
     try {
-      const res = await fetch(`/api/logistica/${selected.id}`, {
+      const res = await fetch(`/api/logistica/${selected.id}` + "?token=" + new URLSearchParams(window.location.search).get("token"), {
         method: 'PATCH',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify(editData),
@@ -309,7 +309,7 @@ function DetailModal({ item, onClose, onEdit }: { item: LogItem; onClose: () => 
             <button onClick={onEdit} className="text-[10px] px-2 py-1 rounded" style={{ color: 'var(--accent-blue)' }}>✏️</button>
             <button onClick={async () => {
               if (!confirm('¿Eliminar este registro?')) return
-              await fetch(`/api/logistica/${item.id}`, { method: 'DELETE' })
+              await fetch(`/api/logistica/${item.id}?token=` + new URLSearchParams(window.location.search).get("token"), { method: 'DELETE' })
               window.location.reload()
             }} className="text-[10px] px-2 py-1 rounded" style={{ color: '#ef4444' }}>🗑</button>
             <button onClick={onClose} className="text-sm px-2 py-1 rounded" style={{ color: 'var(--text-muted)' }}>✕</button>

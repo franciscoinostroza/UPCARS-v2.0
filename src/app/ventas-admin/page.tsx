@@ -222,12 +222,12 @@ function VentasAdminInner() {
                   <textarea value={selected.observaciones} onChange={e => setRecords(prev => prev.map(r => r.id === selected.id ? { ...r, observaciones: e.target.value } : r))} rows={2} className="w-full text-xs px-2 py-1.5 rounded outline-none resize-none" style={{ background: 'var(--bg)', color: 'var(--text)', border: '1px solid var(--border)' }} />
                 </div>
                 <button onClick={async () => {
-                  await fetch(`/api/ventas-admin/${selected.id}`, { method: 'PATCH', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ precioVenta: selected.precioVenta, clienteNombre: selected.clienteNombre, clienteContacto: selected.clienteContacto, formaPago: selected.formaPago, financiada: selected.financiada, observaciones: selected.observaciones }) })
+                  await fetch(`/api/ventas-admin/${selected.id}` + "?token=" + new URLSearchParams(window.location.search).get("token"), { method: 'PATCH', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ precioVenta: selected.precioVenta, clienteNombre: selected.clienteNombre, clienteContacto: selected.clienteContacto, formaPago: selected.formaPago, financiada: selected.financiada, observaciones: selected.observaciones }) })
                 }} className="w-full text-[11px] font-semibold py-2 rounded" style={{ background: 'var(--accent-blue)', color: '#fff' }}>💾 Guardar</button>
                 <button onClick={async () => {
                   if (!confirm('¿Eliminar esta venta?')) return
                   try {
-                    await fetch(`/api/ventas-admin/${selected.id}`, { method: 'DELETE' })
+                    await fetch(`/api/ventas-admin/${selected.id}` + "?token=" + new URLSearchParams(window.location.search).get("token"), { method: 'DELETE' })
                     setSelected(null); fetchData()
                   } catch (e) { alert('Error de red al eliminar'); }
                 }} className="w-full text-[11px] font-semibold py-2 rounded mt-1" style={{ background: 'rgba(239,68,68,0.12)', color: '#ef4444' }}>🗑 Eliminar</button>

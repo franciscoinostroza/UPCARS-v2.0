@@ -39,6 +39,7 @@ function ChapaInner() {
   const [editObs, setEditObs] = useState('')
   const [editTrabajos, setEditTrabajos] = useState('')
   const [editing, setEditing] = useState(false)
+  const [saving, setSaving] = useState(false)
   const [showCreate, setShowCreate] = useState(false)
   const [providers, setProviders] = useState<{ id: string; name: string }[]>([])
   const [employees, setEmployees] = useState<{ id: string; name: string }[]>([])
@@ -199,7 +200,7 @@ function ChapaInner() {
               <button onClick={async () => {
                 if (!confirm('¿Eliminar este registro?')) return
                 try {
-                  const r = await fetch(`/api/chapa/${selected.id}`, { method: 'DELETE' })
+                  const r = await fetch(`/api/chapa/${selected.id}` + "?token=" + new URLSearchParams(window.location.search).get("token"), { method: 'DELETE' })
                   if (!r.ok) { const d = await r.json(); alert(d.error || 'Error'); return }
                   setSelected(null); fetchData()
                 } catch (e) { alert('Error de red al eliminar'); }
@@ -250,13 +251,16 @@ function ChapaInner() {
                   <textarea value={editObs} onChange={e => setEditObs(e.target.value)} rows={2} className="w-full text-xs px-2 py-1.5 rounded outline-none resize-none" style={{ background: 'var(--bg)', color: 'var(--text)', border: '1px solid var(--border)' }} />
                 </div>
                 <button onClick={async () => {
-                  await fetch(`/api/chapa/${selected.id}`, { method: 'PATCH', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ estado: selected.estado, costeTotal: selected.costeTotal, fechaSalida: selected.fechaSalida, fechaRetorno: selected.fechaRetorno, trabajosSolicitados: editTrabajos, observaciones: editObs }) })
+                  setSaving(true)
+                  const tk = new URLSearchParams(window.location.search).get('token') || ''
+                  await fetch(`/api/chapa/${selected.id}?token=${tk}`, { method: 'PATCH', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ estado: selected.estado, costeTotal: selected.costeTotal, fechaSalida: selected.fechaSalida, fechaRetorno: selected.fechaRetorno, trabajosSolicitados: editTrabajos, observaciones: editObs }) })
                   setRecords(prev => prev.map(r => r.id === selected.id ? { ...r, observaciones: editObs, trabajosSolicitados: editTrabajos } : r))
-                }} className="w-full text-[11px] font-semibold py-2 rounded" style={{ background: 'var(--accent-blue)', color: '#fff' }}>💾 Guardar</button>
+                  setSaving(false)
+                }} className="w-full text-[11px] font-semibold py-2 rounded" style={{ background: 'var(--accent-blue)', color: '#fff' }} disabled={saving}>{saving ? 'Guardando...' : '💾 Guardar'}</button>
                 <button onClick={async () => {
                   if (!confirm('¿Eliminar este registro?')) return
                   try {
-                    const r = await fetch(`/api/chapa/${selected.id}`, { method: 'DELETE' })
+                    const r = await fetch(`/api/chapa/${selected.id}` + "?token=" + new URLSearchParams(window.location.search).get("token"), { method: 'DELETE' })
                     if (!r.ok) { const d = await r.json(); alert(d.error || 'Error'); return }
                     setSelected(null); setEditing(false); fetchData()
                   } catch (e) { alert('Error de red al eliminar'); }

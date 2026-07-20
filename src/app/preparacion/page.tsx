@@ -30,6 +30,7 @@ function PrepInner() {
   const [selected, setSelected] = useState<PrepItem | null>(null)
   const [editObs, setEditObs] = useState('')
   const [editing, setEditing] = useState(false)
+  const [saving, setSaving] = useState(false)
   const [showCreate, setShowCreate] = useState(false)
   const [vehiculoId, setVehiculoId] = useState('')
   const [preparadorId, setPreparadorId] = useState('')
@@ -197,7 +198,7 @@ function PrepInner() {
               <button onClick={async () => {
                 if (!confirm('¿Eliminar este registro?')) return
                 try {
-                  const r = await fetch(`/api/preparacion/${selected.id}`, { method: 'DELETE' })
+                  const r = await fetch(`/api/preparacion/${selected.id}` + "?token=" + new URLSearchParams(window.location.search).get("token"), { method: 'DELETE' })
                   if (!r.ok) { const d = await r.json(); alert(d.error || 'Error'); return }
                   setSelected(null); fetchData()
                 } catch (e) { alert('Error de red al eliminar'); }
@@ -258,11 +259,13 @@ function PrepInner() {
                           return (
                             <label key={key} className="flex items-center gap-2 text-[11px] cursor-pointer select-none"
                               style={{ color: checked ? 'var(--text)' : 'var(--text-muted)' }}>
-                              <span onClick={async () => {
+                              <span onClick={(e) => {
+                                e.stopPropagation()
                                 const newVal = !checked
+                                const tk = new URLSearchParams(window.location.search).get('token') || ''
                                 setRecords(prev => prev.map(r => r.id === selected.id ? { ...r, [key]: newVal } as PrepItem : r))
-                                setSelected(prev => prev ? { ...prev, [key]: newVal } as PrepItem : null)
-                                await fetch(`/api/preparacion/${selected.id}`, { method: 'PATCH', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ [key]: newVal }) })
+                                setSelected(prev => prev ? { ...prev, [key]: newVal } : null)
+                                fetch(`/api/preparacion/${selected.id}?token=${tk}`, { method: 'PATCH', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ [key]: newVal }) }).catch(() => {})
                               }} style={{
                                 width: 36, height: 20, borderRadius: 10, display: 'inline-flex', alignItems: 'center',
                                 padding: 2, cursor: 'pointer', transition: 'background 0.2s',
@@ -284,13 +287,13 @@ function PrepInner() {
                         <textarea value={editObs} onChange={e => setEditObs(e.target.value)} rows={2} className="w-full text-xs px-2 py-1.5 rounded outline-none resize-none" style={{ background: 'var(--bg)', color: 'var(--text)', border: '1px solid var(--border)' }} />
                       </div>
                       <button onClick={async () => {
-                        await fetch(`/api/preparacion/${selected.id}`, { method: 'PATCH', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ estado: selected.estado, tipoLimpieza: selected.tipoLimpieza, fechaInicio: selected.fechaInicio, fechaFin: selected.fechaFin, fechaEntrega: selected.fechaEntrega, observaciones: editObs }) })
+                        await fetch(`/api/preparacion/${selected.id}` + "?token=" + new URLSearchParams(window.location.search).get("token"), { method: 'PATCH', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ estado: selected.estado, tipoLimpieza: selected.tipoLimpieza, fechaInicio: selected.fechaInicio, fechaFin: selected.fechaFin, fechaEntrega: selected.fechaEntrega, observaciones: editObs }) })
                         setRecords(prev => prev.map(r => r.id === selected.id ? { ...r, observaciones: editObs } : r))
-                      }} className="w-full text-[11px] font-semibold py-2 rounded" style={{ background: 'var(--accent-blue)', color: '#fff' }}>💾 Guardar</button>
+                      }} className="w-full text-[11px] font-semibold py-2 rounded" style={{ background: 'var(--accent-blue)', color: '#fff' }} disabled={saving}>{saving ? 'Guardando...' : '💾 Guardar'}</button>
                       <button onClick={async () => {
                         if (!confirm('¿Eliminar este registro?')) return
                         try {
-                          const r = await fetch(`/api/preparacion/${selected.id}`, { method: 'DELETE' })
+                          const r = await fetch(`/api/preparacion/${selected.id}` + "?token=" + new URLSearchParams(window.location.search).get("token"), { method: 'DELETE' })
                           if (!r.ok) { const d = await r.json(); alert(d.error || 'Error'); return }
                           setSelected(null); setEditing(false); fetchData()
                         } catch (e) { alert('Error de red al eliminar'); }

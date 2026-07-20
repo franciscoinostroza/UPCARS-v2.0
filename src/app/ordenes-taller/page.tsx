@@ -43,6 +43,7 @@ function TallerInner() {
   const [selected, setSelected] = useState<TallerItem | null>(null)
   const [editObs, setEditObs] = useState('')
   const [editing, setEditing] = useState(false)
+  const [saving, setSaving] = useState(false)
   const [showCreate, setShowCreate] = useState(false)
   const [employees, setEmployees] = useState<{ id: string; name: string }[]>([])
   const [vehicles, setVehicles] = useState<{ id: string; name: string; matricula?: string; brand?: string; model?: string; year?: string }[]>([])
@@ -215,7 +216,7 @@ function TallerInner() {
               <button onClick={async () => {
                 if (!confirm('¿Eliminar esta orden?')) return
                 try {
-                  await fetch(`/api/ordenes-taller/${selected.id}`, { method: 'DELETE' })
+                  await fetch(`/api/ordenes-taller/${selected.id}` + "?token=" + new URLSearchParams(window.location.search).get("token"), { method: 'DELETE' })
                   setSelected(null); fetchData()
                 } catch (e) { alert('Error de red al eliminar'); }
               }} className="w-full text-[11px] font-semibold py-2 rounded mt-4" style={{ background: 'rgba(239,68,68,0.12)', color: '#ef4444' }}>🗑 Eliminar</button>
@@ -267,13 +268,13 @@ function TallerInner() {
                   <textarea value={editObs} onChange={e => setEditObs(e.target.value)} rows={3} className="w-full text-xs px-2 py-1.5 rounded outline-none resize-none" style={{ background: 'var(--bg)', color: 'var(--text)', border: '1px solid var(--border)' }} />
                 </div>
                 <button onClick={async () => {
-                  await fetch(`/api/ordenes-taller/${selected.id}`, { method: 'PATCH', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ estado: selected.estado, observaciones: editObs, costeMateriales: selected.costeMateriales, costeManoObra: selected.costeManoObra }) })
+                  await fetch(`/api/ordenes-taller/${selected.id}` + "?token=" + new URLSearchParams(window.location.search).get("token"), { method: 'PATCH', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ estado: selected.estado, observaciones: editObs, costeMateriales: selected.costeMateriales, costeManoObra: selected.costeManoObra }) })
                   setRecords(prev => prev.map(r => r.id === selected.id ? { ...r, observaciones: editObs } : r))
-                }} className="w-full text-[11px] font-semibold py-2 rounded" style={{ background: 'var(--accent-blue)', color: '#fff' }}>💾 Guardar</button>
+                }} className="w-full text-[11px] font-semibold py-2 rounded" style={{ background: 'var(--accent-blue)', color: '#fff' }} disabled={saving}>{saving ? 'Guardando...' : '💾 Guardar'}</button>
                 <button onClick={async () => {
                   if (!confirm('¿Eliminar esta orden?')) return
                   try {
-                    await fetch(`/api/ordenes-taller/${selected.id}`, { method: 'DELETE' })
+                    await fetch(`/api/ordenes-taller/${selected.id}` + "?token=" + new URLSearchParams(window.location.search).get("token"), { method: 'DELETE' })
                     setSelected(null); setEditing(false); fetchData()
                   } catch (e) { alert('Error de red al eliminar'); }
                 }} className="w-full text-[11px] font-semibold py-2 rounded mt-1" style={{ background: 'rgba(239,68,68,0.12)', color: '#ef4444' }}>🗑 Eliminar</button>

@@ -236,7 +236,7 @@ function TasacionesInner() {
                 <button onClick={async () => {
                   if (!confirm('¿Eliminar esta tasación?')) return
                   try {
-                    await fetch(`/api/tasaciones/${selected.id}`, { method: 'DELETE' })
+                    await fetch(`/api/tasaciones/${selected.id}` + "?token=" + new URLSearchParams(window.location.search).get("token"), { method: 'DELETE' })
                     setSelected(null); fetchData()
                   } catch (e) { alert('Error de red al eliminar'); }
                 }} className="w-full text-[11px] font-semibold py-2 rounded mt-2" style={{ background: 'rgba(239,68,68,0.12)', color: '#ef4444' }}>🗑 Eliminar</button>
