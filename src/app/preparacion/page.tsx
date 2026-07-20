@@ -29,6 +29,7 @@ function PrepInner() {
   const [filterEstado, setFilterEstado] = useState('')
   const [selected, setSelected] = useState<PrepItem | null>(null)
   const [editObs, setEditObs] = useState('')
+  const [editing, setEditing] = useState(false)
   const [showCreate, setShowCreate] = useState(false)
   const [vehiculoId, setVehiculoId] = useState('')
   const [preparadorId, setPreparadorId] = useState('')
@@ -165,12 +166,49 @@ function PrepInner() {
           </div>
         )}
 
-        {selected && (
+        {selected && !editing && (
           <div className="fixed inset-0 z-50 flex items-center justify-center p-4" style={{ background: 'rgba(0,0,0,0.6)' }} onClick={(e) => { if (e.target === e.currentTarget) setSelected(null) }}>
             <div className="card w-full max-w-lg animate-fade-up p-5" style={{ background: 'var(--bg-card)', maxHeight: '90vh', overflowY: 'auto' }}>
               <div className="flex items-center justify-between mb-3">
                 <h2 className="text-sm font-semibold" style={{ color: 'var(--text)' }}>{selected.nombre}</h2>
-                <button onClick={() => setSelected(null)} className="text-sm px-2 py-1 rounded" style={{ color: 'var(--text-muted)' }}>✕</button>
+                <div className="flex items-center gap-1">
+                  <button onClick={() => setEditing(true)} className="text-[10px] px-2 py-1 rounded" style={{ color: 'var(--accent-blue)' }}>✏️</button>
+                  <button onClick={() => setSelected(null)} className="text-sm px-2 py-1 rounded" style={{ color: 'var(--text-muted)' }}>✕</button>
+                </div>
+              </div>
+              <div className="space-y-2 text-xs">
+                <div className="flex gap-2"><span className="font-medium shrink-0" style={{ color: 'var(--text-muted)' }}>Estado:</span><span style={{ color: 'var(--text)' }}>{selected.estado || 'Sin estado'}</span></div>
+                <div className="flex gap-2"><span className="font-medium shrink-0" style={{ color: 'var(--text-muted)' }}>Vehículo:</span><span style={{ color: 'var(--text)' }}>{selected.vehiculoNombre || '—'}</span></div>
+                <div className="flex gap-2"><span className="font-medium shrink-0" style={{ color: 'var(--text-muted)' }}>Tipo limpieza:</span><span style={{ color: 'var(--text)' }}>{selected.tipoLimpieza || '—'}</span></div>
+                <div className="flex gap-2"><span className="font-medium shrink-0" style={{ color: 'var(--text-muted)' }}>Preparador:</span><span style={{ color: 'var(--text)' }}>{selected.preparadorNombre || '—'}</span></div>
+                <div className="flex gap-2"><span className="font-medium shrink-0" style={{ color: 'var(--text-muted)' }}>Inicio:</span><span style={{ color: 'var(--text)' }}>{fmtDate(selected.fechaInicio)}</span></div>
+                <div className="flex gap-2"><span className="font-medium shrink-0" style={{ color: 'var(--text-muted)' }}>Fin:</span><span style={{ color: 'var(--text)' }}>{fmtDate(selected.fechaFin)}</span></div>
+                <div className="flex gap-2"><span className="font-medium shrink-0" style={{ color: 'var(--text-muted)' }}>Entrega:</span><span style={{ color: 'var(--text)' }}>{fmtDate(selected.fechaEntrega)}</span></div>
+                {selected.horasInvertidas != null && <div className="flex gap-2"><span className="font-medium shrink-0" style={{ color: 'var(--text-muted)' }}>Horas invertidas:</span><span style={{ color: 'var(--text)' }}>{selected.horasInvertidas}h</span></div>}
+                <div className="flex flex-wrap gap-3 mt-1">
+                  <span style={{ color: selected.limpiezaInterior ? '#22c55e' : 'var(--text-muted)' }}>{selected.limpiezaInterior ? '✅ Interior' : '⬜ Interior'}</span>
+                  <span style={{ color: selected.limpiezaExterior ? '#22c55e' : 'var(--text-muted)' }}>{selected.limpiezaExterior ? '✅ Exterior' : '⬜ Exterior'}</span>
+                  <span style={{ color: selected.fotografiaAnuncio ? '#22c55e' : 'var(--text-muted)' }}>{selected.fotografiaAnuncio ? '📸 Foto ✅' : '📸 Foto'}</span>
+                  <span style={{ color: selected.registrarInicio ? '#22c55e' : 'var(--text-muted)' }}>{selected.registrarInicio ? '🟢 Inicio ✅' : '🟢 Inicio'}</span>
+                  <span style={{ color: selected.registrarFin ? '#22c55e' : 'var(--text-muted)' }}>{selected.registrarFin ? '🔴 Fin ✅' : '🔴 Fin'}</span>
+                </div>
+                {selected.observaciones && <div className="mt-2 pt-2 border-t" style={{ borderColor: 'var(--border)' }}><p className="text-[10px] font-medium mb-0.5" style={{ color: 'var(--text-muted)' }}>Observaciones:</p><p style={{ color: 'var(--text-secondary)' }}>{selected.observaciones}</p></div>}
+              </div>
+              <button onClick={async () => {
+                if (!confirm('¿Eliminar este registro?')) return
+                await fetch(`/api/preparacion/${selected.id}`, { method: 'DELETE' })
+                setSelected(null); fetchData()
+              }} className="w-full text-[11px] font-semibold py-2 rounded mt-4" style={{ background: 'rgba(239,68,68,0.12)', color: '#ef4444' }}>🗑 Eliminar</button>
+            </div>
+          </div>
+        )}
+
+        {selected && editing && (
+          <div className="fixed inset-0 z-50 flex items-center justify-center p-4" style={{ background: 'rgba(0,0,0,0.6)' }} onClick={(e) => { if (e.target === e.currentTarget) { setSelected(null); setEditing(false) } }}>
+            <div className="card w-full max-w-lg animate-fade-up p-5" style={{ background: 'var(--bg-card)', maxHeight: '90vh', overflowY: 'auto' }}>
+              <div className="flex items-center justify-between mb-3">
+                <h2 className="text-sm font-semibold" style={{ color: 'var(--text)' }}>✏️ {selected.nombre}</h2>
+                <button onClick={() => setEditing(false)} className="text-sm px-2 py-1 rounded" style={{ color: 'var(--text-muted)' }}>✕</button>
               </div>
               <div className="space-y-2 text-xs mb-4">
                 <div className="flex gap-2 items-center">
@@ -205,42 +243,37 @@ function PrepInner() {
                   <div className="flex gap-2"><span className="font-medium shrink-0" style={{ color: 'var(--text-muted)' }}>Horas invertidas:</span><span style={{ color: 'var(--text)' }}>{selected.horasInvertidas}h</span></div>
                 )}
                 <div className="flex flex-wrap gap-3 mt-2">
-                  <label className="flex items-center gap-1.5 text-[11px]" style={{ color: 'var(--text-secondary)' }}>
-                    <input type="checkbox" checked={selected.limpiezaInterior} onChange={e => setRecords(prev => prev.map(r => r.id === selected.id ? { ...r, limpiezaInterior: e.target.checked } : r))} />
-                    Interior
-                  </label>
-                  <label className="flex items-center gap-1.5 text-[11px]" style={{ color: 'var(--text-secondary)' }}>
-                    <input type="checkbox" checked={selected.limpiezaExterior} onChange={e => setRecords(prev => prev.map(r => r.id === selected.id ? { ...r, limpiezaExterior: e.target.checked } : r))} />
-                    Exterior
-                  </label>
-                  <label className="flex items-center gap-1.5 text-[11px]" style={{ color: 'var(--text-secondary)' }}>
-                    <input type="checkbox" checked={selected.fotografiaAnuncio} onChange={e => setRecords(prev => prev.map(r => r.id === selected.id ? { ...r, fotografiaAnuncio: e.target.checked } : r))} />
-                    📸 Foto anuncio
-                  </label>
-                  <label className="flex items-center gap-1.5 text-[11px]" style={{ color: 'var(--text-secondary)' }}>
-                    <input type="checkbox" checked={selected.registrarInicio} onChange={e => setRecords(prev => prev.map(r => r.id === selected.id ? { ...r, registrarInicio: e.target.checked } : r))} />
-                    🟢 Registrar inicio
-                  </label>
-                  <label className="flex items-center gap-1.5 text-[11px]" style={{ color: 'var(--text-secondary)' }}>
-                    <input type="checkbox" checked={selected.registrarFin} onChange={e => setRecords(prev => prev.map(r => r.id === selected.id ? { ...r, registrarFin: e.target.checked } : r))} />
-                    🔴 Registrar fin
-                  </label>
+                  {[
+                    ['Interior', 'limpiezaInterior'],
+                    ['Exterior', 'limpiezaExterior'],
+                    ['📸 Foto anuncio', 'fotografiaAnuncio'],
+                    ['🟢 Registrar inicio', 'registrarInicio'],
+                    ['🔴 Registrar fin', 'registrarFin'],
+                  ].map(([label, key]) => (
+                    <label key={key} className="flex items-center gap-1.5 text-[11px]" style={{ color: 'var(--text-secondary)' }}>
+                      <input type="checkbox" checked={(selected as any)[key]} onChange={async (e) => {
+                        const checked = e.target.checked
+                        setRecords(prev => prev.map(r => r.id === selected.id ? { ...r, [key]: checked } as PrepItem : r))
+                        await fetch(`/api/preparacion/${selected.id}`, { method: 'PATCH', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ [key]: checked }) })
+                      }} />
+                      {label}
+                    </label>
+                  ))}
                 </div>
                 <div className="mt-2 pt-2 border-t" style={{ borderColor: 'var(--border)' }}>
                   <p className="text-[10px] font-medium mb-1" style={{ color: 'var(--text-muted)' }}>Observaciones:</p>
                   <textarea value={editObs} onChange={e => setEditObs(e.target.value)} rows={2} className="w-full text-xs px-2 py-1.5 rounded outline-none resize-none" style={{ background: 'var(--bg)', color: 'var(--text)', border: '1px solid var(--border)' }} />
                 </div>
                 <button onClick={async () => {
-                  await fetch(`/api/preparacion/${selected.id}`, { method: 'PATCH', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ estado: selected.estado, tipoLimpieza: selected.tipoLimpieza, fechaInicio: selected.fechaInicio, fechaFin: selected.fechaFin, fechaEntrega: selected.fechaEntrega, limpiezaInterior: selected.limpiezaInterior, limpiezaExterior: selected.limpiezaExterior, fotografiaAnuncio: selected.fotografiaAnuncio, registrarInicio: selected.registrarInicio, registrarFin: selected.registrarFin, observaciones: editObs }) })
+                  await fetch(`/api/preparacion/${selected.id}`, { method: 'PATCH', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ estado: selected.estado, tipoLimpieza: selected.tipoLimpieza, fechaInicio: selected.fechaInicio, fechaFin: selected.fechaFin, fechaEntrega: selected.fechaEntrega, observaciones: editObs }) })
                   setRecords(prev => prev.map(r => r.id === selected.id ? { ...r, observaciones: editObs } : r))
                 }} className="w-full text-[11px] font-semibold py-2 rounded" style={{ background: 'var(--accent-blue)', color: '#fff' }}>💾 Guardar</button>
                 <button onClick={async () => {
-                  if (!confirm('¿Eliminar este registro de preparación?')) return
+                  if (!confirm('¿Eliminar este registro?')) return
                   await fetch(`/api/preparacion/${selected.id}`, { method: 'DELETE' })
-                  setSelected(null); fetchData()
+                  setSelected(null); setEditing(false); fetchData()
                 }} className="w-full text-[11px] font-semibold py-2 rounded mt-1" style={{ background: 'rgba(239,68,68,0.12)', color: '#ef4444' }}>🗑 Eliminar</button>
               </div>
-              <a href={`https://www.notion.so/${selected.id.replace(/-/g, '')}`} target="_blank" rel="noopener noreferrer" className="block w-full text-center text-[10px] font-medium py-2 rounded" style={{ background: 'var(--bg-pill)', color: 'var(--accent-blue)' }}>🔗 Abrir en Notion</a>
             </div>
           </div>
         )}

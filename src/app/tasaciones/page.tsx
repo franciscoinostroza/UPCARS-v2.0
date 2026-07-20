@@ -8,6 +8,7 @@ import { Skeleton } from '@/components/skeleton'
 import { fmtDate } from '@/lib/dates'
 import { stateColor, priorityColor } from '@/lib/colors'
 import CalendarView from '@/components/calendar-view'
+import SearchableSelect from '@/components/searchable-select'
 
 interface TasacionItem {
   id: string; nombre: string; estado: string; prioridad: string
@@ -25,16 +26,18 @@ function TasacionesInner() {
   const [loading, setLoading] = useState(true)
   const [vista, setVista] = useState<'tabla' | 'kanban' | 'calendario'>('tabla')
   const [filterEstado, setFilterEstado] = useState('')
+  const [filterPrioridad, setFilterPrioridad] = useState('')
+  const [filterResponsable, setFilterResponsable] = useState('')
+  const [filterTipoTarea, setFilterTipoTarea] = useState('')
+  const [filterArea, setFilterArea] = useState('')
   const [selected, setSelected] = useState<TasacionItem | null>(null)
   const [showCreate, setShowCreate] = useState(false)
   const [employees, setEmployees] = useState<{ id: string; name: string }[]>([])
 
   const fetchData = useCallback(async () => {
     try {
-      const params = new URLSearchParams()
-      if (filterEstado) params.set('estado', filterEstado)
       const [res, empRes] = await Promise.all([
-        fetch(`/api/tasaciones${params.toString() ? '?' + params : ''}`),
+        fetch('/api/tasaciones'),
         fetch('/api/employees'),
       ])
       const json = await res.json()
@@ -42,11 +45,22 @@ function TasacionesInner() {
       if (json.success) setRecords(json.data)
       if (empJson.success) setEmployees(empJson.data)
     } catch {} finally { setLoading(false) }
-  }, [filterEstado])
+  }, [])
 
   useEffect(() => { fetchData() }, [fetchData])
 
-  const columns = ESTADOS.filter(Boolean).map(est => ({ estado: est, items: records.filter(r => r.estado === est) }))
+  const allTipos = [...new Set(records.flatMap(r => r.tipoTarea))]
+  const allAreas = [...new Set(records.flatMap(r => r.area))]
+
+  const filtrados = records.filter(r => {
+    if (filterPrioridad && r.prioridad !== filterPrioridad) return false
+    if (filterResponsable && r.responsableId !== filterResponsable) return false
+    if (filterTipoTarea && !r.tipoTarea.includes(filterTipoTarea)) return false
+    if (filterArea && !r.area.includes(filterArea)) return false
+    return true
+  })
+
+  const columns = ESTADOS.filter(Boolean).map(est => ({ estado: est, items: filtrados.filter(r => r.estado === est) }))
 
   const sensors = useSensors(
     useSensor(MouseSensor, { activationConstraint: { distance: 8 } }),
@@ -102,6 +116,31 @@ function TasacionesInner() {
             <option value="">Todos los estados</option>
             {ESTADOS.filter(Boolean).map(e => <option key={e} value={e}>{e}</option>)}
           </select>
+          <select value={filterPrioridad} onChange={e => setFilterPrioridad(e.target.value)}
+            className="text-[11px] px-2 py-1.5 rounded outline-none"
+            style={{ background: 'var(--bg-card)', color: 'var(--text)', border: '1px solid var(--border)' }}>
+            <option value="">Todas las prioridades</option>
+            <option value="Alta">🔴 Alta</option>
+            <option value="Media">🟡 Media</option>
+            <option value="Baja">🟢 Baja</option>
+          </select>
+          <SearchableSelect items={employees} value={filterResponsable} onChange={setFilterResponsable} placeholder="Filtrar por responsable..." displayFn={(e: any) => e.name} />
+          {allTipos.length > 0 && (
+            <select value={filterTipoTarea} onChange={e => setFilterTipoTarea(e.target.value)}
+              className="text-[11px] px-2 py-1.5 rounded outline-none"
+              style={{ background: 'var(--bg-card)', color: 'var(--text)', border: '1px solid var(--border)' }}>
+              <option value="">Todos los tipos</option>
+              {allTipos.map(t => <option key={t} value={t}>{t}</option>)}
+            </select>
+          )}
+          {allAreas.length > 0 && (
+            <select value={filterArea} onChange={e => setFilterArea(e.target.value)}
+              className="text-[11px] px-2 py-1.5 rounded outline-none"
+              style={{ background: 'var(--bg-card)', color: 'var(--text)', border: '1px solid var(--border)' }}>
+              <option value="">Todas las áreas</option>
+              {allAreas.map(a => <option key={a} value={a}>{a}</option>)}
+            </select>
+          )}
         </div>
 
         {vista === 'kanban' ? (
@@ -130,15 +169,15 @@ function TasacionesInner() {
         ) : vista === 'calendario' ? (
           <div className="animate-fade-up">
             <CalendarView
-              items={records.filter(r => r.plazo).map(r => ({ id: r.id, titulo: r.nombre, fecha: r.plazo!, estado: r.estado, area: r.tipoTarea.join(', ') }))}
+              items={filtrados.filter(r => r.plazo).map(r => ({ id: r.id, titulo: r.nombre, fecha: r.plazo!, estado: r.estado, area: r.tipoTarea.join(', ') }))}
               typeColors={{ 'Sin empezar': '#eab308', 'Seguimiento': '#3b82f6', 'Vendido': '#22c55e', 'Desiste compra': '#ef4444' }}
             />
           </div>
         ) : (
           <div className="space-y-2 animate-fade-up">
-            {records.length === 0 ? (
+            {filtrados.length === 0 ? (
               <div className="card p-8 text-center"><p className="text-sm" style={{ color: 'var(--text-muted)' }}>Sin tasaciones</p></div>
-            ) : records.map(r => {
+            ) : filtrados.map(r => {
               const ec = stateColor(r.estado)
               const pc = priorityColor(r.prioridad)
               const overdue = r.plazo && new Date(r.plazo) < new Date()
