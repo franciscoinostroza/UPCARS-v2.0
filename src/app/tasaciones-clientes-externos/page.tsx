@@ -365,5 +365,5 @@ function DraggableTasacionCard({ item, onClick }: { item: TasacionItem; onClick:
 const selectSx: React.CSSProperties = { background: 'var(--bg-card)', color: 'var(--text)', border: '1px solid var(--border)', fontSize: 11, padding: '6px 8px', borderRadius: 6, width: '100%', outline: 'none' }
 
 export default function TasacionesClientesExternosPage() {
-  return <ThemeProvider><TasacionesInner /></ThemeProvider>
+  return <ThemeProvider><TasacionesClientesExternosInner /></ThemeProvider>
 }
