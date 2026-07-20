@@ -139,6 +139,9 @@ function LogisticaInner() {
         setRecords(prev => prev.map(r => r.id === selected.id ? { ...r, ...editData } as LogItem : r))
         setSelected(prev => prev ? { ...prev, ...editData } as LogItem : null)
         setEditing(false)
+        if (editData.responsableId) {
+          fetch('/api/notify', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ type: 'logistica', recordName: selected.nombre, responsableId: editData.responsableId, autorNombre: 'Sistema' }) }).catch(() => {})
+        }
       }
     } catch {}
   }

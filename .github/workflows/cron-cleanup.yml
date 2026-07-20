@@ -1,0 +1,14 @@
+name: Cleanup completed records
+
+on:
+  schedule:
+    - cron: '0 3 * * *'  # every day at 3am
+  workflow_dispatch:
+
+jobs:
+  cleanup:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Call cleanup endpoint
+        run: |
+          curl -s "https://upcars.pixelarch.dev/api/cron/cleanup-completed?token=${{ secrets.CRON_SECRET }}" || echo "Cleanup failed"

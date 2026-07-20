@@ -423,8 +423,14 @@ function AsignarForm({ vehicles, employees, onSuccess, onError }: { vehicles: Ve
         body: JSON.stringify({ employeeId }),
       })
       const data = await res.json()
-      if (res.ok) onSuccess()
-      else onError(data.error || 'Error al asignar')
+      if (res.ok) {
+        onSuccess()
+        const veh = vehicles.find(v => v.id === vehicleId)
+        const emp = employees.find(e => e.id === employeeId)
+        if (veh && emp) {
+          fetch('/api/notify', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ type: 'vehiculos', recordName: vehLabel(veh), responsableId: employeeId, autorNombre: 'Sistema' }) }).catch(() => {})
+        }
+      } else onError(data.error || 'Error al asignar')
     } catch (err: any) {
       onError(err?.message || 'Error de red')
     } finally {

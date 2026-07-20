@@ -1,5 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { updateTask, archiveTask } from '@/lib/notion/tasks'
+import { getEmployees } from '@/lib/notion/employees'
+import { createNotificacion } from '@/lib/notion/notifications'
 
 export const dynamic = 'force-dynamic'
 
@@ -29,6 +31,16 @@ export async function PATCH(
     const body = await request.json()
 
     await updateTask(id, body)
+
+    if (body.responsableId) {
+      try {
+        const employees = await getEmployees()
+        const emp = employees.find(e => e.id === body.responsableId)
+        if (emp?.email) {
+          await createNotificacion(`📋 Tarea asignada: ${body.name || 'Tarea'}`, null, [emp.email]).catch(() => {})
+        }
+      } catch {}
+    }
 
     return NextResponse.json({ success: true, data: { id, ...body } })
   } catch (error: any) {
