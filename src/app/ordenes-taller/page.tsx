@@ -42,6 +42,7 @@ function TallerInner() {
   const [filterEstado, setFilterEstado] = useState('')
   const [selected, setSelected] = useState<TallerItem | null>(null)
   const [editObs, setEditObs] = useState('')
+  const [editing, setEditing] = useState(false)
   const [showCreate, setShowCreate] = useState(false)
   const [employees, setEmployees] = useState<{ id: string; name: string }[]>([])
   const [vehicles, setVehicles] = useState<{ id: string; name: string; matricula?: string; brand?: string; model?: string; year?: string }[]>([])
@@ -188,12 +189,44 @@ function TallerInner() {
           </div>
         )}
 
-        {selected && (
+        {selected && !editing && (
           <div className="fixed inset-0 z-50 flex items-center justify-center p-4" style={{ background: 'rgba(0,0,0,0.6)' }} onClick={(e) => { if (e.target === e.currentTarget) setSelected(null) }}>
             <div className="card w-full max-w-lg animate-fade-up p-5" style={{ background: 'var(--bg-card)', maxHeight: '90vh', overflowY: 'auto' }}>
               <div className="flex items-center justify-between mb-3">
                 <h2 className="text-sm font-semibold" style={{ color: 'var(--text)' }}>{vehicleDisplay(vehicles, selected.vehicleId)}</h2>
-                <button onClick={() => setSelected(null)} className="text-sm px-2 py-1 rounded" style={{ color: 'var(--text-muted)' }}>✕</button>
+                <div className="flex items-center gap-1">
+                  <button onClick={() => setEditing(true)} className="text-[10px] px-2 py-1 rounded" style={{ color: 'var(--accent-blue)' }}>✏️</button>
+                  <button onClick={() => setSelected(null)} className="text-sm px-2 py-1 rounded" style={{ color: 'var(--text-muted)' }}>✕</button>
+                </div>
+              </div>
+              <div className="space-y-2 text-xs">
+                <div className="flex gap-2"><span className="font-medium shrink-0" style={{ color: 'var(--text-muted)' }}>Estado:</span><span style={{ color: 'var(--text)' }}>{selected.estado || 'Sin estado'}</span></div>
+                <div className="flex gap-2"><span className="font-medium shrink-0" style={{ color: 'var(--text-muted)' }}>Vehículo:</span><span style={{ color: 'var(--text)' }}>{selected.vehiculoNombre || '—'}</span></div>
+                <div className="flex gap-2"><span className="font-medium shrink-0" style={{ color: 'var(--text-muted)' }}>Tipo:</span><span style={{ color: 'var(--text)' }}>{selected.tipo || '—'}</span></div>
+                <div className="flex gap-2"><span className="font-medium shrink-0" style={{ color: 'var(--text-muted)' }}>Mecánico:</span><span style={{ color: 'var(--text)' }}>{selected.responsableNombre || '—'}</span></div>
+                <div className="flex gap-2"><span className="font-medium shrink-0" style={{ color: 'var(--text-muted)' }}>Entrada:</span><span style={{ color: 'var(--text)' }}>{fmtDate(selected.fechaEntrada)}</span></div>
+                <div className="flex gap-2"><span className="font-medium shrink-0" style={{ color: 'var(--text-muted)' }}>Salida:</span><span style={{ color: 'var(--text)' }}>{fmtDate(selected.fechaSalida)}</span></div>
+                {selected.costeMateriales != null && <div className="flex gap-2"><span className="font-medium shrink-0" style={{ color: 'var(--text-muted)' }}>Coste materiales:</span><span style={{ color: 'var(--text)' }}>{selected.costeMateriales.toLocaleString('es-ES', { style: 'currency', currency: 'EUR' })}</span></div>}
+                {selected.costeManoObra != null && <div className="flex gap-2"><span className="font-medium shrink-0" style={{ color: 'var(--text-muted)' }}>Coste mano obra:</span><span style={{ color: 'var(--text)' }}>{selected.costeManoObra.toLocaleString('es-ES', { style: 'currency', currency: 'EUR' })}</span></div>}
+                {selected.costeTotal != null && <div className="flex gap-2"><span className="font-medium shrink-0" style={{ color: 'var(--text-muted)' }}>Coste total:</span><span style={{ color: 'var(--accent-blue)' }}>{selected.costeTotal.toLocaleString('es-ES', { style: 'currency', currency: 'EUR' })}</span></div>}
+                {selected.diasTaller != null && <div className="flex gap-2"><span className="font-medium shrink-0" style={{ color: 'var(--text-muted)' }}>Días en taller:</span><span style={{ color: 'var(--text)' }}>{selected.diasTaller}</span></div>}
+                {selected.observaciones && <div className="mt-2 pt-2 border-t" style={{ borderColor: 'var(--border)' }}><p className="text-[10px] font-medium mb-0.5" style={{ color: 'var(--text-muted)' }}>Observaciones:</p><p style={{ color: 'var(--text-secondary)' }}>{selected.observaciones}</p></div>}
+              </div>
+              <button onClick={async () => {
+                if (!confirm('¿Eliminar esta orden?')) return
+                await fetch(`/api/ordenes-taller/${selected.id}`, { method: 'DELETE' })
+                setSelected(null); fetchData()
+              }} className="w-full text-[11px] font-semibold py-2 rounded mt-4" style={{ background: 'rgba(239,68,68,0.12)', color: '#ef4444' }}>🗑 Eliminar</button>
+            </div>
+          </div>
+        )}
+
+        {selected && editing && (
+          <div className="fixed inset-0 z-50 flex items-center justify-center p-4" style={{ background: 'rgba(0,0,0,0.6)' }} onClick={(e) => { if (e.target === e.currentTarget) { setSelected(null); setEditing(false) } }}>
+            <div className="card w-full max-w-lg animate-fade-up p-5" style={{ background: 'var(--bg-card)', maxHeight: '90vh', overflowY: 'auto' }}>
+              <div className="flex items-center justify-between mb-3">
+                <h2 className="text-sm font-semibold" style={{ color: 'var(--text)' }}>✏️ {vehicleDisplay(vehicles, selected.vehicleId)}</h2>
+                <button onClick={() => setEditing(false)} className="text-sm px-2 py-1 rounded" style={{ color: 'var(--text-muted)' }}>✕</button>
               </div>
               <div className="space-y-2 text-xs mb-4">
                 <div className="flex gap-2 items-center">
@@ -236,12 +269,11 @@ function TallerInner() {
                   setRecords(prev => prev.map(r => r.id === selected.id ? { ...r, observaciones: editObs } : r))
                 }} className="w-full text-[11px] font-semibold py-2 rounded" style={{ background: 'var(--accent-blue)', color: '#fff' }}>💾 Guardar</button>
                 <button onClick={async () => {
-                  if (!confirm('¿Eliminar esta orden de taller?')) return
+                  if (!confirm('¿Eliminar esta orden?')) return
                   await fetch(`/api/ordenes-taller/${selected.id}`, { method: 'DELETE' })
-                  setSelected(null); fetchData()
+                  setSelected(null); setEditing(false); fetchData()
                 }} className="w-full text-[11px] font-semibold py-2 rounded mt-1" style={{ background: 'rgba(239,68,68,0.12)', color: '#ef4444' }}>🗑 Eliminar</button>
               </div>
-              <a href={`https://www.notion.so/${selected.id.replace(/-/g, '')}`} target="_blank" rel="noopener noreferrer" className="block w-full text-center text-[10px] font-medium py-2 rounded" style={{ background: 'var(--bg-pill)', color: 'var(--accent-blue)' }}>🔗 Abrir en Notion</a>
             </div>
           </div>
         )}

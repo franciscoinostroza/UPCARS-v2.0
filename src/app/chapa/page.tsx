@@ -38,6 +38,7 @@ function ChapaInner() {
   const [selected, setSelected] = useState<ChapaItem | null>(null)
   const [editObs, setEditObs] = useState('')
   const [editTrabajos, setEditTrabajos] = useState('')
+  const [editing, setEditing] = useState(false)
   const [showCreate, setShowCreate] = useState(false)
   const [providers, setProviders] = useState<{ id: string; name: string }[]>([])
   const [employees, setEmployees] = useState<{ id: string; name: string }[]>([])
@@ -177,12 +178,41 @@ function ChapaInner() {
           </div>
         )}
 
-        {selected && (
+        {selected && !editing && (
           <div className="fixed inset-0 z-50 flex items-center justify-center p-4" style={{ background: 'rgba(0,0,0,0.6)' }} onClick={(e) => { if (e.target === e.currentTarget) setSelected(null) }}>
             <div className="card w-full max-w-lg animate-fade-up p-5" style={{ background: 'var(--bg-card)', maxHeight: '90vh', overflowY: 'auto' }}>
               <div className="flex items-center justify-between mb-3">
                 <h2 className="text-sm font-semibold" style={{ color: 'var(--text)' }}>{vehicleDisplay(vehicles, selected.vehiculoId)}</h2>
-                <button onClick={() => setSelected(null)} className="text-sm px-2 py-1 rounded" style={{ color: 'var(--text-muted)' }}>✕</button>
+                <div className="flex items-center gap-1">
+                  <button onClick={() => setEditing(true)} className="text-[10px] px-2 py-1 rounded" style={{ color: 'var(--accent-blue)' }}>✏️</button>
+                  <button onClick={() => setSelected(null)} className="text-sm px-2 py-1 rounded" style={{ color: 'var(--text-muted)' }}>✕</button>
+                </div>
+              </div>
+              <div className="space-y-2 text-xs">
+                <div className="flex gap-2"><span className="font-medium shrink-0" style={{ color: 'var(--text-muted)' }}>Estado:</span><span style={{ color: 'var(--text)' }}>{selected.estado || 'Sin estado'}</span></div>
+                <div className="flex gap-2"><span className="font-medium shrink-0" style={{ color: 'var(--text-muted)' }}>Proveedor:</span><span style={{ color: 'var(--text)' }}>{selected.proveedorNombre || '—'}</span></div>
+                <div className="flex gap-2"><span className="font-medium shrink-0" style={{ color: 'var(--text-muted)' }}>Coste total:</span><span style={{ color: 'var(--text)' }}>{selected.costeTotal != null ? selected.costeTotal.toLocaleString('es-ES', { style: 'currency', currency: 'EUR' }) : '—'}</span></div>
+                <div className="flex gap-2"><span className="font-medium shrink-0" style={{ color: 'var(--text-muted)' }}>Salida:</span><span style={{ color: 'var(--text)' }}>{fmtDate(selected.fechaSalida)}</span></div>
+                <div className="flex gap-2"><span className="font-medium shrink-0" style={{ color: 'var(--text-muted)' }}>Retorno:</span><span style={{ color: 'var(--text)' }}>{fmtDate(selected.fechaRetorno)}</span></div>
+                {selected.diasFuera != null && <div className="flex gap-2"><span className="font-medium shrink-0" style={{ color: 'var(--text-muted)' }}>Días fuera:</span><span style={{ color: 'var(--text)' }}>{selected.diasFuera}</span></div>}
+                {selected.trabajosSolicitados && <div className="mt-2 pt-2 border-t" style={{ borderColor: 'var(--border)' }}><p className="text-[10px] font-medium mb-0.5" style={{ color: 'var(--text-muted)' }}>Trabajos solicitados:</p><p style={{ color: 'var(--text-secondary)' }}>{selected.trabajosSolicitados}</p></div>}
+                {selected.observaciones && <div className="mt-2 pt-2 border-t" style={{ borderColor: 'var(--border)' }}><p className="text-[10px] font-medium mb-0.5" style={{ color: 'var(--text-muted)' }}>Observaciones:</p><p style={{ color: 'var(--text-secondary)' }}>{selected.observaciones}</p></div>}
+              </div>
+              <button onClick={async () => {
+                if (!confirm('¿Eliminar este registro?')) return
+                await fetch(`/api/chapa/${selected.id}`, { method: 'DELETE' })
+                setSelected(null); fetchData()
+              }} className="w-full text-[11px] font-semibold py-2 rounded mt-4" style={{ background: 'rgba(239,68,68,0.12)', color: '#ef4444' }}>🗑 Eliminar</button>
+            </div>
+          </div>
+        )}
+
+        {selected && editing && (
+          <div className="fixed inset-0 z-50 flex items-center justify-center p-4" style={{ background: 'rgba(0,0,0,0.6)' }} onClick={(e) => { if (e.target === e.currentTarget) { setSelected(null); setEditing(false) } }}>
+            <div className="card w-full max-w-lg animate-fade-up p-5" style={{ background: 'var(--bg-card)', maxHeight: '90vh', overflowY: 'auto' }}>
+              <div className="flex items-center justify-between mb-3">
+                <h2 className="text-sm font-semibold" style={{ color: 'var(--text)' }}>✏️ {vehicleDisplay(vehicles, selected.vehiculoId)}</h2>
+                <button onClick={() => setEditing(false)} className="text-sm px-2 py-1 rounded" style={{ color: 'var(--text-muted)' }}>✕</button>
               </div>
               <div className="space-y-2 text-xs mb-4">
                 <div className="flex gap-2 items-center">
@@ -223,12 +253,11 @@ function ChapaInner() {
                   setRecords(prev => prev.map(r => r.id === selected.id ? { ...r, observaciones: editObs, trabajosSolicitados: editTrabajos } : r))
                 }} className="w-full text-[11px] font-semibold py-2 rounded" style={{ background: 'var(--accent-blue)', color: '#fff' }}>💾 Guardar</button>
                 <button onClick={async () => {
-                  if (!confirm('¿Eliminar este registro de chapa?')) return
+                  if (!confirm('¿Eliminar este registro?')) return
                   await fetch(`/api/chapa/${selected.id}`, { method: 'DELETE' })
-                  setSelected(null); fetchData()
+                  setSelected(null); setEditing(false); fetchData()
                 }} className="w-full text-[11px] font-semibold py-2 rounded mt-1" style={{ background: 'rgba(239,68,68,0.12)', color: '#ef4444' }}>🗑 Eliminar</button>
               </div>
-              <a href={`https://www.notion.so/${selected.id.replace(/-/g, '')}`} target="_blank" rel="noopener noreferrer" className="block w-full text-center text-[10px] font-medium py-2 rounded" style={{ background: 'var(--bg-pill)', color: 'var(--accent-blue)' }}>🔗 Abrir en Notion</a>
             </div>
           </div>
         )}
