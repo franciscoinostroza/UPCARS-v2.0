@@ -39,6 +39,7 @@ function FinancierasInner() {
   const [selected, setSelected] = useState<FinancieraItem | null>(null)
   const [editing, setEditing] = useState(false)
   const [saving, setSaving] = useState(false)
+  const [imagenUrl, setImagenUrl] = useState('')
   const [editData, setEditData] = useState<any>({})
 
   const fetchData = useCallback(async () => {
@@ -188,7 +189,7 @@ function FinancierasInner() {
                   <h2 className="text-sm font-semibold" style={{ color: 'var(--text)' }}>{selected.nombre}</h2>
                 </div>
                 <div className="flex items-center gap-1">
-                  <button onClick={() => { setEditing(true); setEditData(selected) }} className="text-[10px] px-2 py-1 rounded" style={{ color: 'var(--accent-blue)' }}>✏️</button>
+                  <button onClick={() => { setEditing(true); setEditData(selected); setImagenUrl('') }} className="text-[10px] px-2 py-1 rounded" style={{ color: 'var(--accent-blue)' }}>✏️</button>
                   <button onClick={() => setSelected(null)} className="text-sm px-2 py-1 rounded" style={{ color: 'var(--text-muted)' }}>✕</button>
                 </div>
               </div>
@@ -245,11 +246,17 @@ function FinancierasInner() {
                   <textarea value={selected.datosAcceso} onChange={e => setRecords(prev => prev.map(r => r.id === selected.id ? { ...r, datosAcceso: e.target.value } : r))} rows={2} style={{...inputSx, resize: 'vertical'}} className="mt-1" /></div>
                 <div><span className="font-medium" style={{ color: 'var(--text-muted)' }}>Notas:</span>
                   <textarea value={editData.notas || ''} onChange={e => setEditData({...editData, notas: e.target.value})} rows={2} style={{...inputSx, resize: 'vertical'}} className="mt-1" /></div>
+                <div><span className="font-medium" style={{ color: 'var(--text-muted)' }}>🖼️ URL de imagen:</span>
+                  <input value={imagenUrl} onChange={e => setImagenUrl(e.target.value)} style={inputSx} className="mt-1" placeholder="https://..." />
+                  {imagenUrl && <img src={imagenUrl} className="w-full h-32 object-cover rounded mt-2" />}
+                </div>
                 <div className="flex gap-2 pt-2">
                   <button onClick={async () => {
                     setSaving(true)
                     const tk = new URLSearchParams(window.location.search).get('token') || ''
-                    await fetch(`/api/financieras/${selected.id}?token=${tk}`, { method: 'PATCH', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ estado: selected.estado, personaContacto: selected.personaContacto, telefono: selected.telefono, email: selected.email, enlaceAcceso: selected.enlaceAcceso, datosAcceso: selected.datosAcceso, notas: editData.notas }) })
+                    const body: any = { estado: selected.estado, personaContacto: selected.personaContacto, telefono: selected.telefono, email: selected.email, enlaceAcceso: selected.enlaceAcceso, datosAcceso: selected.datosAcceso, notas: editData.notas }
+                    if (imagenUrl) body.tarifasLeasingUrl = imagenUrl
+                    await fetch(`/api/financieras/${selected.id}?token=${tk}`, { method: 'PATCH', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(body) })
                     setRecords(prev => prev.map(r => r.id === selected.id ? { ...r, notas: editData.notas } : r))
                     setSaving(false); setEditing(false)
                   }} className="flex-1 text-[11px] font-semibold py-2 rounded" style={{ background: 'var(--accent-blue)', color: '#fff' }} disabled={saving}>{saving ? 'Guardando...' : '💾 Guardar'}</button>

@@ -82,6 +82,9 @@ export async function updateFinanciera(id: string, data: Record<string, any>) {
   if (data.datosAcceso !== undefined) props['Datos de Acceso'] = { rich_text: [{ text: { content: data.datosAcceso } }] }
   if (data.enlaceAcceso !== undefined) props['Enlace de Acceso'] = { rich_text: [{ text: { content: data.enlaceAcceso } }] }
   if (data.notas !== undefined) props['Notas'] = { rich_text: [{ text: { content: data.notas } }] }
+  if (data.tarifasLeasingUrl) {
+    props['Tarifas Leasing'] = { files: [{ name: 'Imagen', type: 'external', external: { url: data.tarifasLeasingUrl } }] }
+  }
 
   if (Object.keys(props).length === 0) return
   await notionPatch(`/pages/${id}`, { properties: props })
