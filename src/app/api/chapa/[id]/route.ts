@@ -31,6 +31,7 @@ export async function DELETE(
     await notionPatch(`/pages/${id}`, { archived: true })
     return NextResponse.json({ success: true, data: { id } })
   } catch (error: any) {
+    console.error('chapa DELETE error:', error);
     return NextResponse.json({ success: false, error: error?.message || 'Failed' }, { status: 500 })
   }
 }

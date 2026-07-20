@@ -196,9 +196,11 @@ function PrepInner() {
               </div>
               <button onClick={async () => {
                 if (!confirm('¿Eliminar este registro?')) return
-                const r = await fetch(`/api/preparacion/${selected.id}`, { method: 'DELETE' })
-                if (!r.ok) { const d = await r.json(); alert(d.error || 'Error'); return }
-                setSelected(null); fetchData()
+                try {
+                  const r = await fetch(`/api/preparacion/${selected.id}`, { method: 'DELETE' })
+                  if (!r.ok) { const d = await r.json(); alert(d.error || 'Error'); return }
+                  setSelected(null); fetchData()
+                } catch (e) { alert('Error de red al eliminar'); }
               }} className="w-full text-[11px] font-semibold py-2 rounded mt-4" style={{ background: 'rgba(239,68,68,0.12)', color: '#ef4444' }}>🗑 Eliminar</button>
             </div>
           </div>
@@ -259,6 +261,7 @@ function PrepInner() {
                               <span onClick={async () => {
                                 const newVal = !checked
                                 setRecords(prev => prev.map(r => r.id === selected.id ? { ...r, [key]: newVal } as PrepItem : r))
+                                setSelected(prev => prev ? { ...prev, [key]: newVal } as PrepItem : null)
                                 await fetch(`/api/preparacion/${selected.id}`, { method: 'PATCH', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ [key]: newVal }) })
                               }} style={{
                                 width: 36, height: 20, borderRadius: 10, display: 'inline-flex', alignItems: 'center',
@@ -286,9 +289,11 @@ function PrepInner() {
                       }} className="w-full text-[11px] font-semibold py-2 rounded" style={{ background: 'var(--accent-blue)', color: '#fff' }}>💾 Guardar</button>
                       <button onClick={async () => {
                         if (!confirm('¿Eliminar este registro?')) return
-                        const r = await fetch(`/api/preparacion/${selected.id}`, { method: 'DELETE' })
-                        if (!r.ok) { const d = await r.json(); alert(d.error || 'Error'); return }
-                        setSelected(null); setEditing(false); fetchData()
+                        try {
+                          const r = await fetch(`/api/preparacion/${selected.id}`, { method: 'DELETE' })
+                          if (!r.ok) { const d = await r.json(); alert(d.error || 'Error'); return }
+                          setSelected(null); setEditing(false); fetchData()
+                        } catch (e) { alert('Error de red al eliminar'); }
                       }} className="w-full text-[11px] font-semibold py-2 rounded mt-1" style={{ background: 'rgba(239,68,68,0.12)', color: '#ef4444' }}>🗑 Eliminar</button>
                     </div>
                   </div>

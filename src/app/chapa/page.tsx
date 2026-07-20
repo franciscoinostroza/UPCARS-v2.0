@@ -198,9 +198,11 @@ function ChapaInner() {
               </div>
               <button onClick={async () => {
                 if (!confirm('¿Eliminar este registro?')) return
-                const r = await fetch(`/api/chapa/${selected.id}`, { method: 'DELETE' })
-                if (!r.ok) { const d = await r.json(); alert(d.error || 'Error'); return }
-                setSelected(null); fetchData()
+                try {
+                  const r = await fetch(`/api/chapa/${selected.id}`, { method: 'DELETE' })
+                  if (!r.ok) { const d = await r.json(); alert(d.error || 'Error'); return }
+                  setSelected(null); fetchData()
+                } catch (e) { alert('Error de red al eliminar'); }
               }} className="w-full text-[11px] font-semibold py-2 rounded mt-4" style={{ background: 'rgba(239,68,68,0.12)', color: '#ef4444' }}>🗑 Eliminar</button>
             </div>
           </div>
@@ -253,79 +255,14 @@ function ChapaInner() {
                 }} className="w-full text-[11px] font-semibold py-2 rounded" style={{ background: 'var(--accent-blue)', color: '#fff' }}>💾 Guardar</button>
                 <button onClick={async () => {
                   if (!confirm('¿Eliminar este registro?')) return
-                  const r = await fetch(`/api/chapa/${selected.id}`, { method: 'DELETE' })
-                  if (!r.ok) { const d = await r.json(); alert(d.error || 'Error'); return }
-                  setSelected(null); setEditing(false); fetchData()
+                  try {
+                    const r = await fetch(`/api/chapa/${selected.id}`, { method: 'DELETE' })
+                    if (!r.ok) { const d = await r.json(); alert(d.error || 'Error'); return }
+                    setSelected(null); setEditing(false); fetchData()
+                  } catch (e) { alert('Error de red al eliminar'); }
                 }} className="w-full text-[11px] font-semibold py-2 rounded mt-1" style={{ background: 'rgba(239,68,68,0.12)', color: '#ef4444' }}>🗑 Eliminar</button>
               </div>
             </div>
-          </div>
-        )}
-
-        {showCreate && (
-          <div className="fixed inset-0 z-50 flex items-center justify-center p-4" style={{ background: 'rgba(0,0,0,0.6)' }} onClick={(e) => { if (e.target === e.currentTarget) setShowCreate(false) }}>
-            <form onSubmit={async (e) => {
-              e.preventDefault()
-              await fetch('/api/chapa', {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({
-                  vehiculoId: createData.vehiculoId,
-                  estado: createData.estado,
-                  proveedorId: createData.proveedorId || null,
-                  costeTotal: createData.costeTotal ? parseFloat(createData.costeTotal) : null,
-                  fechaSalida: createData.fechaSalida || null,
-                  fechaRetorno: createData.fechaRetorno || null,
-                  trabajosSolicitados: createData.trabajosSolicitados,
-                  observaciones: createData.observaciones,
-                }),
-              })
-              setShowCreate(false)
-              setCreateData({ vehiculoId: '', estado: 'Pendiente de Chapa', proveedorId: '', costeTotal: '', fechaSalida: '', fechaRetorno: '', trabajosSolicitados: '', observaciones: '' })
-              fetchData()
-            }} className="card w-full max-w-md animate-fade-up p-5" style={{ background: 'var(--bg-card)' }}>
-              <h2 className="text-sm font-semibold mb-4" style={{ color: 'var(--text)' }}>Nuevo registro Chapa</h2>
-              <div className="space-y-3">
-                <div>
-                  <p className="text-[10px] font-medium mb-0.5" style={{ color: 'var(--text-muted)' }}>Vehículo *</p>
-                  <VehicleAutocomplete vehicles={vehicles} value={createData.vehiculoId} onChange={(id) => setCreateData(p => ({ ...p, vehiculoId: id }))} required placeholder="Buscar vehículo..." />
-                </div>
-                <div>
-                  <p className="text-[10px] font-medium mb-0.5" style={{ color: 'var(--text-muted)' }}>Estado</p>
-                  <select value={createData.estado} onChange={e => setCreateData(p => ({ ...p, estado: e.target.value }))} style={selectSx}>
-                    {ESTADOS.filter(Boolean).map(s => <option key={s} value={s}>{s}</option>)}
-                  </select>
-                </div>
-                <div>
-                  <p className="text-[10px] font-medium mb-0.5" style={{ color: 'var(--text-muted)' }}>Proveedor externo</p>
-                  <SearchableSelect items={providers} value={createData.proveedorId || ''} onChange={(id) => setCreateData(p => ({ ...p, proveedorId: id }))} placeholder="Buscar proveedor..." displayFn={(p: any) => p.name} />
-                </div>
-                <div>
-                  <p className="text-[10px] font-medium mb-0.5" style={{ color: 'var(--text-muted)' }}>Coste total (€)</p>
-                  <input type="number" value={createData.costeTotal} onChange={e => setCreateData(p => ({ ...p, costeTotal: e.target.value }))} style={selectSx} step="0.01" />
-                </div>
-                <div>
-                  <p className="text-[10px] font-medium mb-0.5" style={{ color: 'var(--text-muted)' }}>Fecha salida</p>
-                  <input type="date" value={createData.fechaSalida} onChange={e => setCreateData(p => ({ ...p, fechaSalida: e.target.value }))} style={selectSx} />
-                </div>
-                <div>
-                  <p className="text-[10px] font-medium mb-0.5" style={{ color: 'var(--text-muted)' }}>Fecha retorno</p>
-                  <input type="date" value={createData.fechaRetorno} onChange={e => setCreateData(p => ({ ...p, fechaRetorno: e.target.value }))} style={selectSx} />
-                </div>
-                <div>
-                  <p className="text-[10px] font-medium mb-0.5" style={{ color: 'var(--text-muted)' }}>Trabajos solicitados</p>
-                  <textarea value={createData.trabajosSolicitados} onChange={e => setCreateData(p => ({ ...p, trabajosSolicitados: e.target.value }))} rows={2} className="w-full text-xs px-2 py-1.5 rounded outline-none resize-none" style={{ background: 'var(--bg)', color: 'var(--text)', border: '1px solid var(--border)' }} placeholder="Opcional" />
-                </div>
-                <div>
-                  <p className="text-[10px] font-medium mb-0.5" style={{ color: 'var(--text-muted)' }}>Observaciones</p>
-                  <textarea value={createData.observaciones} onChange={e => setCreateData(p => ({ ...p, observaciones: e.target.value }))} rows={2} className="w-full text-xs px-2 py-1.5 rounded outline-none resize-none" style={{ background: 'var(--bg)', color: 'var(--text)', border: '1px solid var(--border)' }} placeholder="Opcional" />
-                </div>
-              </div>
-              <div className="flex gap-2 mt-4">
-                <button type="submit" className="flex-1 text-[11px] font-semibold py-2.5 rounded" style={{ background: 'var(--accent-blue)', color: '#fff' }}>Crear</button>
-                <button type="button" onClick={() => setShowCreate(false)} className="flex-1 text-[11px] font-semibold py-2.5 rounded" style={{ background: 'var(--bg-pill)', color: 'var(--text-secondary)' }}>Cancelar</button>
-              </div>
-            </form>
           </div>
         )}
       </div>

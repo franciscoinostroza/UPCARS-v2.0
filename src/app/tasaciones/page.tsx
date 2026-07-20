@@ -235,11 +235,12 @@ function TasacionesInner() {
                 )}
                 <button onClick={async () => {
                   if (!confirm('¿Eliminar esta tasación?')) return
-                  await fetch(`/api/tasaciones/${selected.id}`, { method: 'DELETE' })
-                  setSelected(null); fetchData()
+                  try {
+                    await fetch(`/api/tasaciones/${selected.id}`, { method: 'DELETE' })
+                    setSelected(null); fetchData()
+                  } catch (e) { alert('Error de red al eliminar'); }
                 }} className="w-full text-[11px] font-semibold py-2 rounded mt-2" style={{ background: 'rgba(239,68,68,0.12)', color: '#ef4444' }}>🗑 Eliminar</button>
               </div>
-              <a href={`https://www.notion.so/${selected.id.replace(/-/g, '')}`} target="_blank" rel="noopener noreferrer" className="block w-full text-center text-[10px] font-medium py-2 rounded" style={{ background: 'var(--bg-pill)', color: 'var(--accent-blue)' }}>🔗 Abrir en Notion</a>
             </div>
           </div>
         )}
