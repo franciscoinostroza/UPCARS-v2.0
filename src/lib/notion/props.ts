@@ -68,6 +68,7 @@ export function parseVehicleProps(id: string, p: Record<string, NotionProp>) {
   const situacionKey = matchKey(selectKeys, ['Situación', 'Situacion', 'Estado']) ?? selectKeys[0]
   const ubicacionKey = matchKey(selectKeys, ['Ubicación', 'Ubicacion']) ?? selectKeys[1]
   const colaboradorKey = matchKey(selectKeys, ['¿Colaborador?', 'Colaborador']) ?? selectKeys[2]
+  const colorSelectKey = matchKey(selectKeys, ['Color']) ?? selectKeys[3]
 
   // Extraer área y sub-estado desde "Estado Actual" (ej: "Taller - En proceso")
   const estadoActual = sel(estadoActualKey ? p[estadoActualKey] : undefined)
@@ -78,7 +79,6 @@ export function parseVehicleProps(id: string, p: Record<string, NotionProp>) {
   const richTextKeys = idx.rich_text
   const brandKey = matchKey(richTextKeys, ['Marca', 'Brand']) ?? richTextKeys[0]
   const modelKey = matchKey(richTextKeys, ['Modelo', 'Model']) ?? richTextKeys[1]
-  const colorKey = matchKey(richTextKeys, ['Color']) ?? richTextKeys[2]
   const notasKey = matchKey(richTextKeys, ['Notas']) ?? richTextKeys[richTextKeys.length - 1]
 
   const combustibleKey = matchKey(selectKeys, ['Combustible']) ?? selectKeys[2]
@@ -161,7 +161,7 @@ export function parseVehicleProps(id: string, p: Record<string, NotionProp>) {
     precioCompra: num(precioCompraKey ? p[precioCompraKey] : undefined),
     precioVenta: num(precioVentaKey ? p[precioVentaKey] : undefined),
     combustible: sel(combustibleKey ? p[combustibleKey] : undefined),
-    color: rtv(colorKey ? p[colorKey] : undefined),
+    color: sel(colorSelectKey ? p[colorSelectKey] : undefined),
     kilometrajeEntrada: num(kilometrajeEntradaKey ? p[kilometrajeEntradaKey] : undefined),
     fechaEntradaTaller: dateVal(fechaEntradaTallerKey ? p[fechaEntradaTallerKey] : undefined),
     fechaEntradaPreparacion: dateVal(fechaEntradaPreparacionKey ? p[fechaEntradaPreparacionKey] : undefined),

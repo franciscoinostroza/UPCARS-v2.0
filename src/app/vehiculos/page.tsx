@@ -103,8 +103,7 @@ function VehiculosInner() {
   return (
     <div style={{ background: 'var(--bg)', minHeight: '100vh' }}>
       <div className="max-w-7xl mx-auto p-3 sm:p-6 lg:p-8">
-        <div className="flex items-center justify-between mb-4 animate-fade-up">
-          <h1 className="text-lg sm:text-2xl font-bold" style={{ color: 'var(--text)' }}>🚗 Vehículos</h1>
+        <div className="flex items-center justify-end mb-4 animate-fade-up">
           <DarkModeToggle />
         </div>
 

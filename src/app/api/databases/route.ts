@@ -19,7 +19,7 @@ type DBMetaEntry = {
 }
 
 const DB_META: Record<string, DBMetaEntry> = {
-  vehicles: { name: 'Vehículos', icon: '🚗', desc: 'Base principal de vehículos', category: 'Operaciones', pageId: '36cf70f847018075b917e92236b444af' },
+  vehicles: { name: 'Vehículos', icon: '🚗', desc: 'Base principal de vehículos', category: 'Operaciones', pageId: '3a3f70f84701806dbc9adaaa81ef0558' },
   workshop: { name: 'Taller', icon: '🔧', desc: 'Órdenes de taller mecánico', category: 'Operaciones', pageId: '398f70f84701807ca12ad6a08c83be03' },
   chapa: { name: 'Chapa y Pintura', icon: '🎨', desc: 'Trabajos de chapa y pintura', category: 'Operaciones', pageId: '398f70f847018062adabf1b015444a94' },
   preparacion: { name: 'Preparación', icon: '✨', desc: 'Preparación previa a venta', category: 'Operaciones', pageId: '398f70f84701801382c8e96333ab4226' },
