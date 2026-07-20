@@ -37,6 +37,22 @@ export interface Vehicle {
   tiempoTotalDias: number | null
   diasActivoSinCerrar: number | null
   margenBruto: number | null
+  inicioTaller: string | null
+  finTaller: string | null
+  inicioChapa: string | null
+  finChapa: string | null
+  inicioPreparacion: string | null
+  finPreparacion: string | null
+  inicioLogistica: string | null
+  finLogistica: string | null
+  tiempoTaller: number | null
+  tiempoChapa: number | null
+  tiempoPreparacion: number | null
+  tiempoLogistica: number | null
+  diasFuera: number | null
+  fechaCesion: string | null
+  colaborador: string | null
+  fotos: { name: string; url: string }[]
 }
 
 export interface NotionVehiclePage {

@@ -67,6 +67,7 @@ export function parseVehicleProps(id: string, p: Record<string, NotionProp>) {
   const estadoActualKey = matchKey(selectKeys, ['Estado Actual']) ?? selectKeys[0]
   const situacionKey = matchKey(selectKeys, ['Situación', 'Situacion', 'Estado']) ?? selectKeys[0]
   const ubicacionKey = matchKey(selectKeys, ['Ubicación', 'Ubicacion']) ?? selectKeys[1]
+  const colaboradorKey = matchKey(selectKeys, ['¿Colaborador?', 'Colaborador']) ?? selectKeys[2]
 
   // Extraer área y sub-estado desde "Estado Actual" (ej: "Taller - En proceso")
   const estadoActual = sel(estadoActualKey ? p[estadoActualKey] : undefined)
@@ -90,12 +91,26 @@ export function parseVehicleProps(id: string, p: Record<string, NotionProp>) {
   const fechaEntradaPreparacionKey = matchKey(dateKeys, ['Fecha entrada preparación']) ?? dateKeys[2]
   const fechaListoKey = matchKey(dateKeys, ['Fecha listo para venta', 'Fecha listo']) ?? dateKeys[3]
   const fechaVendidoKey = matchKey(dateKeys, ['Fecha de venta', 'Fecha venta']) ?? dateKeys[4]
+  const inicioTallerKey = matchKey(dateKeys, ['Inicio Taller']) ?? dateKeys[5]
+  const finTallerKey = matchKey(dateKeys, ['Fin Taller']) ?? dateKeys[6]
+  const inicioChapaKey = matchKey(dateKeys, ['Inicio Chapa']) ?? dateKeys[7]
+  const finChapaKey = matchKey(dateKeys, ['Fin Chapa']) ?? dateKeys[8]
+  const inicioPrepKey = matchKey(dateKeys, ['Inicio Preparación']) ?? dateKeys[9]
+  const finPrepKey = matchKey(dateKeys, ['Fin Preparación']) ?? dateKeys[10]
+  const inicioLogKey = matchKey(dateKeys, ['Inicio Logística']) ?? dateKeys[11]
+  const finLogKey = matchKey(dateKeys, ['Fin Logística']) ?? dateKeys[12]
+  const fechaCesionKey = matchKey(dateKeys, ['Fecha de cesión']) ?? dateKeys[13]
 
   const numberKeys = idx.number
   const yearKey = matchKey(numberKeys, ['Año', 'Year', 'Ano']) ?? numberKeys[0]
   const kilometrajeEntradaKey = matchKey(numberKeys, ['Kilometraje entrada']) ?? numberKeys[1]
   const precioCompraKey = matchKey(numberKeys, ['Precio de compra (€)', 'Precio compra', 'Precio de compra']) ?? numberKeys[2]
   const precioVentaKey = matchKey(numberKeys, ['Precio venta (€)', 'Precio de venta (€)', 'Precio venta', 'Precio de venta']) ?? numberKeys[3]
+
+  const fileKeys = idx.rich_text
+  const fotosFiles = idx.rich_text // files are not in rich_text, check files
+  
+  const fotos = p['Fotos']?.files?.map((f: any) => ({ name: f.name, url: f.file?.url ?? f.external?.url ?? '' })) ?? []
 
   const relationKeys = idx.relation
   const responsableKey = matchKey(relationKeys, ['Responsable Actual', 'Responsable']) ?? relationKeys[0]
@@ -104,6 +119,11 @@ export function parseVehicleProps(id: string, p: Record<string, NotionProp>) {
   const tiempoTotalKey = matchKey(formulaKeys, ['Tiempo total (días)', 'Tiempo total']) ?? formulaKeys[0]
   const diasActivoKey = matchKey(formulaKeys, ['Días activo sin cerrar']) ?? formulaKeys[1]
   const margenBrutoKey = matchKey(formulaKeys, ['Margen bruto (€)', 'Margen bruto']) ?? formulaKeys[2]
+  const tiempoTallerKey = matchKey(formulaKeys, ['Tiempo Taller']) ?? formulaKeys[3]
+  const tiempoChapaKey = matchKey(formulaKeys, ['Tiempo Chapa']) ?? formulaKeys[4]
+  const tiempoPrepKey = matchKey(formulaKeys, ['Tiempo Preparación']) ?? formulaKeys[5]
+  const tiempoLogKey = matchKey(formulaKeys, ['Tiempo Logística']) ?? formulaKeys[6]
+  const diasFueraKey = matchKey(formulaKeys, ['Días fuera']) ?? formulaKeys[7]
 
   const autoName = [rtv(brandKey ? p[brandKey] : undefined), rtv(modelKey ? p[modelKey] : undefined)].filter(Boolean).join(' ')
 
@@ -150,6 +170,22 @@ export function parseVehicleProps(id: string, p: Record<string, NotionProp>) {
     tiempoTotalDias: formulaNum(tiempoTotalKey ? p[tiempoTotalKey] : undefined),
     diasActivoSinCerrar: formulaNum(diasActivoKey ? p[diasActivoKey] : undefined),
     margenBruto: formulaNum(margenBrutoKey ? p[margenBrutoKey] : undefined),
+    inicioTaller: dateVal(inicioTallerKey ? p[inicioTallerKey] : undefined),
+    finTaller: dateVal(finTallerKey ? p[finTallerKey] : undefined),
+    inicioChapa: dateVal(inicioChapaKey ? p[inicioChapaKey] : undefined),
+    finChapa: dateVal(finChapaKey ? p[finChapaKey] : undefined),
+    inicioPreparacion: dateVal(inicioPrepKey ? p[inicioPrepKey] : undefined),
+    finPreparacion: dateVal(finPrepKey ? p[finPrepKey] : undefined),
+    inicioLogistica: dateVal(inicioLogKey ? p[inicioLogKey] : undefined),
+    finLogistica: dateVal(finLogKey ? p[finLogKey] : undefined),
+    tiempoTaller: formulaNum(tiempoTallerKey ? p[tiempoTallerKey] : undefined),
+    tiempoChapa: formulaNum(tiempoChapaKey ? p[tiempoChapaKey] : undefined),
+    tiempoPreparacion: formulaNum(tiempoPrepKey ? p[tiempoPrepKey] : undefined),
+    tiempoLogistica: formulaNum(tiempoLogKey ? p[tiempoLogKey] : undefined),
+    diasFuera: formulaNum(diasFueraKey ? p[diasFueraKey] : undefined),
+    fechaCesion: dateVal(fechaCesionKey ? p[fechaCesionKey] : undefined),
+    colaborador: sel(colaboradorKey ? p[colaboradorKey] : undefined),
+    fotos,
   }
 }
 
