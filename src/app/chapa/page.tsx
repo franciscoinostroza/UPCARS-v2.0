@@ -22,6 +22,13 @@ const ESTADO_ICONS: Record<string, string> = { '': '—', 'En taller': '🔧', '
 
 function fmtEuro(n: number | null) { return n != null ? n.toLocaleString('es-ES', { style: 'currency', currency: 'EUR' }) : '-' }
 
+function vehicleDisplay(v: any, id: string | null): string {
+  if (!id) return '🚗 Sin vehículo'
+  const veh = v.find((x: any) => x.id === id)
+  if (!veh) return '🚗 Sin vehículo'
+  return `${veh.name} — ${veh.brand} ${veh.model} (${veh.year || '—'})`
+}
+
 function ChapaInner() {
   const { dark } = useTheme()
   const [records, setRecords] = useState<ChapaItem[]>([])
@@ -122,7 +129,7 @@ function ChapaInner() {
                 <div className="space-y-1.5 overflow-y-auto flex-1">
                   {col.items.length === 0 ? <p className="text-[11px] py-4 text-center" style={{ color: 'var(--text-muted)' }}>Vacío</p>
                   : col.items.map(item => (
-                    <DraggableChapaCard key={item.id} item={item} onClick={() => { setSelected(item); setEditObs(item.observaciones); setEditTrabajos(item.trabajosSolicitados) }} />
+                    <DraggableChapaCard key={item.id} item={item} vehicles={vehicles} onClick={() => { setSelected(item); setEditObs(item.observaciones); setEditTrabajos(item.trabajosSolicitados) }} />
                   ))}
                 </div>
               </DroppableColumn>
@@ -150,8 +157,8 @@ function ChapaInner() {
                     <tr key={r.id} onClick={() => { setSelected(r); setEditObs(r.observaciones); setEditTrabajos(r.trabajosSolicitados) }}
                       className="cursor-pointer transition-all hover:brightness-95"
                       style={{ borderBottom: '1px solid var(--border)', background: i % 2 === 0 ? 'transparent' : 'var(--bg-pill)' }}>
-                      <td className="p-3 font-medium" style={{ color: 'var(--text)' }}>{r.matricula || '-'}</td>
-                      <td className="p-3" style={{ color: 'var(--text-secondary)' }}>{r.vehiculoNombre || '-'}</td>
+                      <td className="p-3 font-medium" style={{ color: 'var(--text)' }}>{vehicleDisplay(vehicles, r.vehiculoId)}</td>
+                      <td className="p-3" style={{ color: 'var(--text-secondary)' }}>{r.proveedorNombre || '-'}</td>
                       <td className="p-3"><span className="text-[10px] px-1.5 py-0.5 rounded font-medium" style={{
                         background: stateColor(r.estado).bg,
                         color: stateColor(r.estado).text,
@@ -174,7 +181,7 @@ function ChapaInner() {
           <div className="fixed inset-0 z-50 flex items-center justify-center p-4" style={{ background: 'rgba(0,0,0,0.6)' }} onClick={(e) => { if (e.target === e.currentTarget) setSelected(null) }}>
             <div className="card w-full max-w-lg animate-fade-up p-5" style={{ background: 'var(--bg-card)', maxHeight: '90vh', overflowY: 'auto' }}>
               <div className="flex items-center justify-between mb-3">
-                <h2 className="text-sm font-semibold" style={{ color: 'var(--text)' }}>{selected.matricula || selected.vehiculoNombre}</h2>
+                <h2 className="text-sm font-semibold" style={{ color: 'var(--text)' }}>{vehicleDisplay(vehicles, selected.vehiculoId)}</h2>
                 <button onClick={() => setSelected(null)} className="text-sm px-2 py-1 rounded" style={{ color: 'var(--text-muted)' }}>✕</button>
               </div>
               <div className="space-y-2 text-xs mb-4">
@@ -308,15 +315,17 @@ function DroppableColumn({ id, children }: { id: string; children: React.ReactNo
   )
 }
 
-function DraggableChapaCard({ item, onClick }: { item: ChapaItem; onClick: () => void }) {
+function DraggableChapaCard({ item, vehicles, onClick }: { item: ChapaItem; vehicles: any[]; onClick: () => void }) {
   const { attributes, listeners, setNodeRef, transform, isDragging } = useDraggable({ id: item.id })
   const style = transform ? { transform: `translate(${transform.x}px, ${transform.y}px)`, zIndex: 999, opacity: 0.8 } : {}
+  const display = item.vehiculoId ? vehicleDisplay(vehicles, item.vehiculoId) : (item.matricula || 'Sin vehículo')
   return (
-    <button ref={setNodeRef} style={style} {...attributes} {...listeners}
+    <button ref={setNodeRef} style={{ ...style, borderLeft: `3px solid ${stateColor(item.estado).text}` }}
+      {...attributes} {...listeners}
       onClick={onClick}
-      className="vehicle-card w-full text-left cursor-grab active:cursor-grabbing transition-shadow duration-150 touch-none"
+      className="vehicle-card w-full text-left cursor-grab active:cursor-grabbing p-2.5 transition-shadow duration-150 touch-none"
     >
-      <p className="text-[11px] font-semibold truncate" style={{ color: 'var(--text)' }}>{item.matricula || item.vehiculoNombre}</p>
+      <p className="text-[11px] font-semibold truncate" style={{ color: 'var(--text)' }}>{display}</p>
       <div className="text-[10px] mt-0.5 flex flex-wrap gap-1" style={{ color: 'var(--text-muted)' }}>
         {item.vehiculoNombre && <span>🚗 {item.vehiculoNombre}</span>}
         {item.costeTotal != null && <span>{item.costeTotal.toLocaleString('es-ES', { style: 'currency', currency: 'EUR' })}</span>}

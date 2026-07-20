@@ -3,6 +3,8 @@ import { getChapaRecords, createChapaRecord } from '@/lib/notion/chapa-records'
 import { getEmployees } from '@/lib/notion/employees'
 import { getVehicles } from '@/lib/notion/vehicles'
 import { getProviders } from '@/lib/notion/providers'
+import { notionGet } from '@/lib/notion/client'
+import { parseVehicleProps } from '@/lib/notion/props'
 
 export const dynamic = 'force-dynamic'
 
@@ -41,10 +43,8 @@ export async function POST(request: NextRequest) {
     if (!body.vehiculoId) {
       return NextResponse.json({ success: false, error: 'vehiculoId required' }, { status: 400 })
     }
-    const vehRes = await fetch(`${process.env.NEXT_PUBLIC_BASE_URL || ''}/api/vehicles?list=true`)
-    const vehJson = await vehRes.json()
-    const veh = (vehJson.data || []).find((v: any) => v.id === body.vehiculoId)
-    const matricula = veh?.matricula || 'CHAPA'
+    const vehPage: any = await notionGet(`/pages/${body.vehiculoId}`)
+    const matricula = parseVehicleProps(body.vehiculoId, vehPage.properties).matricula || 'CHAPA'
 
     await createChapaRecord({
       matricula,

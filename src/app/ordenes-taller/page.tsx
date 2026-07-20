@@ -71,6 +71,13 @@ function TallerInner() {
 
   const columns = ESTADOS.map(est => ({ estado: est, items: records.filter(r => r.estado === est) }))
 
+  function vehicleDisplay(v: any, id: string | null): string {
+    if (!id) return '🚗 Sin vehículo'
+    const veh = v.find((x: any) => x.id === id)
+    if (!veh) return '🚗 Sin vehículo'
+    return `${veh.name} — ${veh.brand} ${veh.model} (${veh.year || '—'})`
+  }
+
   const sensors = useSensors(
     useSensor(MouseSensor, { activationConstraint: { distance: 8 } }),
     useSensor(TouchSensor, { activationConstraint: { delay: 250, tolerance: 5 } }),
@@ -134,7 +141,7 @@ function TallerInner() {
                 <div className="space-y-1.5 overflow-y-auto flex-1">
                   {col.items.length === 0 ? <p className="text-[11px] py-4 text-center" style={{ color: 'var(--text-muted)' }}>Vacío</p>
                   : col.items.map(item => (
-                    <DraggableTallerCard key={item.id} item={item} onClick={() => { setSelected(item); setEditObs(item.observaciones) }} />
+                    <DraggableTallerCard key={item.id} item={item} vehicles={vehicles} onClick={() => { setSelected(item); setEditObs(item.observaciones) }} />
                   ))}
                 </div>
               </DroppableColumn>
@@ -144,7 +151,7 @@ function TallerInner() {
         ) : vista === 'calendario' ? (
           <div className="animate-fade-up" style={{ animationDelay: '100ms' }}>
             <CalendarView
-              items={records.filter(r => r.fechaEntrada).map(r => ({ id: r.id, titulo: `${r.nombre}${r.vehiculoNombre ? ' — ' + r.vehiculoNombre : ''}`, fecha: r.fechaEntrada!, estado: r.estado, area: r.tipo }))}
+              items={records.filter(r => r.fechaEntrada).map(r => ({ id: r.id, titulo: `${vehicleDisplay(vehicles, r.vehicleId)}`, fecha: r.fechaEntrada!, estado: r.estado, area: r.tipo }))}
               typeColors={{ 'En proceso': '#3b82f6', 'Terminado': '#22c55e', 'Bloqueado': '#ef4444' }}
             />
           </div>
@@ -169,7 +176,7 @@ function TallerInner() {
                     <tr key={r.id} onClick={() => { setSelected(r); setEditObs(r.observaciones) }}
                       className="cursor-pointer transition-all hover:brightness-95"
                       style={{ borderBottom: '1px solid var(--border)', background: i % 2 === 0 ? 'transparent' : 'var(--bg-pill)' }}>
-                      <td className="p-3 font-medium" style={{ color: 'var(--text)' }}>{r.nombre}</td>
+                      <td className="p-3 font-medium" style={{ color: 'var(--text)' }}>{vehicleDisplay(vehicles, r.vehicleId)}</td>
                       <td className="p-3" style={{ color: 'var(--text-secondary)' }}>{r.vehiculoNombre || '-'}</td>
                       <td className="p-3" style={{ color: 'var(--text-secondary)' }}>{r.tipo || '-'}</td>
                       <td className="p-3"><span className="text-[10px] px-1.5 py-0.5 rounded font-medium" style={{
@@ -192,7 +199,7 @@ function TallerInner() {
           <div className="fixed inset-0 z-50 flex items-center justify-center p-4" style={{ background: 'rgba(0,0,0,0.6)' }} onClick={(e) => { if (e.target === e.currentTarget) setSelected(null) }}>
             <div className="card w-full max-w-lg animate-fade-up p-5" style={{ background: 'var(--bg-card)', maxHeight: '90vh', overflowY: 'auto' }}>
               <div className="flex items-center justify-between mb-3">
-                <h2 className="text-sm font-semibold" style={{ color: 'var(--text)' }}>{selected.nombre}</h2>
+                <h2 className="text-sm font-semibold" style={{ color: 'var(--text)' }}>{vehicleDisplay(vehicles, selected.vehicleId)}</h2>
                 <button onClick={() => setSelected(null)} className="text-sm px-2 py-1 rounded" style={{ color: 'var(--text-muted)' }}>✕</button>
               </div>
               <div className="space-y-2 text-xs mb-4">
@@ -313,15 +320,16 @@ function DroppableColumn({ id, children }: { id: string; children: React.ReactNo
   )
 }
 
-function DraggableTallerCard({ item, onClick }: { item: TallerItem; onClick: () => void }) {
+function DraggableTallerCard({ item, vehicles, onClick }: { item: TallerItem; vehicles: any[]; onClick: () => void }) {
   const { attributes, listeners, setNodeRef, transform, isDragging } = useDraggable({ id: item.id })
   const style = transform ? { transform: `translate(${transform.x}px, ${transform.y}px)`, zIndex: 999, opacity: 0.8 } : {}
+  const display = item.vehicleId ? vehicleDisplay(vehicles, item.vehicleId) : item.nombre
   return (
     <button ref={setNodeRef} style={style} {...attributes} {...listeners}
       onClick={onClick}
       className="vehicle-card w-full text-left cursor-grab active:cursor-grabbing transition-shadow duration-150 touch-none"
     >
-      <p className="text-[11px] font-semibold truncate" style={{ color: 'var(--text)' }}>{item.nombre}</p>
+      <p className="text-[11px] font-semibold truncate" style={{ color: 'var(--text)' }}>{display}</p>
       <div className="text-[10px] mt-0.5 flex flex-wrap gap-1" style={{ color: 'var(--text-muted)' }}>
         {item.vehiculoNombre && <span>🚗 {item.vehiculoNombre}</span>}
         {item.responsableNombre && <span>👤 {item.responsableNombre}</span>}

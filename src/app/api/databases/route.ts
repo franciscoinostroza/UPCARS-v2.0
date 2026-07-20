@@ -26,7 +26,6 @@ const DB_META: Record<string, DBMetaEntry> = {
   logistics: { name: 'Logística', icon: '🚛', desc: 'Transporte y logística', category: 'Operaciones', pageId: '397f70f8470180c28157c96bbd17b99a' },
   tasks: { name: 'Tareas', icon: '📋', desc: 'Tareas operativas del equipo', category: 'Operaciones' },
   ventas: { name: 'Ventas', icon: '💰', desc: 'Registro de ventas', category: 'Movimiento' },
-  calendario_operativo: { name: 'Calendario Operativo', icon: '📅', desc: 'Planificación operativa', category: 'Movimiento' },
   calendario_rrhh: { name: 'Calendario RRHH', icon: '👤', desc: 'Gestión de turnos y ausencias', category: 'Movimiento' },
   reviews: { name: 'Reviews Google', icon: '⭐', desc: 'Reseñas y reputación online', category: 'Movimiento' },
   marketing: { name: 'Marketing', icon: '📢', desc: 'Campañas y contenido', category: 'Movimiento' },
@@ -36,7 +35,7 @@ const DB_META: Record<string, DBMetaEntry> = {
   operaciones_financiadas: { name: 'Op. Financiadas', icon: '💳', desc: 'Operaciones con financiación', category: 'Gestión' },
   finanzas: { name: 'Finanzas', icon: '📊', desc: 'Control financiero', category: 'Gestión' },
   buzon_mejora: { name: 'Buzón Mejoras', icon: '💡', desc: 'Propuestas de mejora', category: 'Gestión' },
-  tasaciones: { name: 'Tasaciones', icon: '📋', desc: 'Tasaciones y clientes externos', category: 'Operaciones', pageId: '3a0f70f847018030a119c0c831b509e5' },
+  tasaciones: { name: 'Tasaciones y Clientes Externos', icon: '📋', desc: 'Tasaciones y clientes externos', category: 'Operaciones', pageId: '3a0f70f847018030a119c0c831b509e5' },
 }
 
 const ENV_KEYS: Record<string, string> = {
@@ -48,7 +47,6 @@ const ENV_KEYS: Record<string, string> = {
   logistics: 'LOGISTICS_DB_ID',
   tasks: 'TASKS_DB_ID',
   ventas: 'VENTAS_DB_ID',
-  calendario_operativo: 'CALENDARIO_OPERATIVO_DB_ID',
   calendario_rrhh: 'CALENDARIO_RRHH_DB_ID',
   marketing: 'MARKETING_DB_ID',
   reviews: 'GOOGLE_REVIEWS_DB_ID',
