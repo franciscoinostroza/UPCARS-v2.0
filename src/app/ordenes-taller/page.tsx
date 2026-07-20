@@ -71,13 +71,6 @@ function TallerInner() {
 
   const columns = ESTADOS.map(est => ({ estado: est, items: records.filter(r => r.estado === est) }))
 
-  function vehicleDisplay(v: any, id: string | null): string {
-    if (!id) return '🚗 Sin vehículo'
-    const veh = v.find((x: any) => x.id === id)
-    if (!veh) return '🚗 Sin vehículo'
-    return `${veh.name} — ${veh.brand} ${veh.model} (${veh.year || '—'})`
-  }
-
   const sensors = useSensors(
     useSensor(MouseSensor, { activationConstraint: { distance: 8 } }),
     useSensor(TouchSensor, { activationConstraint: { delay: 250, tolerance: 5 } }),
@@ -310,6 +303,13 @@ function TallerInner() {
 }
 
 const selectSx: React.CSSProperties = { background: 'var(--bg-card)', color: 'var(--text)', border: '1px solid var(--border)', fontSize: 11, padding: '6px 8px', borderRadius: 6, width: '100%', outline: 'none' }
+
+function vehicleDisplay(v: any, id: string | null): string {
+  if (!id) return '🚗 Sin vehículo'
+  const veh = v.find((x: any) => x.id === id)
+  if (!veh) return '🚗 Sin vehículo'
+  return `${veh.name} — ${veh.brand} ${veh.model} (${veh.year || '—'})`
+}
 
 function DroppableColumn({ id, children }: { id: string; children: React.ReactNode }) {
   const { isOver, setNodeRef } = useDroppable({ id })
