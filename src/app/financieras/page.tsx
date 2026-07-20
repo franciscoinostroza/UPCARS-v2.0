@@ -39,6 +39,7 @@ function FinancierasInner() {
   const [selected, setSelected] = useState<FinancieraItem | null>(null)
   const [editing, setEditing] = useState(false)
   const [saving, setSaving] = useState(false)
+  const [showCreate, setShowCreate] = useState(false)
   const [imagenUrl, setImagenUrl] = useState('')
   const [editData, setEditData] = useState<any>({})
 
@@ -87,9 +88,11 @@ function FinancierasInner() {
   return (
     <div style={{ background: 'var(--bg)', minHeight: '100vh' }}>
       <div className="max-w-6xl mx-auto p-4 sm:p-6">
-        <div className="flex items-center justify-between mb-5 animate-fade-up">
-          <h1 className="text-lg sm:text-2xl font-bold" style={{ color: 'var(--text)' }}>🏦 Financieras</h1>
-          <DarkModeToggle />
+        <div className="flex items-center justify-end mb-5 animate-fade-up">
+          <div className="flex gap-2">
+            <button onClick={() => setShowCreate(true)} className="text-[11px] font-semibold px-3 py-2 rounded" style={{ background: 'var(--accent-blue)', color: '#fff' }}>+ Nueva</button>
+            <DarkModeToggle />
+          </div>
         </div>
 
         <div className="flex flex-wrap items-center gap-2 mb-4 animate-fade-up" style={{ animationDelay: '40ms' }}>
@@ -201,10 +204,10 @@ function FinancierasInner() {
                 {selected.enlaceAcceso && <div><span className="font-medium" style={{ color: 'var(--text-muted)' }}>🔗 Enlace:</span> <span style={{ color: 'var(--accent-blue)' }}>{selected.enlaceAcceso}</span></div>}
                 {selected.datosAcceso && <div className="mt-2 pt-2 border-t" style={{ borderColor: 'var(--border)' }}><p className="text-[10px] font-medium mb-0.5" style={{ color: 'var(--text-muted)' }}>🔑 Datos de Acceso:</p><p style={{ color: 'var(--text-secondary)' }}>{selected.datosAcceso}</p></div>}
                 {selected.notas && <div className="mt-2 pt-2 border-t" style={{ borderColor: 'var(--border)' }}><p className="text-[10px] font-medium mb-0.5" style={{ color: 'var(--text-muted)' }}>📝 Notas:</p><p style={{ color: 'var(--text-secondary)' }}>{selected.notas}</p></div>}
-                {(selected.tarifasLeasing.length > 0 || selected.tarifasVnVo.length > 0) && (
+                {(selected.tarifasLeasing.filter(f => f.name !== 'Imagen').length > 0 || selected.tarifasVnVo.length > 0) && (
                   <div className="mt-2 pt-2 border-t space-y-1" style={{ borderColor: 'var(--border)' }}>
                     <p className="text-[10px] font-medium" style={{ color: 'var(--text-muted)' }}>📎 Archivos:</p>
-                    {selected.tarifasLeasing.map(f => <a key={f.name} href={f.url} target="_blank" rel="noopener noreferrer" className="block text-[11px]" style={{ color: 'var(--accent-blue)' }}>📄 Tarifa: {f.name}</a>)}
+                    {selected.tarifasLeasing.filter(f => f.name !== 'Imagen').map(f => <a key={f.name} href={f.url} target="_blank" rel="noopener noreferrer" className="block text-[11px]" style={{ color: 'var(--accent-blue)' }}>📄 Tarifa: {f.name}</a>)}
                     {selected.tarifasVnVo.map(f => <a key={f.name} href={f.url} target="_blank" rel="noopener noreferrer" className="block text-[11px]" style={{ color: 'var(--accent-blue)' }}>📄 VN-VO: {f.name}</a>)}
                   </div>
                 )}
@@ -250,6 +253,13 @@ function FinancierasInner() {
                   <input value={imagenUrl} onChange={e => setImagenUrl(e.target.value)} style={inputSx} className="mt-1" placeholder="https://..." />
                   {imagenUrl && <img src={imagenUrl} className="w-full h-32 object-cover rounded mt-2" />}
                 </div>
+                {(selected.tarifasLeasing.filter(f => f.name !== 'Imagen').length > 0 || selected.tarifasVnVo.length > 0) && (
+                  <div className="mt-2 pt-2 border-t space-y-1" style={{ borderColor: 'var(--border)' }}>
+                    <p className="text-[10px] font-medium" style={{ color: 'var(--text-muted)' }}>📎 Archivos:</p>
+                    {selected.tarifasLeasing.filter(f => f.name !== 'Imagen').map(f => <a key={f.name} href={f.url} target="_blank" rel="noopener noreferrer" className="block text-[11px]" style={{ color: 'var(--accent-blue)' }}>📄 Tarifa: {f.name}</a>)}
+                    {selected.tarifasVnVo.map(f => <a key={f.name} href={f.url} target="_blank" rel="noopener noreferrer" className="block text-[11px]" style={{ color: 'var(--accent-blue)' }}>📄 VN-VO: {f.name}</a>)}
+                  </div>
+                )}
                 <div className="flex gap-2 pt-2">
                   <button onClick={async () => {
                     setSaving(true)
@@ -277,6 +287,67 @@ function FinancierasInner() {
                   }} className="flex-1 text-[11px] font-semibold py-2 rounded" style={{ background: 'rgba(239,68,68,0.12)', color: '#ef4444' }}>🗑 Eliminar</button>
                 </div>
               </div>
+            </div>
+          </div>
+        )}
+
+        {showCreate && (
+          <div className="fixed inset-0 z-50 flex items-center justify-center p-4" style={{ background: 'rgba(0,0,0,0.6)' }} onClick={(e) => { if (e.target === e.currentTarget) setShowCreate(false) }}>
+            <div className="card w-full max-w-lg animate-fade-up p-5" style={{ background: 'var(--bg-card)', maxHeight: '90vh', overflowY: 'auto' }}>
+              <h2 className="text-sm font-semibold mb-4" style={{ color: 'var(--text)' }}>➕ Nueva financiera</h2>
+              <form onSubmit={async (e) => {
+                e.preventDefault()
+                const fd = new FormData(e.target as HTMLFormElement)
+                setSaving(true)
+                try {
+                  const tk = new URLSearchParams(window.location.search).get('token') || ''
+                  const body: any = { nombre: fd.get('nombre'), estado: fd.get('estado') || 'Activa', personaContacto: fd.get('personaContacto') || '', telefono: fd.get('telefono') || '', email: fd.get('email') || '', enlaceAcceso: fd.get('enlaceAcceso') || '', datosAcceso: fd.get('datosAcceso') || '', notas: fd.get('notas') || '' }
+                  const res = await fetch(`/api/financieras?token=${tk}`, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(body) })
+                  if (!res.ok) { const d = await res.json(); alert(d.error || 'Error'); setSaving(false); return }
+                  setShowCreate(false); fetchData()
+                } catch { alert('Error de red') } finally { setSaving(false) }
+              }} className="space-y-3">
+                <div>
+                  <p className="text-[10px] font-medium mb-0.5" style={{ color: 'var(--text-muted)' }}>Nombre *</p>
+                  <input name="nombre" required style={inputSx} placeholder="Ej: CAIXABANK" />
+                </div>
+                <div>
+                  <p className="text-[10px] font-medium mb-0.5" style={{ color: 'var(--text-muted)' }}>Estado</p>
+                  <select name="estado" style={inputSx}>
+                    {ESTADOS.filter(Boolean).map(s => <option key={s} value={s}>{s}</option>)}
+                  </select>
+                </div>
+                <div className="grid grid-cols-2 gap-2">
+                  <div>
+                    <p className="text-[10px] font-medium mb-0.5" style={{ color: 'var(--text-muted)' }}>Persona de contacto</p>
+                    <input name="personaContacto" style={inputSx} placeholder="Nombre" />
+                  </div>
+                  <div>
+                    <p className="text-[10px] font-medium mb-0.5" style={{ color: 'var(--text-muted)' }}>Teléfono</p>
+                    <input name="telefono" style={inputSx} placeholder="644568052" />
+                  </div>
+                </div>
+                <div>
+                  <p className="text-[10px] font-medium mb-0.5" style={{ color: 'var(--text-muted)' }}>Email</p>
+                  <input name="email" type="email" style={inputSx} placeholder="email@financiera.es" />
+                </div>
+                <div>
+                  <p className="text-[10px] font-medium mb-0.5" style={{ color: 'var(--text-muted)' }}>Enlace de Acceso</p>
+                  <input name="enlaceAcceso" style={inputSx} placeholder="https://portal.financiera.es" />
+                </div>
+                <div>
+                  <p className="text-[10px] font-medium mb-0.5" style={{ color: 'var(--text-muted)' }}>Datos de Acceso</p>
+                  <textarea name="datosAcceso" rows={2} style={{...inputSx, resize: 'vertical'}} placeholder="usuario / contraseña" />
+                </div>
+                <div>
+                  <p className="text-[10px] font-medium mb-0.5" style={{ color: 'var(--text-muted)' }}>Notas</p>
+                  <textarea name="notas" rows={2} style={{...inputSx, resize: 'vertical'}} placeholder="Opcional" />
+                </div>
+                <div className="flex gap-2 pt-1">
+                  <button type="submit" className="flex-1 text-[11px] font-semibold py-2.5 rounded" style={{ background: 'var(--accent-blue)', color: '#fff' }} disabled={saving}>{saving ? 'Creando...' : '✅ Crear'}</button>
+                  <button type="button" onClick={() => setShowCreate(false)} className="flex-1 text-[11px] font-semibold py-2.5 rounded" style={{ background: 'var(--bg-pill)', color: 'var(--text-secondary)' }}>Cancelar</button>
+                </div>
+              </form>
             </div>
           </div>
         )}
