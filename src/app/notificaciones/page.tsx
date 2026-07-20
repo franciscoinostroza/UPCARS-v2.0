@@ -31,14 +31,16 @@ function NotificacionesInner() {
   const noLeidasCount = records.filter(r => !r.leida).length
 
   async function marcarLeida(id: string) {
-    await fetch('/api/notificaciones', { method: 'PATCH', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ id }) })
+    const tk = new URLSearchParams(window.location.search).get('token') || ''
+    await fetch(`/api/notificaciones?token=${tk}`, { method: 'PATCH', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ id }) })
     setRecords(prev => prev.map(r => r.id === id ? { ...r, leida: true } : r))
   }
 
   async function marcarTodas() {
     const ids = records.filter(r => !r.leida).map(r => r.id)
     if (ids.length === 0) return
-    await fetch('/api/notificaciones', { method: 'PATCH', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ marcarTodas: true, ids }) })
+    const tk = new URLSearchParams(window.location.search).get('token') || ''
+    await fetch(`/api/notificaciones?token=${tk}`, { method: 'PATCH', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ marcarTodas: true, ids }) })
     setRecords(prev => prev.map(r => ({ ...r, leida: true })))
   }
 
@@ -108,6 +110,14 @@ function NotificacionesInner() {
                     <div className="flex items-center gap-2 mt-1 text-[10px]" style={{ color: 'var(--text-muted)' }}>
                       {n.fecha && <span>📅 {fmtDate(n.fecha)}</span>}
                       {n.link && <a href={n.link} target="_blank" rel="noopener noreferrer" onClick={e => e.stopPropagation()} style={{ color: 'var(--accent-blue)' }}>🔗 Link</a>}
+                    </div>
+                    <div className="flex flex-wrap gap-x-2 mt-1 text-[9px]" style={{ color: 'var(--text-muted)' }}>
+                      {n.cuerpo.split('\n').find(l => l.startsWith('Por:')) && (
+                        <span>✍️ {n.cuerpo.split('\n').find(l => l.startsWith('Por:'))?.replace('Por:', '').trim()}</span>
+                      )}
+                      {n.asignados.length > 0 && (
+                        <span>📬 Para: {n.asignados.map(a => a.name).filter(Boolean).join(', ')}</span>
+                      )}
                     </div>
                   </div>
                 </div>
