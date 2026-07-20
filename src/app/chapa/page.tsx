@@ -143,7 +143,6 @@ function ChapaInner() {
               <table className="w-full text-xs sm:text-sm">
                 <thead>
                   <tr style={{ background: 'var(--bg-pill)' }}>
-                    <th className="text-left p-3 font-semibold text-[10px] uppercase tracking-wider" style={{ color: 'var(--text-secondary)' }}>Matrícula</th>
                     <th className="text-left p-3 font-semibold text-[10px] uppercase tracking-wider" style={{ color: 'var(--text-secondary)' }}>Vehículo</th>
                     <th className="text-left p-3 font-semibold text-[10px] uppercase tracking-wider" style={{ color: 'var(--text-secondary)' }}>Estado</th>
                     <th className="text-left p-3 font-semibold text-[10px] uppercase tracking-wider" style={{ color: 'var(--text-secondary)' }}>Proveedor</th>
@@ -159,7 +158,6 @@ function ChapaInner() {
                       className="cursor-pointer transition-all hover:brightness-95"
                       style={{ borderBottom: '1px solid var(--border)', background: i % 2 === 0 ? 'transparent' : 'var(--bg-pill)' }}>
                       <td className="p-3 font-medium" style={{ color: 'var(--text)' }}>{vehicleDisplay(vehicles, r.vehiculoId)}</td>
-                      <td className="p-3" style={{ color: 'var(--text-secondary)' }}>{r.proveedorNombre || '-'}</td>
                       <td className="p-3"><span className="text-[10px] px-1.5 py-0.5 rounded font-medium" style={{
                         background: stateColor(r.estado).bg,
                         color: stateColor(r.estado).text,
@@ -200,7 +198,8 @@ function ChapaInner() {
               </div>
               <button onClick={async () => {
                 if (!confirm('¿Eliminar este registro?')) return
-                await fetch(`/api/chapa/${selected.id}`, { method: 'DELETE' })
+                const r = await fetch(`/api/chapa/${selected.id}`, { method: 'DELETE' })
+                if (!r.ok) { const d = await r.json(); alert(d.error || 'Error'); return }
                 setSelected(null); fetchData()
               }} className="w-full text-[11px] font-semibold py-2 rounded mt-4" style={{ background: 'rgba(239,68,68,0.12)', color: '#ef4444' }}>🗑 Eliminar</button>
             </div>
@@ -254,7 +253,8 @@ function ChapaInner() {
                 }} className="w-full text-[11px] font-semibold py-2 rounded" style={{ background: 'var(--accent-blue)', color: '#fff' }}>💾 Guardar</button>
                 <button onClick={async () => {
                   if (!confirm('¿Eliminar este registro?')) return
-                  await fetch(`/api/chapa/${selected.id}`, { method: 'DELETE' })
+                  const r = await fetch(`/api/chapa/${selected.id}`, { method: 'DELETE' })
+                  if (!r.ok) { const d = await r.json(); alert(d.error || 'Error'); return }
                   setSelected(null); setEditing(false); fetchData()
                 }} className="w-full text-[11px] font-semibold py-2 rounded mt-1" style={{ background: 'rgba(239,68,68,0.12)', color: '#ef4444' }}>🗑 Eliminar</button>
               </div>

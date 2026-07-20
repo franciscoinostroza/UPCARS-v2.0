@@ -196,87 +196,100 @@ function PrepInner() {
               </div>
               <button onClick={async () => {
                 if (!confirm('¿Eliminar este registro?')) return
-                await fetch(`/api/preparacion/${selected.id}`, { method: 'DELETE' })
+                const r = await fetch(`/api/preparacion/${selected.id}`, { method: 'DELETE' })
+                if (!r.ok) { const d = await r.json(); alert(d.error || 'Error'); return }
                 setSelected(null); fetchData()
               }} className="w-full text-[11px] font-semibold py-2 rounded mt-4" style={{ background: 'rgba(239,68,68,0.12)', color: '#ef4444' }}>🗑 Eliminar</button>
-            </div>
-          </div>
-        )}
+              {selected && editing && (
+                <div className="fixed inset-0 z-50 flex items-center justify-center p-4" style={{ background: 'rgba(0,0,0,0.6)' }} onClick={(e) => { if (e.target === e.currentTarget) { setSelected(null); setEditing(false) } }}>
+                  <div className="card w-full max-w-lg animate-fade-up p-5" style={{ background: 'var(--bg-card)', maxHeight: '90vh', overflowY: 'auto' }}>
+                    <div className="flex items-center justify-between mb-3">
+                      <h2 className="text-sm font-semibold" style={{ color: 'var(--text)' }}>✏️ {selected.nombre}</h2>
+                      <button onClick={() => setEditing(false)} className="text-sm px-2 py-1 rounded" style={{ color: 'var(--text-muted)' }}>✕</button>
+                    </div>
 
-        {selected && editing && (
-          <div className="fixed inset-0 z-50 flex items-center justify-center p-4" style={{ background: 'rgba(0,0,0,0.6)' }} onClick={(e) => { if (e.target === e.currentTarget) { setSelected(null); setEditing(false) } }}>
-            <div className="card w-full max-w-lg animate-fade-up p-5" style={{ background: 'var(--bg-card)', maxHeight: '90vh', overflowY: 'auto' }}>
-              <div className="flex items-center justify-between mb-3">
-                <h2 className="text-sm font-semibold" style={{ color: 'var(--text)' }}>✏️ {selected.nombre}</h2>
-                <button onClick={() => setEditing(false)} className="text-sm px-2 py-1 rounded" style={{ color: 'var(--text-muted)' }}>✕</button>
-              </div>
-              <div className="space-y-2 text-xs mb-4">
-                <div className="flex gap-2 items-center">
-                  <span className="font-medium shrink-0" style={{ color: 'var(--text-muted)' }}>Estado:</span>
-                  <select value={selected.estado} onChange={e => setRecords(prev => prev.map(r => r.id === selected.id ? { ...r, estado: e.target.value } : r))} style={selectSx}>
-                    {ESTADOS.map(s => <option key={s} value={s}>{s || 'Sin estado'}</option>)}
-                  </select>
+                    <div className="space-y-2 text-xs mb-4">
+                      <div className="flex gap-2 items-center">
+                        <span className="font-medium shrink-0" style={{ color: 'var(--text-muted)' }}>Estado:</span>
+                        <select value={selected.estado} onChange={e => setRecords(prev => prev.map(r => r.id === selected.id ? { ...r, estado: e.target.value } : r))} style={selectSx}>
+                          {ESTADOS.map(s => <option key={s} value={s}>{s || 'Sin estado'}</option>)}
+                        </select>
+                      </div>
+                      <div className="flex gap-2 items-center">
+                        <span className="font-medium shrink-0" style={{ color: 'var(--text-muted)' }}>Tipo limpieza:</span>
+                        <select value={selected.tipoLimpieza} onChange={e => setRecords(prev => prev.map(r => r.id === selected.id ? { ...r, tipoLimpieza: e.target.value } : r))} style={selectSx}>
+                          <option value="">Sin tipo</option>
+                          <option value="Entrega cliente">Entrega cliente</option>
+                          <option value="Exposición">Exposición</option>
+                          <option value="Lavado Taller">Lavado Taller</option>
+                          <option value="Repaso - Visita cte.">Repaso - Visita cte.</option>
+                        </select>
+                      </div>
+                      <div className="flex gap-2 items-center">
+                        <span className="font-medium shrink-0" style={{ color: 'var(--text-muted)' }}>Inicio:</span>
+                        <input type="date" value={selected.fechaInicio?.split('T')[0] || ''} onChange={e => setRecords(prev => prev.map(r => r.id === selected.id ? { ...r, fechaInicio: e.target.value || null } : r))} style={selectSx} />
+                      </div>
+                      <div className="flex gap-2 items-center">
+                        <span className="font-medium shrink-0" style={{ color: 'var(--text-muted)' }}>Fin:</span>
+                        <input type="date" value={selected.fechaFin?.split('T')[0] || ''} onChange={e => setRecords(prev => prev.map(r => r.id === selected.id ? { ...r, fechaFin: e.target.value || null } : r))} style={selectSx} />
+                      </div>
+                      <div className="flex gap-2 items-center">
+                        <span className="font-medium shrink-0" style={{ color: 'var(--text-muted)' }}>Entrega:</span>
+                        <input type="date" value={selected.fechaEntrega?.split('T')[0] || ''} onChange={e => setRecords(prev => prev.map(r => r.id === selected.id ? { ...r, fechaEntrega: e.target.value || null } : r))} style={selectSx} />
+                      </div>
+                      {selected.horasInvertidas != null && (
+                        <div className="flex gap-2"><span className="font-medium shrink-0" style={{ color: 'var(--text-muted)' }}>Horas invertidas:</span><span style={{ color: 'var(--text)' }}>{selected.horasInvertidas}h</span></div>
+                      )}
+                      <div className="flex flex-wrap gap-3 mt-2">
+                        {[
+                          ['Interior', 'limpiezaInterior'],
+                          ['Exterior', 'limpiezaExterior'],
+                          ['📸 Foto anuncio', 'fotografiaAnuncio'],
+                          ['🟢 Registrar inicio', 'registrarInicio'],
+                          ['🔴 Registrar fin', 'registrarFin'],
+                        ].map(([label, key]) => {
+                          const checked = (selected as any)[key]
+                          return (
+                            <label key={key} className="flex items-center gap-2 text-[11px] cursor-pointer select-none"
+                              style={{ color: checked ? 'var(--text)' : 'var(--text-muted)' }}>
+                              <span onClick={async () => {
+                                const newVal = !checked
+                                setRecords(prev => prev.map(r => r.id === selected.id ? { ...r, [key]: newVal } as PrepItem : r))
+                                await fetch(`/api/preparacion/${selected.id}`, { method: 'PATCH', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ [key]: newVal }) })
+                              }} style={{
+                                width: 36, height: 20, borderRadius: 10, display: 'inline-flex', alignItems: 'center',
+                                padding: 2, cursor: 'pointer', transition: 'background 0.2s',
+                                background: checked ? '#22c55e' : 'var(--border)',
+                              }}>
+                                <span style={{
+                                  width: 16, height: 16, borderRadius: '50%', background: '#fff',
+                                  transition: 'transform 0.2s',
+                                  transform: checked ? 'translateX(16px)' : 'translateX(0)',
+                                }} />
+                              </span>
+                              {label}
+                            </label>
+                          )
+                        })}
+                      </div>
+                      <div className="mt-2 pt-2 border-t" style={{ borderColor: 'var(--border)' }}>
+                        <p className="text-[10px] font-medium mb-1" style={{ color: 'var(--text-muted)' }}>Observaciones:</p>
+                        <textarea value={editObs} onChange={e => setEditObs(e.target.value)} rows={2} className="w-full text-xs px-2 py-1.5 rounded outline-none resize-none" style={{ background: 'var(--bg)', color: 'var(--text)', border: '1px solid var(--border)' }} />
+                      </div>
+                      <button onClick={async () => {
+                        await fetch(`/api/preparacion/${selected.id}`, { method: 'PATCH', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ estado: selected.estado, tipoLimpieza: selected.tipoLimpieza, fechaInicio: selected.fechaInicio, fechaFin: selected.fechaFin, fechaEntrega: selected.fechaEntrega, observaciones: editObs }) })
+                        setRecords(prev => prev.map(r => r.id === selected.id ? { ...r, observaciones: editObs } : r))
+                      }} className="w-full text-[11px] font-semibold py-2 rounded" style={{ background: 'var(--accent-blue)', color: '#fff' }}>💾 Guardar</button>
+                      <button onClick={async () => {
+                        if (!confirm('¿Eliminar este registro?')) return
+                        const r = await fetch(`/api/preparacion/${selected.id}`, { method: 'DELETE' })
+                        if (!r.ok) { const d = await r.json(); alert(d.error || 'Error'); return }
+                        setSelected(null); setEditing(false); fetchData()
+                      }} className="w-full text-[11px] font-semibold py-2 rounded mt-1" style={{ background: 'rgba(239,68,68,0.12)', color: '#ef4444' }}>🗑 Eliminar</button>
+                    </div>
+                  </div>
                 </div>
-                <div className="flex gap-2 items-center">
-                  <span className="font-medium shrink-0" style={{ color: 'var(--text-muted)' }}>Tipo limpieza:</span>
-                  <select value={selected.tipoLimpieza} onChange={e => setRecords(prev => prev.map(r => r.id === selected.id ? { ...r, tipoLimpieza: e.target.value } : r))} style={selectSx}>
-                    <option value="">Sin tipo</option>
-                    <option value="Entrega cliente">Entrega cliente</option>
-                    <option value="Exposición">Exposición</option>
-                    <option value="Lavado Taller">Lavado Taller</option>
-                    <option value="Repaso - Visita cte.">Repaso - Visita cte.</option>
-                  </select>
-                </div>
-                <div className="flex gap-2 items-center">
-                  <span className="font-medium shrink-0" style={{ color: 'var(--text-muted)' }}>Inicio:</span>
-                  <input type="date" value={selected.fechaInicio?.split('T')[0] || ''} onChange={e => setRecords(prev => prev.map(r => r.id === selected.id ? { ...r, fechaInicio: e.target.value || null } : r))} style={selectSx} />
-                </div>
-                <div className="flex gap-2 items-center">
-                  <span className="font-medium shrink-0" style={{ color: 'var(--text-muted)' }}>Fin:</span>
-                  <input type="date" value={selected.fechaFin?.split('T')[0] || ''} onChange={e => setRecords(prev => prev.map(r => r.id === selected.id ? { ...r, fechaFin: e.target.value || null } : r))} style={selectSx} />
-                </div>
-                <div className="flex gap-2 items-center">
-                  <span className="font-medium shrink-0" style={{ color: 'var(--text-muted)' }}>Entrega:</span>
-                  <input type="date" value={selected.fechaEntrega?.split('T')[0] || ''} onChange={e => setRecords(prev => prev.map(r => r.id === selected.id ? { ...r, fechaEntrega: e.target.value || null } : r))} style={selectSx} />
-                </div>
-                {selected.horasInvertidas != null && (
-                  <div className="flex gap-2"><span className="font-medium shrink-0" style={{ color: 'var(--text-muted)' }}>Horas invertidas:</span><span style={{ color: 'var(--text)' }}>{selected.horasInvertidas}h</span></div>
-                )}
-                <div className="flex flex-wrap gap-3 mt-2">
-                  {[
-                    ['Interior', 'limpiezaInterior'],
-                    ['Exterior', 'limpiezaExterior'],
-                    ['📸 Foto anuncio', 'fotografiaAnuncio'],
-                    ['🟢 Registrar inicio', 'registrarInicio'],
-                    ['🔴 Registrar fin', 'registrarFin'],
-                  ].map(([label, key]) => (
-                    <label key={key} className="flex items-center gap-1.5 text-[11px]" style={{ color: 'var(--text-secondary)' }}>
-                      <input type="checkbox" checked={(selected as any)[key]} onChange={async (e) => {
-                        const checked = e.target.checked
-                        setRecords(prev => prev.map(r => r.id === selected.id ? { ...r, [key]: checked } as PrepItem : r))
-                        await fetch(`/api/preparacion/${selected.id}`, { method: 'PATCH', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ [key]: checked }) })
-                      }} />
-                      {label}
-                    </label>
-                  ))}
-                </div>
-                <div className="mt-2 pt-2 border-t" style={{ borderColor: 'var(--border)' }}>
-                  <p className="text-[10px] font-medium mb-1" style={{ color: 'var(--text-muted)' }}>Observaciones:</p>
-                  <textarea value={editObs} onChange={e => setEditObs(e.target.value)} rows={2} className="w-full text-xs px-2 py-1.5 rounded outline-none resize-none" style={{ background: 'var(--bg)', color: 'var(--text)', border: '1px solid var(--border)' }} />
-                </div>
-                <button onClick={async () => {
-                  await fetch(`/api/preparacion/${selected.id}`, { method: 'PATCH', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ estado: selected.estado, tipoLimpieza: selected.tipoLimpieza, fechaInicio: selected.fechaInicio, fechaFin: selected.fechaFin, fechaEntrega: selected.fechaEntrega, observaciones: editObs }) })
-                  setRecords(prev => prev.map(r => r.id === selected.id ? { ...r, observaciones: editObs } : r))
-                }} className="w-full text-[11px] font-semibold py-2 rounded" style={{ background: 'var(--accent-blue)', color: '#fff' }}>💾 Guardar</button>
-                <button onClick={async () => {
-                  if (!confirm('¿Eliminar este registro?')) return
-                  await fetch(`/api/preparacion/${selected.id}`, { method: 'DELETE' })
-                  setSelected(null); setEditing(false); fetchData()
-                }} className="w-full text-[11px] font-semibold py-2 rounded mt-1" style={{ background: 'rgba(239,68,68,0.12)', color: '#ef4444' }}>🗑 Eliminar</button>
-              </div>
-            </div>
-          </div>
-        )}
+              )}
 
         {showCreate && (
           <div className="fixed inset-0 z-50 flex items-center justify-center p-4" style={{ background: 'rgba(0,0,0,0.6)' }} onClick={(e) => { if (e.target === e.currentTarget) setShowCreate(false) }}>
