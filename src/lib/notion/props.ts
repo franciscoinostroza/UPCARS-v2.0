@@ -108,9 +108,8 @@ export function parseVehicleProps(id: string, p: Record<string, NotionProp>) {
   const precioVentaKey = matchKey(numberKeys, ['Precio venta (€)', 'Precio de venta (€)', 'Precio venta', 'Precio de venta']) ?? numberKeys[3]
 
   const fileKeys = idx.rich_text
-  const fotosFiles = idx.rich_text // files are not in rich_text, check files
-  
-  const fotos = p['Fotos']?.files?.map((f: any) => ({ name: f.name, url: f.file?.url ?? f.external?.url ?? '' })) ?? []
+  const fotosFiles = (p['Fotos']?.files as any[]) || []
+  const fotos = fotosFiles.map((f: any) => ({ name: f.name, url: f.file?.url ?? f.external?.url ?? '' }))
 
   const relationKeys = idx.relation
   const responsableKey = matchKey(relationKeys, ['Responsable Actual', 'Responsable']) ?? relationKeys[0]
