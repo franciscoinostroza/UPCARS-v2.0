@@ -35,7 +35,7 @@ const DB_META: Record<string, DBMetaEntry> = {
   operaciones_financiadas: { name: 'Op. Financiadas', icon: '💳', desc: 'Operaciones con financiación', category: 'Gestión' },
   finanzas: { name: 'Finanzas', icon: '📊', desc: 'Control financiero', category: 'Gestión' },
   buzon_mejora: { name: 'Buzón Mejoras', icon: '💡', desc: 'Propuestas de mejora', category: 'Gestión' },
-  tasaciones: { name: 'Tasaciones y Clientes Externos', icon: '📋', desc: 'Tasaciones y clientes externos', category: 'Operaciones', pageId: '3a0f70f847018030a119c0c831b509e5' },
+  tasaciones: { name: 'Tasaciones y Clientes Externos', icon: '📋', desc: 'Tasaciones y clientes externos', category: 'Operaciones', customUrl: 'https://upcars.pixelarch.dev/tasaciones-clientes-externos' },
 }
 
 const ENV_KEYS: Record<string, string> = {
