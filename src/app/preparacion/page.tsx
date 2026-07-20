@@ -200,7 +200,11 @@ function PrepInner() {
                 if (!r.ok) { const d = await r.json(); alert(d.error || 'Error'); return }
                 setSelected(null); fetchData()
               }} className="w-full text-[11px] font-semibold py-2 rounded mt-4" style={{ background: 'rgba(239,68,68,0.12)', color: '#ef4444' }}>🗑 Eliminar</button>
-              {selected && editing && (
+            </div>
+          </div>
+        )}
+
+        {selected && editing && (
                 <div className="fixed inset-0 z-50 flex items-center justify-center p-4" style={{ background: 'rgba(0,0,0,0.6)' }} onClick={(e) => { if (e.target === e.currentTarget) { setSelected(null); setEditing(false) } }}>
                   <div className="card w-full max-w-lg animate-fade-up p-5" style={{ background: 'var(--bg-card)', maxHeight: '90vh', overflowY: 'auto' }}>
                     <div className="flex items-center justify-between mb-3">
