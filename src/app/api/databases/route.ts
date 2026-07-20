@@ -31,7 +31,7 @@ const DB_META: Record<string, DBMetaEntry> = {
   marketing: { name: 'Marketing', icon: '📢', desc: 'Campañas y contenido', category: 'Movimiento' },
   employees: { name: 'Empleados', icon: '👥', desc: 'Plantilla y responsables', category: 'Gestión' },
   providers: { name: 'Proveedores', icon: '🏭', desc: 'Empresas proveedoras', category: 'Gestión' },
-  financieras: { name: 'Financieras', icon: '🏦', desc: 'Entidades financieras', category: 'Gestión' },
+  financieras: { name: 'Financieras', icon: '🏦', desc: 'Entidades financieras', category: 'Gestión', customUrl: 'https://upcars.pixelarch.dev/financieras' },
   operaciones_financiadas: { name: 'Op. Financiadas', icon: '💳', desc: 'Operaciones con financiación', category: 'Gestión' },
   finanzas: { name: 'Finanzas', icon: '📊', desc: 'Control financiero', category: 'Gestión' },
   buzon_mejora: { name: 'Buzón Mejoras', icon: '💡', desc: 'Propuestas de mejora', category: 'Gestión' },
