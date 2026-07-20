@@ -24,7 +24,7 @@ const DB_META: Record<string, DBMetaEntry> = {
   chapa: { name: 'Chapa y Pintura', icon: '🎨', desc: 'Trabajos de chapa y pintura', category: 'Operaciones', pageId: '398f70f847018062adabf1b015444a94' },
   preparacion: { name: 'Preparación', icon: '✨', desc: 'Preparación previa a venta', category: 'Operaciones', pageId: '398f70f84701801382c8e96333ab4226' },
   logistics: { name: 'Logística', icon: '🚛', desc: 'Transporte y logística', category: 'Operaciones', pageId: '397f70f8470180c28157c96bbd17b99a' },
-  tasks: { name: 'Tareas', icon: '📋', desc: 'Tareas operativas del equipo', category: 'Operaciones' },
+  tasks: { name: 'Tareas', icon: '📋', desc: 'Tareas operativas del equipo', category: 'Operaciones', pageId: '3a3f70f847018044a513f8cb0ac24354' },
   ventas: { name: 'Ventas', icon: '💰', desc: 'Registro de ventas', category: 'Movimiento' },
   calendario_rrhh: { name: 'Calendario RRHH', icon: '👤', desc: 'Gestión de turnos y ausencias', category: 'Movimiento' },
   reviews: { name: 'Reviews Google', icon: '⭐', desc: 'Reseñas y reputación online', category: 'Movimiento' },
