@@ -312,6 +312,26 @@ function VehiculosInner() {
             </div>
           </div>
         )}
+        {confirmDelete && (
+          <div className="fixed inset-0 z-[60] flex items-center justify-center p-4" style={{ background: 'rgba(0,0,0,0.5)' }}>
+            <div className="card p-5 max-w-sm animate-fade-up" style={{ background: 'var(--bg-card)' }}>
+              <p className="text-sm font-semibold mb-4 text-center" style={{ color: 'var(--text)' }}>🗑 ¿Eliminar este registro?</p>
+              <div className="flex gap-2">
+                <button onClick={async () => {
+                  const id = confirmDelete; setConfirmDelete(null)
+                  try {
+                    const tk = new URLSearchParams(window.location.search).get('token') || ''
+                    const r = await fetch(`/api/vehiculos/${id}?token=${tk}`, { method: 'DELETE' })
+                    if (!r.ok) { const d = await r.json(); alert(d.error || 'Error'); return }
+                    setSelected(null); setEditing(false); fetchData()
+                  } catch { alert('Error de red'); }
+                }} className="flex-1 text-[11px] font-semibold py-2.5 rounded" style={{ background: 'rgba(239,68,68,0.12)', color: '#ef4444', cursor: 'pointer' }}>🗑 Eliminar</button>
+                <button onClick={() => setConfirmDelete(null)} className="flex-1 text-[11px] font-semibold py-2.5 rounded" style={{ background: 'var(--bg-pill)', color: 'var(--text-secondary)', cursor: 'pointer' }}>Cancelar</button>
+              </div>
+            </div>
+          </div>
+        )}
+
       </div>
     </div>
   )
@@ -344,25 +364,6 @@ function DraggableVehCard({ item, onClick }: { item: VehiculoItem; onClick: () =
       </div>
     </button>
 
-        {confirmDelete && (
-          <div className="fixed inset-0 z-[60] flex items-center justify-center p-4" style={{ background: 'rgba(0,0,0,0.5)' }}>
-            <div className="card p-5 max-w-sm animate-fade-up" style={{ background: 'var(--bg-card)' }}>
-              <p className="text-sm font-semibold mb-4 text-center" style={{ color: 'var(--text)' }}>🗑 ¿Eliminar este registro?</p>
-              <div className="flex gap-2">
-                <button onClick={async () => {
-                  const id = confirmDelete; setConfirmDelete(null)
-                  try {
-                    const tk = new URLSearchParams(window.location.search).get('token') || ''
-                    const r = await fetch(`/api/vehiculos/${id}?token=${tk}`, { method: 'DELETE' })
-                    if (!r.ok) { const d = await r.json(); alert(d.error || 'Error'); return }
-                    setSelected(null); setEditing(false); fetchData()
-                  } catch { alert('Error de red'); }
-                }} className="flex-1 text-[11px] font-semibold py-2.5 rounded" style={{ background: 'rgba(239,68,68,0.12)', color: '#ef4444', cursor: 'pointer' }}>🗑 Eliminar</button>
-                <button onClick={() => setConfirmDelete(null)} className="flex-1 text-[11px] font-semibold py-2.5 rounded" style={{ background: 'var(--bg-pill)', color: 'var(--text-secondary)', cursor: 'pointer' }}>Cancelar</button>
-              </div>
-            </div>
-          </div>
-        )}
   )
 }
 

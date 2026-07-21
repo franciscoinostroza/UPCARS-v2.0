@@ -479,17 +479,6 @@ function CreateModal({ employees, vehicles, onCreate, onClose, onRefresh }: { em
           </div>
           <button type="submit" disabled={saving || !name.trim()} className="w-full text-[11px] font-semibold py-2 rounded transition-opacity disabled:opacity-40" style={{ background: 'var(--accent-blue)', color: '#fff' }}>{saving ? '...' : '✅ Crear'}</button>
         </form>
-      </div>
-    </div>
-  )
-}
-
-export default function LogisticaPage() {
-  return (
-    <ThemeProvider>
-      <LogisticaInner />
-    </ThemeProvider>
-
         {confirmDelete && (
           <div className="fixed inset-0 z-[60] flex items-center justify-center p-4" style={{ background: 'rgba(0,0,0,0.5)' }}>
             <div className="card p-5 max-w-sm animate-fade-up" style={{ background: 'var(--bg-card)' }}>
@@ -509,5 +498,17 @@ export default function LogisticaPage() {
             </div>
           </div>
         )}
+
+      </div>
+    </div>
+  )
+}
+
+export default function LogisticaPage() {
+  return (
+    <ThemeProvider>
+      <LogisticaInner />
+    </ThemeProvider>
+
   )
 }

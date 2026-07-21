@@ -379,25 +379,6 @@ function FinancierasInner() {
             </div>
           </div>
         )}
-      </div>
-    </div>
-  )
-}
-
-function DraggableFinCard({ item, onClick }: { item: FinancieraItem; onClick: () => void }) {
-  const { attributes, listeners, setNodeRef, transform, isDragging } = useDraggable({ id: item.id })
-  const style = transform ? { transform: `translate(${transform.x}px, ${transform.y}px)`, zIndex: 999, opacity: 0.8 } : {}
-  const ec = stateColor(item.estado)
-  return (
-    <div ref={setNodeRef} style={{ ...style, borderLeft: `3px solid ${ec.text}`, background: 'var(--bg-card)' }}
-      {...attributes} {...listeners}
-      onClick={onClick}
-      className="card p-2.5 cursor-grab active:cursor-grabbing transition-shadow duration-150 touch-none"
-    >
-      <p className="text-[11px] font-semibold truncate" style={{ color: 'var(--text)' }}>{item.nombre}</p>
-      <p className="text-[9px] truncate" style={{ color: 'var(--text-muted)' }}>{item.personaContacto || item.telefono || ''}</p>
-    </div>
-
         {confirmDelete && (
           <div className="fixed inset-0 z-[60] flex items-center justify-center p-4" style={{ background: 'rgba(0,0,0,0.5)' }}>
             <div className="card p-5 max-w-sm animate-fade-up" style={{ background: 'var(--bg-card)' }}>
@@ -417,6 +398,26 @@ function DraggableFinCard({ item, onClick }: { item: FinancieraItem; onClick: ()
             </div>
           </div>
         )}
+
+      </div>
+    </div>
+  )
+}
+
+function DraggableFinCard({ item, onClick }: { item: FinancieraItem; onClick: () => void }) {
+  const { attributes, listeners, setNodeRef, transform, isDragging } = useDraggable({ id: item.id })
+  const style = transform ? { transform: `translate(${transform.x}px, ${transform.y}px)`, zIndex: 999, opacity: 0.8 } : {}
+  const ec = stateColor(item.estado)
+  return (
+    <div ref={setNodeRef} style={{ ...style, borderLeft: `3px solid ${ec.text}`, background: 'var(--bg-card)' }}
+      {...attributes} {...listeners}
+      onClick={onClick}
+      className="card p-2.5 cursor-grab active:cursor-grabbing transition-shadow duration-150 touch-none"
+    >
+      <p className="text-[11px] font-semibold truncate" style={{ color: 'var(--text)' }}>{item.nombre}</p>
+      <p className="text-[9px] truncate" style={{ color: 'var(--text-muted)' }}>{item.personaContacto || item.telefono || ''}</p>
+    </div>
+
   )
 }
 
