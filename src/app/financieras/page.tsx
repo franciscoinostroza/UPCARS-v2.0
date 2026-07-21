@@ -205,10 +205,23 @@ function FinancierasInner() {
                 {selected.datosAcceso && <div className="mt-2 pt-2 border-t" style={{ borderColor: 'var(--border)' }}><p className="text-[10px] font-medium mb-0.5" style={{ color: 'var(--text-muted)' }}>🔑 Datos de Acceso:</p><p style={{ color: 'var(--text-secondary)' }}>{selected.datosAcceso}</p></div>}
                 {selected.notas && <div className="mt-2 pt-2 border-t" style={{ borderColor: 'var(--border)' }}><p className="text-[10px] font-medium mb-0.5" style={{ color: 'var(--text-muted)' }}>📝 Notas:</p><p style={{ color: 'var(--text-secondary)' }}>{selected.notas}</p></div>}
                 {(selected.tarifasLeasing.filter(f => f.name !== 'Imagen').length > 0 || selected.tarifasVnVo.length > 0) && (
-                  <div className="mt-2 pt-2 border-t space-y-1" style={{ borderColor: 'var(--border)' }}>
+                  <div className="mt-2 pt-2 border-t space-y-2" style={{ borderColor: 'var(--border)' }}>
                     <p className="text-[10px] font-medium" style={{ color: 'var(--text-muted)' }}>📎 Archivos:</p>
-                    {selected.tarifasLeasing.filter(f => f.name !== 'Imagen').map((f, i) => <a key={f.name} href={`/api/files/download?pageId=${selected.id}&property=${encodeURIComponent('Tarifas Leasing')}&index=${i}`} target="_blank" rel="noopener noreferrer" className="block text-[11px]" style={{ color: 'var(--accent-blue)' }}>📄 Tarifa: {f.name}</a>)}
-                    {selected.tarifasVnVo.map((f, i) => <a key={f.name} href={`/api/files/download?pageId=${selected.id}&property=${encodeURIComponent('Tarifas vigentes VN - VO')}&index=${i}`} target="_blank" rel="noopener noreferrer" className="block text-[11px]" style={{ color: 'var(--accent-blue)' }}>📄 VN-VO: {f.name}</a>)}
+                    {selected.tarifasLeasing.filter(f => f.name !== 'Imagen').concat(selected.tarifasVnVo).map((f, i) => {
+                      const prop = i < selected.tarifasLeasing.filter(f => f.name !== 'Imagen').length ? 'Tarifas Leasing' : 'Tarifas vigentes VN - VO'
+                      const idx = i < selected.tarifasLeasing.filter(f => f.name !== 'Imagen').length ? i : i - selected.tarifasLeasing.filter(f => f.name !== 'Imagen').length
+                      const url = `/api/files/download?pageId=${selected.id}&property=${encodeURIComponent(prop)}&index=${idx}`
+                      const previewUrl = url + '&preview=true'
+                      const isImage = f.name.match(/\.(jpg|jpeg|png|gif|webp)/i)
+                      const isPdf = f.name.match(/\.pdf/i)
+                      return (
+                        <div key={f.name} className="card p-2" style={{ background: 'var(--bg-pill)' }}>
+                          {isImage && <img src={previewUrl} alt={f.name} className="w-full rounded" style={{ maxHeight: 150, objectFit: 'contain' }} />}
+                          {isPdf && <iframe src={previewUrl} className="w-full rounded" style={{ height: 150 }} />}
+                          <a href={url} target="_blank" rel="noopener noreferrer" className="inline-block mt-1 text-[10px] font-medium" style={{ color: 'var(--accent-blue)' }}>📥 {f.name}</a>
+                        </div>
+                      )
+                    })}
                   </div>
                 )}
               </div>
@@ -254,10 +267,24 @@ function FinancierasInner() {
                   {imagenUrl && <img src={imagenUrl} className="w-full h-32 object-cover rounded mt-2" />}
                 </div>
                 {(selected.tarifasLeasing.filter(f => f.name !== 'Imagen').length > 0 || selected.tarifasVnVo.length > 0) && (
-                  <div className="mt-2 pt-2 border-t space-y-1" style={{ borderColor: 'var(--border)' }}>
+                  <div className="mt-2 pt-2 border-t space-y-2" style={{ borderColor: 'var(--border)' }}>
                     <p className="text-[10px] font-medium" style={{ color: 'var(--text-muted)' }}>📎 Archivos:</p>
-                    {selected.tarifasLeasing.filter(f => f.name !== 'Imagen').map((f, i) => <a key={f.name} href={`/api/files/download?pageId=${selected.id}&property=${encodeURIComponent('Tarifas Leasing')}&index=${i}`} target="_blank" rel="noopener noreferrer" className="block text-[11px]" style={{ color: 'var(--accent-blue)' }}>📄 Tarifa: {f.name}</a>)}
-                    {selected.tarifasVnVo.map((f, i) => <a key={f.name} href={`/api/files/download?pageId=${selected.id}&property=${encodeURIComponent('Tarifas vigentes VN - VO')}&index=${i}`} target="_blank" rel="noopener noreferrer" className="block text-[11px]" style={{ color: 'var(--accent-blue)' }}>📄 VN-VO: {f.name}</a>)}
+                    {selected.tarifasLeasing.filter(f => f.name !== 'Imagen').concat(selected.tarifasVnVo).map((f, i) => {
+                      const leasingCount = selected.tarifasLeasing.filter(f => f.name !== 'Imagen').length
+                      const prop = i < leasingCount ? 'Tarifas Leasing' : 'Tarifas vigentes VN - VO'
+                      const idx = i < leasingCount ? i : i - leasingCount
+                      const url = `/api/files/download?pageId=${selected.id}&property=${encodeURIComponent(prop)}&index=${idx}`
+                      const previewUrl = url + '&preview=true'
+                      const isImage = f.name.match(/\.(jpg|jpeg|png|gif|webp)/i)
+                      const isPdf = f.name.match(/\.pdf/i)
+                      return (
+                        <div key={f.name} className="card p-2" style={{ background: 'var(--bg-pill)' }}>
+                          {isImage && <img src={previewUrl} alt={f.name} className="w-full rounded" style={{ maxHeight: 150, objectFit: 'contain' }} />}
+                          {isPdf && <iframe src={previewUrl} className="w-full rounded" style={{ height: 150 }} />}
+                          <a href={url} target="_blank" rel="noopener noreferrer" className="inline-block mt-1 text-[10px] font-medium" style={{ color: 'var(--accent-blue)' }}>📥 {f.name}</a>
+                        </div>
+                      )
+                    })}
                   </div>
                 )}
                 <div className="flex gap-2 pt-2">

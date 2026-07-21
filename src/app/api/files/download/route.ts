@@ -9,6 +9,7 @@ export async function GET(request: NextRequest) {
     const pageId = searchParams.get('pageId')
     const property = searchParams.get('property')
     const index = parseInt(searchParams.get('index') || '0')
+    const preview = searchParams.get('preview') === 'true'
 
     if (!pageId || !property) {
       return NextResponse.json({ error: 'pageId and property required' }, { status: 400 })
@@ -49,13 +50,14 @@ export async function GET(request: NextRequest) {
     }
 
     const blob = await fileRes.blob()
-    return new NextResponse(blob, {
-      headers: {
-        'Content-Type': fileRes.headers.get('content-type') || 'application/octet-stream',
-        'Content-Disposition': `attachment; filename="${fileName}"`,
-        'Cache-Control': 'no-cache',
-      },
-    })
+    const headers: Record<string, string> = {
+      'Content-Type': fileRes.headers.get('content-type') || 'application/octet-stream',
+      'Cache-Control': 'no-cache',
+    }
+    if (!preview) {
+      headers['Content-Disposition'] = `attachment; filename="${fileName}"`
+    }
+    return new NextResponse(blob, { headers })
   } catch (error: any) {
     console.error('Download error:', error)
     return NextResponse.json({ error: error?.message || 'Failed' }, { status: 500 })
