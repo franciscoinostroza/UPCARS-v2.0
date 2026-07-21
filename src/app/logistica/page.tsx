@@ -311,7 +311,12 @@ function DetailModal({ item, onClose, onEdit }: { item: LogItem; onClose: () => 
           <div className="flex items-center gap-1">
             <button onClick={onEdit} className="text-[10px] px-2 py-1 rounded" style={{ color: 'var(--accent-blue)' }}>✏️</button>
             <button onClick={async () => {
-              setConfirmDelete(selected.id)
+              if (!confirm('¿Eliminar?')) return
+              try {
+                const tk = new URLSearchParams(window.location.search).get('token') || ''
+                await fetch(`/api/logistica/${item.id}?token=${tk}`, { method: 'DELETE' })
+                window.location.reload()
+              } catch { alert('Error'); }
             }} className="text-[10px] px-2 py-1 rounded" style={{ color: '#ef4444', cursor: 'pointer' }}>🗑</button>
             <button onClick={onClose} className="text-sm px-2 py-1 rounded" style={{ color: 'var(--text-muted)' }}>✕</button>
           </div>
