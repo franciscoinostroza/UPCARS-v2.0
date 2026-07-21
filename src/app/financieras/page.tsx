@@ -207,8 +207,8 @@ function FinancierasInner() {
                 {(selected.tarifasLeasing.filter(f => f.name !== 'Imagen').length > 0 || selected.tarifasVnVo.length > 0) && (
                   <div className="mt-2 pt-2 border-t space-y-1" style={{ borderColor: 'var(--border)' }}>
                     <p className="text-[10px] font-medium" style={{ color: 'var(--text-muted)' }}>📎 Archivos:</p>
-                    {selected.tarifasLeasing.filter(f => f.name !== 'Imagen').map(f => <a key={f.name} href={f.url} target="_blank" rel="noopener noreferrer" className="block text-[11px]" style={{ color: 'var(--accent-blue)' }}>📄 Tarifa: {f.name}</a>)}
-                    {selected.tarifasVnVo.map(f => <a key={f.name} href={f.url} target="_blank" rel="noopener noreferrer" className="block text-[11px]" style={{ color: 'var(--accent-blue)' }}>📄 VN-VO: {f.name}</a>)}
+                    {selected.tarifasLeasing.filter(f => f.name !== 'Imagen').map((f, i) => <a key={f.name} href={`/api/files/download?pageId=${selected.id}&property=${encodeURIComponent('Tarifas Leasing')}&index=${i}`} target="_blank" rel="noopener noreferrer" className="block text-[11px]" style={{ color: 'var(--accent-blue)' }}>📄 Tarifa: {f.name}</a>)}
+                    {selected.tarifasVnVo.map((f, i) => <a key={f.name} href={`/api/files/download?pageId=${selected.id}&property=${encodeURIComponent('Tarifas vigentes VN - VO')}&index=${i}`} target="_blank" rel="noopener noreferrer" className="block text-[11px]" style={{ color: 'var(--accent-blue)' }}>📄 VN-VO: {f.name}</a>)}
                   </div>
                 )}
               </div>
@@ -256,8 +256,8 @@ function FinancierasInner() {
                 {(selected.tarifasLeasing.filter(f => f.name !== 'Imagen').length > 0 || selected.tarifasVnVo.length > 0) && (
                   <div className="mt-2 pt-2 border-t space-y-1" style={{ borderColor: 'var(--border)' }}>
                     <p className="text-[10px] font-medium" style={{ color: 'var(--text-muted)' }}>📎 Archivos:</p>
-                    {selected.tarifasLeasing.filter(f => f.name !== 'Imagen').map(f => <a key={f.name} href={f.url} target="_blank" rel="noopener noreferrer" className="block text-[11px]" style={{ color: 'var(--accent-blue)' }}>📄 Tarifa: {f.name}</a>)}
-                    {selected.tarifasVnVo.map(f => <a key={f.name} href={f.url} target="_blank" rel="noopener noreferrer" className="block text-[11px]" style={{ color: 'var(--accent-blue)' }}>📄 VN-VO: {f.name}</a>)}
+                    {selected.tarifasLeasing.filter(f => f.name !== 'Imagen').map((f, i) => <a key={f.name} href={`/api/files/download?pageId=${selected.id}&property=${encodeURIComponent('Tarifas Leasing')}&index=${i}`} target="_blank" rel="noopener noreferrer" className="block text-[11px]" style={{ color: 'var(--accent-blue)' }}>📄 Tarifa: {f.name}</a>)}
+                    {selected.tarifasVnVo.map((f, i) => <a key={f.name} href={`/api/files/download?pageId=${selected.id}&property=${encodeURIComponent('Tarifas vigentes VN - VO')}&index=${i}`} target="_blank" rel="noopener noreferrer" className="block text-[11px]" style={{ color: 'var(--accent-blue)' }}>📄 VN-VO: {f.name}</a>)}
                   </div>
                 )}
                 <div className="flex gap-2 pt-2">
