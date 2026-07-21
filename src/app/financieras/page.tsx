@@ -39,6 +39,7 @@ function FinancierasInner() {
   const [selected, setSelected] = useState<FinancieraItem | null>(null)
   const [editing, setEditing] = useState(false)
   const [saving, setSaving] = useState(false)
+  const [confirmDelete, setConfirmDelete] = useState<string | null>(null)
   const [showCreate, setShowCreate] = useState(false)
   const [imagenUrl, setImagenUrl] = useState('')
   const [editData, setEditData] = useState<any>({})
@@ -232,7 +233,7 @@ function FinancierasInner() {
                   if (!r.ok) { const d = await r.json(); alert(d.error || 'Error'); return }
                   setSelected(null); fetchData()
                 } catch { alert('Error de red'); }
-              }} className="w-full text-[11px] font-semibold py-2 rounded mt-4" style={{ background: 'rgba(239,68,68,0.12)', color: '#ef4444' }}>🗑 Eliminar</button>
+              }} className="w-full text-[11px] font-semibold py-2 rounded mt-4" style={{ background: 'rgba(239,68,68,0.12)', color: '#ef4444', cursor: 'pointer' }}>🗑 Eliminar</button>
             </div>
           </div>
         )}
@@ -311,7 +312,7 @@ function FinancierasInner() {
                       if (!r.ok) { const d = await r.json(); alert(d.error || 'Error'); return }
                       setSelected(null); setEditing(false); fetchData()
                     } catch { alert('Error de red'); }
-                  }} className="flex-1 text-[11px] font-semibold py-2 rounded" style={{ background: 'rgba(239,68,68,0.12)', color: '#ef4444' }}>🗑 Eliminar</button>
+                  }} className="flex-1 text-[11px] font-semibold py-2 rounded" style={{ background: 'rgba(239,68,68,0.12)', color: '#ef4444', cursor: 'pointer' }}>🗑 Eliminar</button>
                 </div>
               </div>
             </div>
@@ -396,6 +397,26 @@ function DraggableFinCard({ item, onClick }: { item: FinancieraItem; onClick: ()
       <p className="text-[11px] font-semibold truncate" style={{ color: 'var(--text)' }}>{item.nombre}</p>
       <p className="text-[9px] truncate" style={{ color: 'var(--text-muted)' }}>{item.personaContacto || item.telefono || ''}</p>
     </div>
+
+        {confirmDelete && (
+          <div className="fixed inset-0 z-[60] flex items-center justify-center p-4" style={{ background: 'rgba(0,0,0,0.5)' }}>
+            <div className="card p-5 max-w-sm animate-fade-up" style={{ background: 'var(--bg-card)' }}>
+              <p className="text-sm font-semibold mb-4 text-center" style={{ color: 'var(--text)' }}>🗑 ¿Eliminar este registro?</p>
+              <div className="flex gap-2">
+                <button onClick={async () => {
+                  const id = confirmDelete; setConfirmDelete(null)
+                  try {
+                    const tk = new URLSearchParams(window.location.search).get('token') || ''
+                    const r = await fetch(`/api/financieras/${id}?token=${tk}`, { method: 'DELETE' })
+                    if (!r.ok) { const d = await r.json(); alert(d.error || 'Error'); return }
+                    setSelected(null); setEditing(false); fetchData()
+                  } catch { alert('Error de red'); }
+                }} className="flex-1 text-[11px] font-semibold py-2.5 rounded" style={{ background: 'rgba(239,68,68,0.12)', color: '#ef4444', cursor: 'pointer' }}>🗑 Eliminar</button>
+                <button onClick={() => setConfirmDelete(null)} className="flex-1 text-[11px] font-semibold py-2.5 rounded" style={{ background: 'var(--bg-pill)', color: 'var(--text-secondary)', cursor: 'pointer' }}>Cancelar</button>
+              </div>
+            </div>
+          </div>
+        )}
   )
 }
 

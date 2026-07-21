@@ -187,7 +187,7 @@ function TasacionesInner() {
                   <div className="flex-1 min-w-0">
                     <div className="flex items-center gap-2 mb-1">
                       <h3 className="text-sm font-semibold truncate" style={{ color: 'var(--text)' }}>{r.nombre}</h3>
-                      {overdue && <span className="text-[9px] px-1.5 py-0.5 rounded font-medium" style={{ background: 'rgba(239,68,68,0.12)', color: '#ef4444' }}>Vencido</span>}
+                      {overdue && <span className="text-[9px] px-1.5 py-0.5 rounded font-medium" style={{ background: 'rgba(239,68,68,0.12)', color: '#ef4444', cursor: 'pointer' }}>Vencido</span>}
                     </div>
                     {r.descripcion && <p className="text-[11px] mb-2 line-clamp-2" style={{ color: 'var(--text-secondary)' }}>{r.descripcion}</p>}
                     <div className="flex flex-wrap gap-1.5 items-center">
@@ -239,7 +239,7 @@ function TasacionesInner() {
                     await fetch(`/api/tasaciones/${selected.id}` + "?token=" + new URLSearchParams(window.location.search).get("token"), { method: 'DELETE' })
                     setSelected(null); fetchData()
                   } catch (e) { alert('Error de red al eliminar'); }
-                }} className="w-full text-[11px] font-semibold py-2 rounded mt-2" style={{ background: 'rgba(239,68,68,0.12)', color: '#ef4444' }}>🗑 Eliminar</button>
+                }} className="w-full text-[11px] font-semibold py-2 rounded mt-2" style={{ background: 'rgba(239,68,68,0.12)', color: '#ef4444', cursor: 'pointer' }}>🗑 Eliminar</button>
               </div>
             </div>
           </div>
@@ -358,6 +358,26 @@ function DraggableTasacionCard({ item, onClick }: { item: TasacionItem; onClick:
         {item.plazo && <span className="text-[9px]" style={{ color: new Date(item.plazo) < new Date() ? '#ef4444' : 'var(--text-muted)' }}>📅 {fmtDate(item.plazo)}</span>}
       </div>
     </button>
+
+        {confirmDelete && (
+          <div className="fixed inset-0 z-[60] flex items-center justify-center p-4" style={{ background: 'rgba(0,0,0,0.5)' }}>
+            <div className="card p-5 max-w-sm animate-fade-up" style={{ background: 'var(--bg-card)' }}>
+              <p className="text-sm font-semibold mb-4 text-center" style={{ color: 'var(--text)' }}>🗑 ¿Eliminar este registro?</p>
+              <div className="flex gap-2">
+                <button onClick={async () => {
+                  const id = confirmDelete; setConfirmDelete(null)
+                  try {
+                    const tk = new URLSearchParams(window.location.search).get('token') || ''
+                    const r = await fetch(`/api/tasaciones/${id}?token=${tk}`, { method: 'DELETE' })
+                    if (!r.ok) { const d = await r.json(); alert(d.error || 'Error'); return }
+                    setSelected(null); setEditing(false); fetchData()
+                  } catch { alert('Error de red'); }
+                }} className="flex-1 text-[11px] font-semibold py-2.5 rounded" style={{ background: 'rgba(239,68,68,0.12)', color: '#ef4444', cursor: 'pointer' }}>🗑 Eliminar</button>
+                <button onClick={() => setConfirmDelete(null)} className="flex-1 text-[11px] font-semibold py-2.5 rounded" style={{ background: 'var(--bg-pill)', color: 'var(--text-secondary)', cursor: 'pointer' }}>Cancelar</button>
+              </div>
+            </div>
+          </div>
+        )}
   )
 }
 

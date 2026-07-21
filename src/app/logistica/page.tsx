@@ -311,10 +311,8 @@ function DetailModal({ item, onClose, onEdit }: { item: LogItem; onClose: () => 
           <div className="flex items-center gap-1">
             <button onClick={onEdit} className="text-[10px] px-2 py-1 rounded" style={{ color: 'var(--accent-blue)' }}>✏️</button>
             <button onClick={async () => {
-              if (!confirm('¿Eliminar este registro?')) return
-              await fetch(`/api/logistica/${item.id}?token=` + new URLSearchParams(window.location.search).get("token"), { method: 'DELETE' })
-              window.location.reload()
-            }} className="text-[10px] px-2 py-1 rounded" style={{ color: '#ef4444' }}>🗑</button>
+              setConfirmDelete(selected.id)
+            }} className="text-[10px] px-2 py-1 rounded" style={{ color: '#ef4444', cursor: 'pointer' }}>🗑</button>
             <button onClick={onClose} className="text-sm px-2 py-1 rounded" style={{ color: 'var(--text-muted)' }}>✕</button>
           </div>
         </div>
@@ -412,6 +410,7 @@ function CreateModal({ employees, vehicles, onCreate, onClose, onRefresh }: { em
   const [fecha, setFecha] = useState('')
   const [obs, setObs] = useState('')
   const [saving, setSaving] = useState(false)
+  const [confirmDelete, setConfirmDelete] = useState<string | null>(null)
 
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault()
@@ -490,5 +489,25 @@ export default function LogisticaPage() {
     <ThemeProvider>
       <LogisticaInner />
     </ThemeProvider>
+
+        {confirmDelete && (
+          <div className="fixed inset-0 z-[60] flex items-center justify-center p-4" style={{ background: 'rgba(0,0,0,0.5)' }}>
+            <div className="card p-5 max-w-sm animate-fade-up" style={{ background: 'var(--bg-card)' }}>
+              <p className="text-sm font-semibold mb-4 text-center" style={{ color: 'var(--text)' }}>🗑 ¿Eliminar este registro?</p>
+              <div className="flex gap-2">
+                <button onClick={async () => {
+                  const id = confirmDelete; setConfirmDelete(null)
+                  try {
+                    const tk = new URLSearchParams(window.location.search).get('token') || ''
+                    const r = await fetch(`/api/logistica/${id}?token=${tk}`, { method: 'DELETE' })
+                    if (!r.ok) { const d = await r.json(); alert(d.error || 'Error'); return }
+                    setSelected(null); setEditing(false); fetchData()
+                  } catch { alert('Error de red'); }
+                }} className="flex-1 text-[11px] font-semibold py-2.5 rounded" style={{ background: 'rgba(239,68,68,0.12)', color: '#ef4444', cursor: 'pointer' }}>🗑 Eliminar</button>
+                <button onClick={() => setConfirmDelete(null)} className="flex-1 text-[11px] font-semibold py-2.5 rounded" style={{ background: 'var(--bg-pill)', color: 'var(--text-secondary)', cursor: 'pointer' }}>Cancelar</button>
+              </div>
+            </div>
+          </div>
+        )}
   )
 }
