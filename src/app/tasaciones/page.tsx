@@ -31,6 +31,7 @@ function TasacionesInner() {
   const [filterTipoTarea, setFilterTipoTarea] = useState('')
   const [filterArea, setFilterArea] = useState('')
   const [selected, setSelected] = useState<TasacionItem | null>(null)
+  const [confirmDelete, setConfirmDelete] = useState<string | null>(null)
   const [showCreate, setShowCreate] = useState(false)
   const [employees, setEmployees] = useState<{ id: string; name: string }[]>([])
 
@@ -234,11 +235,7 @@ function TasacionesInner() {
                   </div>
                 )}
                 <button onClick={async () => {
-                  if (!confirm('¿Eliminar esta tasación?')) return
-                  try {
-                    await fetch(`/api/tasaciones/${selected.id}` + "?token=" + new URLSearchParams(window.location.search).get("token"), { method: 'DELETE' })
-                    setSelected(null); fetchData()
-                  } catch (e) { alert('Error de red al eliminar'); }
+                  setConfirmDelete(selected.id)
                 }} className="w-full text-[11px] font-semibold py-2 rounded mt-2" style={{ background: 'rgba(239,68,68,0.12)', color: '#ef4444', cursor: 'pointer' }}>🗑 Eliminar</button>
               </div>
             </div>

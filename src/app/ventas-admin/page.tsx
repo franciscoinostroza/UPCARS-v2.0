@@ -25,6 +25,7 @@ function VentasAdminInner() {
   const [vista, setVista] = useState<'tabla' | 'kanban'>('tabla')
   const [filterVendedor, setFilterVendedor] = useState('')
   const [selected, setSelected] = useState<VentaAdminItem | null>(null)
+  const [confirmDelete, setConfirmDelete] = useState<string | null>(null)
   const [showCreate, setShowCreate] = useState(false)
   const [employees, setEmployees] = useState<{ id: string; name: string }[]>([])
   const [vehicles, setVehicles] = useState<{ id: string; name: string; matricula?: string; brand?: string; model?: string; year?: string }[]>([])
@@ -225,11 +226,7 @@ function VentasAdminInner() {
                   await fetch(`/api/ventas-admin/${selected.id}` + "?token=" + new URLSearchParams(window.location.search).get("token"), { method: 'PATCH', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ precioVenta: selected.precioVenta, clienteNombre: selected.clienteNombre, clienteContacto: selected.clienteContacto, formaPago: selected.formaPago, financiada: selected.financiada, observaciones: selected.observaciones }) })
                 }} className="w-full text-[11px] font-semibold py-2 rounded" style={{ background: 'var(--accent-blue)', color: '#fff' }}>💾 Guardar</button>
                 <button onClick={async () => {
-                  if (!confirm('¿Eliminar esta venta?')) return
-                  try {
-                    await fetch(`/api/ventas-admin/${selected.id}` + "?token=" + new URLSearchParams(window.location.search).get("token"), { method: 'DELETE' })
-                    setSelected(null); fetchData()
-                  } catch (e) { alert('Error de red al eliminar'); }
+                  setConfirmDelete(selected.id)
                 }} className="w-full text-[11px] font-semibold py-2 rounded mt-1" style={{ background: 'rgba(239,68,68,0.12)', color: '#ef4444', cursor: 'pointer' }}>🗑 Eliminar</button>
               </div>
             </div>
