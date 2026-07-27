@@ -31,6 +31,7 @@ function TasacionesClientesExternosInner() {
   const [filterTipoTarea, setFilterTipoTarea] = useState('')
   const [filterArea, setFilterArea] = useState('')
   const [selected, setSelected] = useState<TasacionItem | null>(null)
+  const [confirmDelete, setConfirmDelete] = useState<string | null>(null)
   const [showCreate, setShowCreate] = useState(false)
   const [employees, setEmployees] = useState<{ id: string; name: string }[]>([])
 
@@ -235,12 +236,8 @@ function TasacionesClientesExternosInner() {
                   </div>
                 )}
                 <button onClick={async () => {
-                  if (!confirm('¿Eliminar esta tasación?')) return
-                  try {
-                    await fetch(`/api/tasaciones/${selected.id}` + "?token=" + new URLSearchParams(window.location.search).get("token"), { method: 'DELETE' })
-                    setSelected(null); fetchData()
-                  } catch (e) { alert('Error de red al eliminar'); }
-                }} className="w-full text-[11px] font-semibold py-2 rounded mt-2" style={{ background: 'rgba(239,68,68,0.12)', color: '#ef4444' }}>🗑 Eliminar</button>
+                  setConfirmDelete(selected.id)
+                }} className="w-full text-[11px] font-semibold py-2 rounded mt-2" style={{ background: 'rgba(239,68,68,0.12)', color: '#ef4444', cursor: 'pointer' }}>🗑 Eliminar</button>
               </div>
             </div>
           </div>
@@ -324,6 +321,26 @@ function TasacionesClientesExternosInner() {
                   <button type="button" onClick={() => setShowCreate(false)} className="flex-1 text-[11px] font-semibold py-2.5 rounded" style={{ background: 'var(--bg-pill)', color: 'var(--text-secondary)' }}>Cancelar</button>
                 </div>
               </form>
+            </div>
+          </div>
+        )}
+
+        {confirmDelete && (
+          <div className="fixed inset-0 z-[60] flex items-center justify-center p-4" style={{ background: 'rgba(0,0,0,0.5)' }}>
+            <div className="card p-5 max-w-sm animate-fade-up" style={{ background: 'var(--bg-card)' }}>
+              <p className="text-sm font-semibold mb-4 text-center" style={{ color: 'var(--text)' }}>🗑 ¿Eliminar esta tasación?</p>
+              <div className="flex gap-2">
+                <button onClick={async () => {
+                  const id = confirmDelete; setConfirmDelete(null)
+                  try {
+                    const tk = new URLSearchParams(window.location.search).get('token') || ''
+                    const r = await fetch(`/api/tasaciones/${id}?token=${tk}`, { method: 'DELETE' })
+                    if (!r.ok) { const d = await r.json(); alert(d.error || 'Error'); return }
+                    setSelected(null); fetchData()
+                  } catch { alert('Error de red'); }
+                }} className="flex-1 text-[11px] font-semibold py-2.5 rounded" style={{ background: 'rgba(239,68,68,0.12)', color: '#ef4444', cursor: 'pointer' }}>🗑 Eliminar</button>
+                <button onClick={() => setConfirmDelete(null)} className="flex-1 text-[11px] font-semibold py-2.5 rounded" style={{ background: 'var(--bg-pill)', color: 'var(--text-secondary)', cursor: 'pointer' }}>Cancelar</button>
+              </div>
             </div>
           </div>
         )}
