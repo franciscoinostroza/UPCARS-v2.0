@@ -86,60 +86,37 @@ function LogisticaInner() {
   const [editing, setEditing] = useState(false)
   const [confirmDelete, setConfirmDelete] = useState<string | null>(null)
   const [editData, setEditData] = useState<any>({})
-  const [showCreate, setShowCreate] = useState(false)
-
-  const fetchData = useCallback(async () => {
-    try {
-      const params = new URLSearchParams()
-      if (filterEstado) params.set('estado', filterEstado)
-      const [logRes, empRes, vehRes] = await Promise.all([
-        fetch(`/api/logistica${params.toString() ? '?' + params.toString() : ''}`),
-        fetch('/api/employees'),
-        fetch('/api/vehicles?list=true'),
-      ])
-      const logJson = await logRes.json()
-      const empJson = await empRes.json()
-      const vehJson = await vehRes.json()
-      if (logJson.success) setRecords(logJson.data)
-      if (empJson.success) setEmployees(empJson.data)
-      if (vehJson.success) setVehicles(vehJson.data)
-    } catch {} finally {
-      setLoading(false)
-    }
-  }, [filterEstado])
-
-  useEffect(() => { fetchData() }, [fetchData])
-
-  const columns = ESTADOS.filter(Boolean).map(est => ({ estado: est, items: records.filter(r => r.estado === est) }))
-
-  const sensors = useSensors(
-    useSensor(MouseSensor, { activationConstraint: { distance: 8 } }),
-    useSensor(TouchSensor, { activationConstraint: { delay: 250, tolerance: 5 } }),
-  )
-
-  function handleDragEnd(event: any) {
-    const { active, over } = event
-    if (!over || active.id === over.id) return
-    const record = records.find(r => r.id === active.id)
-    if (!record) return
-    const newEstado = over.id as string
-    if (newEstado === record.estado) return
-    setRecords(prev => prev.map(r => r.id === record.id ? { ...r, estado: newEstado } : r))
-    fetch(`/api/logistica/${record.id}`, { method: 'PATCH', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ estado: newEstado }) }).catch(() => {})
-  }
+  const [editAuthFile, setEditAuthFile] = useState<File | null>(null)
+  const [editUploading, setEditUploading] = useState(false)
 
   async function handleSaveEdit() {
     if (!selected) return
+    let body: any = { ...editData }
+    if (editAuthFile) {
+      setEditUploading(true)
+      try {
+        const fd = new FormData()
+        fd.append('file', editAuthFile)
+        const uploadRes = await fetch('/api/logistica/upload', { method: 'POST', body: fd })
+        const uploadJson = await uploadRes.json()
+        if (uploadJson.success) {
+          body.authFileName = uploadJson.data.name
+          body.authFileUrl = uploadJson.data.url
+          body.oldAuthFileUrl = selected.authFileUrl
+        }
+      } catch {} finally { setEditUploading(false) }
+    }
     try {
       const res = await fetch(`/api/logistica/${selected.id}` + "?token=" + new URLSearchParams(window.location.search).get("token"), {
         method: 'PATCH',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(editData),
+        body: JSON.stringify(body),
       })
       if (res.ok) {
-        setRecords(prev => prev.map(r => r.id === selected.id ? { ...r, ...editData } as LogItem : r))
-        setSelected(prev => prev ? { ...prev, ...editData } as LogItem : null)
+        setRecords(prev => prev.map(r => r.id === selected.id ? { ...r, ...body } as LogItem : r))
+        setSelected(prev => prev ? { ...prev, ...body } as LogItem : null)
         setEditing(false)
+        setEditAuthFile(null)
         if (editData.responsableId) {
           fetch('/api/notify', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ type: 'logistica', recordName: selected.nombre, responsableId: editData.responsableId, autorNombre: 'Sistema' }) }).catch(() => {})
         }
@@ -168,6 +145,8 @@ function LogisticaInner() {
       responsableId: item.responsableId || '',
       vehiculoId: item.vehiculoId || '',
       observaciones: item.observaciones,
+      authFileName: item.authFileName,
+      authFileUrl: item.authFileUrl,
     })
     setEditing(true)
   }
@@ -290,7 +269,8 @@ function LogisticaInner() {
         {selected && editing && (
           <EditModal item={selected} editData={editData} setEditData={setEditData}
             employees={employees} vehicles={vehicles}
-            onSave={handleSaveEdit} onCancel={() => setEditing(false)} />
+            onSave={handleSaveEdit} onCancel={() => setEditing(false)}
+            editAuthFile={editAuthFile} setEditAuthFile={setEditAuthFile} editUploading={editUploading} />
         )}
 
         {showCreate && (
@@ -361,7 +341,7 @@ function DetailModal({ item, onClose, onEdit, onDelete }: { item: LogItem; onClo
   )
 }
 
-function EditModal({ item, editData, setEditData, employees, vehicles, onSave, onCancel }: any) {
+function EditModal({ item, editData, setEditData, employees, vehicles, onSave, onCancel, editAuthFile, setEditAuthFile, editUploading }: any) {
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center p-4" style={{ background: 'rgba(0,0,0,0.6)' }} onClick={(e) => { if (e.target === e.currentTarget) onCancel() }}>
       <div className="card w-full max-w-lg animate-fade-up p-5" style={{ background: 'var(--bg-card)', maxHeight: '90vh', overflowY: 'auto' }}>
@@ -406,9 +386,17 @@ function EditModal({ item, editData, setEditData, employees, vehicles, onSave, o
             <p className="text-[10px] font-medium mb-0.5" style={{ color: 'var(--text-muted)' }}>Observaciones</p>
             <textarea value={editData.observaciones} onChange={e => setEditData({...editData, observaciones: e.target.value})} placeholder="Opcional" rows={3} style={{...selectSx, resize: 'vertical'}} />
           </div>
+          <div>
+            <p className="text-[10px] font-medium mb-0.5" style={{ color: 'var(--text-muted)' }}>📎 Autorización de retirada</p>
+            {editData.authFileName && !editAuthFile && (
+              <p className="text-[10px] mb-1" style={{ color: 'var(--text-secondary)' }}>Actual: {editData.authFileName}</p>
+            )}
+            <input type="file" accept=".pdf,.jpg,.jpeg,.png,.gif,.webp" onChange={e => setEditAuthFile(e.target.files?.[0] || null)} style={{ fontSize: 11, color: 'var(--text)' }} />
+            {editAuthFile && <p className="text-[10px] mt-1" style={{ color: 'var(--text-secondary)' }}>Nuevo: {editAuthFile.name}</p>}
+          </div>
           <div className="flex gap-2 pt-1">
             <button onClick={onCancel} className="flex-1 text-[11px] font-semibold py-2 rounded" style={{ background: 'var(--bg-pill)', color: 'var(--text)' }}>Cancelar</button>
-            <button onClick={onSave} className="flex-1 text-[11px] font-semibold py-2 rounded" style={{ background: 'var(--accent-blue)', color: '#fff' }}>💾 Guardar</button>
+            <button onClick={onSave} disabled={editUploading} className="flex-1 text-[11px] font-semibold py-2 rounded" style={{ background: 'var(--accent-blue)', color: '#fff' }}>{editUploading ? 'Subiendo...' : '💾 Guardar'}</button>
           </div>
         </div>
       </div>
@@ -427,14 +415,31 @@ function CreateModal({ employees, vehicles, onCreate, onClose, onRefresh }: { em
   const [fecha, setFecha] = useState('')
   const [obs, setObs] = useState('')
   const [saving, setSaving] = useState(false)
+  const [authFile, setAuthFile] = useState<File | null>(null)
+  const [uploading, setUploading] = useState(false)
 
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault()
     if (!name.trim()) return
     setSaving(true)
-    const ok = await onCreate({ nombre: name.trim(), vehiculoId: vehId || undefined, responsableId: respId || undefined, estado, fechaProgramada: fecha || undefined, ubicacion: ubicacion.trim() || undefined, situacionComercial: sitCom || undefined, prioridad: prioridad || undefined, observaciones: obs.trim() || undefined })
+    let authFileName: string | undefined
+    let authFileUrl: string | undefined
+    if (authFile) {
+      setUploading(true)
+      try {
+        const fd = new FormData()
+        fd.append('file', authFile)
+        const uploadRes = await fetch('/api/logistica/upload', { method: 'POST', body: fd })
+        const uploadJson = await uploadRes.json()
+        if (uploadJson.success) {
+          authFileName = uploadJson.data.name
+          authFileUrl = uploadJson.data.url
+        }
+      } catch {} finally { setUploading(false) }
+    }
+    const ok = await onCreate({ nombre: name.trim(), vehiculoId: vehId || undefined, responsableId: respId || undefined, estado, fechaProgramada: fecha || undefined, ubicacion: ubicacion.trim() || undefined, situacionComercial: sitCom || undefined, prioridad: prioridad || undefined, observaciones: obs.trim() || undefined, authFileName, authFileUrl })
     setSaving(false)
-    if (ok) { onClose(); setName(''); setVehId(''); setRespId(''); setUbicacion(''); setObs(''); setSitCom(''); setPrioridad(''); setFecha('') }
+    if (ok) { onClose(); setName(''); setVehId(''); setRespId(''); setUbicacion(''); setObs(''); setSitCom(''); setPrioridad(''); setFecha(''); setAuthFile(null) }
   }
 
   return (
@@ -493,7 +498,12 @@ function CreateModal({ employees, vehicles, onCreate, onClose, onRefresh }: { em
             <p className="text-[10px] font-medium mb-0.5" style={{ color: 'var(--text-muted)' }}>Observaciones</p>
             <textarea placeholder="Opcional" value={obs} onChange={e => setObs(e.target.value)} rows={3} style={{...selectSx, resize: 'vertical'}} />
           </div>
-          <button type="submit" disabled={saving || !name.trim()} className="w-full text-[11px] font-semibold py-2 rounded transition-opacity disabled:opacity-40" style={{ background: 'var(--accent-blue)', color: '#fff' }}>{saving ? '...' : '✅ Crear'}</button>
+          <div>
+            <p className="text-[10px] font-medium mb-0.5" style={{ color: 'var(--text-muted)' }}>📎 Autorización de retirada</p>
+            <input type="file" accept=".pdf,.jpg,.jpeg,.png,.gif,.webp" onChange={e => setAuthFile(e.target.files?.[0] || null)} style={{ fontSize: 11, color: 'var(--text)' }} />
+            {authFile && <p className="text-[10px] mt-1" style={{ color: 'var(--text-secondary)' }}>{authFile.name}</p>}
+          </div>
+          <button type="submit" disabled={saving || uploading || !name.trim()} className="w-full text-[11px] font-semibold py-2 rounded transition-opacity disabled:opacity-40" style={{ background: 'var(--accent-blue)', color: '#fff' }}>{uploading ? 'Subiendo...' : saving ? '...' : '✅ Crear'}</button>
         </form>
       </div>
     </div>

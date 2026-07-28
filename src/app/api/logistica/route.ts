@@ -38,7 +38,7 @@ export async function GET(request: NextRequest) {
 export async function POST(request: NextRequest) {
   try {
     const body = await request.json()
-    const { nombre, vehiculoId, responsableId, estado, fechaProgramada, ubicacion, situacionComercial, prioridad, observaciones } = body
+    const { nombre, vehiculoId, responsableId, estado, fechaProgramada, ubicacion, situacionComercial, prioridad, observaciones, authFileName, authFileUrl } = body
 
     if (!nombre) {
       return NextResponse.json({ success: false, error: 'nombre is required' }, { status: 400 })
@@ -54,6 +54,8 @@ export async function POST(request: NextRequest) {
       situacionComercial: situacionComercial || undefined,
       prioridad: prioridad || undefined,
       observaciones: observaciones?.trim(),
+      authFileName: authFileName || undefined,
+      authFileUrl: authFileUrl || undefined,
     })
 
     return NextResponse.json({ success: true }, { status: 201 })

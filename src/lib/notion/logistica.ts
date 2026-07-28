@@ -54,6 +54,8 @@ export async function createLogisticaRecord(data: {
   situacionComercial?: string
   prioridad?: string
   observaciones?: string
+  authFileName?: string
+  authFileUrl?: string
 }) {
   const dbId = getDatabaseId('logistics')
   const schema = await getDbSchema('logistics')
@@ -81,6 +83,11 @@ export async function createLogisticaRecord(data: {
   if (data.situacionComercial) props['Situación comercial'] = { select: { name: data.situacionComercial } }
   if (data.prioridad) props['Prioridad'] = { select: { name: data.prioridad } }
   if (data.observaciones) props['Observaciones'] = { rich_text: [{ text: { content: data.observaciones } }] }
+  if (data.authFileUrl && data.authFileName) {
+    props['Autorización de retirada '] = {
+      files: [{ name: data.authFileName, type: 'external', external: { url: data.authFileUrl } }],
+    }
+  }
 
   await notionPost('/pages', { parent: { database_id: dbId }, properties: props })
 }
@@ -107,6 +114,15 @@ export async function updateLogisticaRecord(id: string, data: Record<string, any
   if (data.vehiculoId) {
     const relKey = relations.find(r => r.name === 'Vehículo')?.name || relations[1]?.name
     if (relKey) props[relKey] = { relation: [{ id: data.vehiculoId }] }
+  }
+  if (data.authFileName !== undefined || data.authFileUrl !== undefined) {
+    if (data.authFileUrl && data.authFileName) {
+      props['Autorización de retirada '] = {
+        files: [{ name: data.authFileName, type: 'external', external: { url: data.authFileUrl } }],
+      }
+    } else {
+      props['Autorización de retirada '] = { files: [] }
+    }
   }
 
   if (Object.keys(props).length === 0) return

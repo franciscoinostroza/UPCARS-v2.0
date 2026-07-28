@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { notionPost, notionPatch, getDatabaseId } from '@/lib/notion/client'
+import { deleteAuthFile } from '@/lib/supabase/storage'
 
 export const maxDuration = 120
 export const dynamic = 'force-dynamic'
@@ -57,6 +58,12 @@ export async function GET(request: NextRequest) {
       for (const page of data.results || []) {
         const fechaVal = page.properties?.[cfg.dateField]?.date?.start
         if (fechaVal && fechaVal < thirtyDaysAgo) {
+          if (cfg.key === 'logistics') {
+            const authFile = page.properties?.['Autorización de retirada ']?.files?.[0]
+            if (authFile?.type === 'external') {
+              await deleteAuthFile(authFile.external.url).catch(() => {})
+            }
+          }
           await notionPatch(`/pages/${page.id}`, { archived: true })
           archived.push(page.id)
         }

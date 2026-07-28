@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { updateLogisticaRecord } from '@/lib/notion/logistica'
 import { notionPatch } from '@/lib/notion/client'
+import { deleteAuthFile } from '@/lib/supabase/storage'
 
 export const dynamic = 'force-dynamic'
 
@@ -11,6 +12,11 @@ export async function PATCH(
   try {
     const { id } = await params
     const body = await request.json()
+
+    if (body.oldAuthFileUrl) {
+      await deleteAuthFile(body.oldAuthFileUrl).catch(() => {})
+    }
+
     await updateLogisticaRecord(id, body)
     return NextResponse.json({ success: true, data: { id } })
   } catch (error: any) {
