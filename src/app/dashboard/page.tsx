@@ -50,8 +50,13 @@ function DashboardInner() {
   const [loading, setLoading] = useState(true)
   const [resolvingId, setResolvingId] = useState<string | null>(null)
   const [employees, setEmployees] = useState<{ id: string; name: string }[]>([])
+  const [token, setToken] = useState('')
   const [filterResponsable, setFilterResponsable] = useState('')
   const [filterMarca, setFilterMarca] = useState('')
+
+  useEffect(() => {
+    setToken(new URLSearchParams(window.location.search).get('token') || '')
+  }, [])
 
   const fetchAll = useCallback(async () => {
     try {
@@ -386,7 +391,7 @@ function DashboardInner() {
           <section className="mt-6 animate-fade-up">
             <div className="flex items-center gap-2 mb-3">
               <h2 className="text-sm font-bold" style={{ color: 'var(--text)' }}>📋 Tasaciones</h2>
-              <a href="/tasaciones" target="_blank" className="text-[10px] font-medium hover:opacity-70" style={{ color: 'var(--accent-blue)' }}>Ver todas →</a>
+              <a href={"/tasaciones?token=" + token} target="_blank" className="text-[10px] font-medium hover:opacity-70" style={{ color: 'var(--accent-blue)' }}>Ver todas →</a>
             </div>
             <div className="flex flex-wrap gap-2 mb-3">
               {['Sin empezar', 'Seguimiento', 'Vendido', 'Desiste compra'].map(est => {

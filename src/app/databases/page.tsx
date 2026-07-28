@@ -26,6 +26,11 @@ function DatabasesInner() {
   const [dbs, setDbs] = useState<DBEntry[]>([])
   const [loading, setLoading] = useState(true)
   const [search, setSearch] = useState('')
+  const [token, setToken] = useState('')
+
+  useEffect(() => {
+    setToken(new URLSearchParams(window.location.search).get('token') || '')
+  }, [])
 
   useEffect(() => {
     fetch('/api/databases')
@@ -87,7 +92,7 @@ function DatabasesInner() {
                     return (
                     <a
                       key={db.key}
-                      href={isMobile ? db.url : db.webUrl}
+                      href={(isMobile ? db.url : db.webUrl) + (token && typeof window !== 'undefined' && (db.webUrl.startsWith(window.location.origin) || db.url.startsWith(window.location.origin)) ? (db.webUrl.includes('?') ? '&' : '?') + 'token=' + token : '')}
                       target="_blank"
                       rel="noopener noreferrer"
                       className="card p-3 min-h-[72px] block transition-all duration-150"
