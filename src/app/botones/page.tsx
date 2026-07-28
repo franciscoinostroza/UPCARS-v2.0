@@ -324,13 +324,13 @@ function NuevoVehiculoForm({ onSuccess, onError }: { onSuccess: () => void; onEr
       <div className="grid grid-cols-2 gap-2">
         <Input label="Color" value={color} onChange={setColor} />
         <Select label="Combustible" value={combustible} onChange={setCombustible}
-          options={[{ value: '', label: 'Seleccionar...' }, ...COMBUSTIBLES.map(c => ({ value: c, label: c }))]}
+          options={COMBUSTIBLES.map(c => ({ value: c, label: c }))}
         />
       </div>
       <div className="grid grid-cols-2 gap-2">
         <Input label="Kilometraje entrada" value={kilometraje} onChange={setKilometraje} inputMode="numeric" />
         <Select label="Línea de negocio" value={lineaNegocio} onChange={setLineaNegocio}
-          options={[{ value: '', label: 'Seleccionar...' }, ...lineaOptions.map(c => ({ value: c, label: c }))]}
+          options={lineaOptions.map(c => ({ value: c, label: c }))}
         />
       </div>
       <Input label="Tipo de vehículo" value={tipo} onChange={setTipo} />
@@ -547,7 +547,6 @@ function OrdenForm({ vehicles, employees, onSuccess, onError }: { vehicles: Vehi
     <form onSubmit={handleSubmit} className="space-y-3">
       <Select label="Tipo de orden *" value={type} onChange={(v) => { resetAll(); setType(v) }}
         options={[
-          { value: '', label: 'Seleccionar...' },
           { value: 'Taller', label: '🔧 Taller' },
           { value: 'Chapa', label: '🔩 Chapa y Pintura' },
           { value: 'Preparacion', label: '🧹 Preparación' },
@@ -685,15 +684,15 @@ function TaskForm({ vehicles, employees, onSuccess, onError }: { vehicles: Vehic
       </div>
       <div className="grid grid-cols-2 gap-2">
         <Select label="Tipo" value={type} onChange={setType}
-          options={[{ value: '', label: 'Seleccionar...' }, ...TIPOS.map(t => ({ value: t, label: t }))]}
+          options={TIPOS.map(t => ({ value: t, label: t }))}
         />
         <Select label="Tipo de tarea" value={tipoTarea} onChange={setTipoTarea}
-          options={[{ value: '', label: 'Seleccionar...' }, ...TIPOS_TAREA.map(t => ({ value: t, label: t }))]}
+          options={TIPOS_TAREA.map(t => ({ value: t, label: t }))}
         />
       </div>
       <div className="grid grid-cols-2 gap-2">
         <Select label="Área de negocio" value={areaNegocio} onChange={setAreaNegocio}
-          options={[{ value: '', label: 'Seleccionar...' }, ...AREAS_NEGOCIO.map(a => ({ value: a, label: a }))]}
+          options={AREAS_NEGOCIO.map(a => ({ value: a, label: a }))}
         />
         <Input label="Fecha límite" value={deadline} onChange={setDeadline} type="date" />
       </div>
