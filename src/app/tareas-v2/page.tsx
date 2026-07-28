@@ -105,12 +105,12 @@ function DraggableTaskCard({ task, onClick }: { task: TaskItem; onClick: () => v
   )
 }
 
-function TaskDetailModal({ task, employees, onClose, onMove, onArchive, onUpdate }: {
+function TaskDetailModal({ task, employees, onClose, onMove, onDelete, onUpdate }: {
   task: TaskItem
   employees: { id: string; name: string }[]
   onClose: () => void
   onMove: (id: string, state: string) => void
-  onArchive: (id: string) => void
+  onDelete: (id: string) => void
   onUpdate: (id: string, data: Partial<TaskItem>) => void
 }) {
   const [editing, setEditing] = useState(false)
@@ -224,10 +224,30 @@ function TaskDetailModal({ task, employees, onClose, onMove, onArchive, onUpdate
               <button onClick={handleSave} className="flex-1 text-[11px] font-semibold py-2 rounded" style={{ background: 'var(--accent-blue)', color: '#fff' }}>💾 Guardar</button>
             </div>
           </div>
-        </div>
+        {confirmDelete && (
+          <div className="fixed inset-0 z-[60] flex items-center justify-center p-4" style={{ background: 'rgba(0,0,0,0.5)' }}>
+            <div className="card p-5 max-w-sm animate-fade-up" style={{ background: 'var(--bg-card)' }}>
+              <p className="text-sm font-semibold mb-4 text-center" style={{ color: 'var(--text)' }}>🗑 ¿Limpiar esta tarea?</p>
+              <div className="flex gap-2">
+                <button onClick={async () => {
+                  const id = confirmDelete; setConfirmDelete(null)
+                  try {
+                    const tk = new URLSearchParams(window.location.search).get('token') || ''
+                    const r = await fetch(`/api/tasks/${id}?token=${tk}`, { method: 'DELETE' })
+                    if (!r.ok) { const d = await r.json(); alert(d.error || 'Error'); return }
+                    setTasks((prev) => prev.filter((t) => t.id !== id))
+                    setSelected(null)
+                  } catch { alert('Error de red'); }
+                }} className="flex-1 text-[11px] font-semibold py-2.5 rounded" style={{ background: 'rgba(239,68,68,0.12)', color: '#ef4444', cursor: 'pointer' }}>🗑 Limpiar</button>
+                <button onClick={() => setConfirmDelete(null)} className="flex-1 text-[11px] font-semibold py-2.5 rounded" style={{ background: 'var(--bg-pill)', color: 'var(--text-secondary)', cursor: 'pointer' }}>Cancelar</button>
+              </div>
+            </div>
+          </div>
+        )}
       </div>
-    )
-  }
+    </div>
+  )
+}
 
   return (
     <div className="fixed inset-0 z-40 flex items-center justify-center p-4" style={{ background: 'rgba(0,0,0,0.6)' }} onClick={(e) => { if (e.target === e.currentTarget) onClose() }}>
@@ -252,7 +272,7 @@ function TaskDetailModal({ task, employees, onClose, onMove, onArchive, onUpdate
           {task.deadline && <div className="flex items-center gap-2"><span className="text-[10px] font-medium" style={{ color: 'var(--text-muted)' }}>Vence:</span><span className="text-[10px]" style={{ color: 'var(--text-secondary)' }}>{new Date(task.deadline).toLocaleDateString('es')}</span></div>}
           {task.descripcion && <div className="mt-3 pt-3 border-t" style={{ borderColor: 'var(--border)' }}><span className="text-[10px] font-medium block mb-1" style={{ color: 'var(--text-muted)' }}>Descripción:</span><p className="text-[11px] leading-relaxed" style={{ color: 'var(--text-secondary)', whiteSpace: 'pre-wrap' }}>{task.descripcion}</p></div>}
         </div>
-         <button onClick={() => onArchive(task.id)}
+         <button onClick={() => onDelete(task.id)}
            className="w-full text-[11px] font-semibold py-2 rounded min-h-[36px] transition-opacity hover:opacity-70 cursor-pointer"
            style={{ background: 'var(--bg-pill)', color: 'var(--text)' }}
          >🗑 Limpiar</button>
@@ -399,6 +419,7 @@ function TareasV2Inner() {
   const [moving, setMoving] = useState<string | null>(null)
   const [showCreate, setShowCreate] = useState(false)
   const [activeId, setActiveId] = useState<string | null>(null)
+  const [confirmDelete, setConfirmDelete] = useState<string | null>(null)
 
   const [filterArea, setFilterArea] = useState('')
   const [filterPriority, setFilterPriority] = useState('')
@@ -502,7 +523,8 @@ function TareasV2Inner() {
 
   async function handleArchive(taskId: string) {
     try {
-      const res = await fetch(`/api/tasks/${taskId}`, { method: 'DELETE' })
+      const tk = new URLSearchParams(window.location.search).get('token') || ''
+      const res = await fetch(`/api/tasks/${taskId}?token=${tk}`, { method: 'DELETE' })
       if (res.ok) {
         setTasks((prev) => prev.filter((t) => t.id !== taskId))
         setSelected(null)
@@ -741,7 +763,7 @@ function TareasV2Inner() {
             employees={employees}
             onClose={() => setSelected(null)}
             onMove={handleMove}
-            onArchive={handleArchive}
+            onDelete={(id) => setConfirmDelete(id)}
             onUpdate={(id, data) => {
               setTasks(prev => prev.map(t => t.id === id ? { ...t, ...data } as TaskItem : t))
               setSelected(prev => prev && prev.id === id ? { ...prev, ...data } as TaskItem : prev)

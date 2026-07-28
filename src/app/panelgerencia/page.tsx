@@ -52,9 +52,6 @@ function PanelInner() {
                 <span className="text-2xl sm:text-3xl block mb-2">{item.icon}</span>
                 <p className="text-sm sm:text-base font-semibold mb-1">{item.name}</p>
                 <p className="text-[11px] sm:text-xs" style={{ color: 'var(--text-muted)' }}>{item.desc}</p>
-                <p className="text-[10px] mt-2" style={{ color: 'var(--accent-blue)' }}>
-                  {isMobile ? 'Abrir en app →' : 'Abrir en Notion →'}
-                </p>
               </a>
             )
           })}

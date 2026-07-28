@@ -80,6 +80,7 @@ function NoticiasInner() {
   const [newCuerpo, setNewCuerpo] = useState('')
   const [newLink, setNewLink] = useState('')
   const [creating, setCreating] = useState(false)
+  const [confirmDelete, setConfirmDelete] = useState<string | null>(null)
 
   useEffect(() => {
     const saved = localStorage.getItem(LS_KEY)
@@ -130,17 +131,6 @@ function NoticiasInner() {
     if (!vistos.has(n.id)) {
       addVisto(n.id)
       setVistos(new Set([...vistos, n.id]))
-    }
-  }
-
-  async function handleArchive(id: string) {
-    try {
-      const res = await fetch(`/api/noticias/${id}`, { method: 'DELETE' })
-      if (res.ok) {
-        setNoticias((prev) => prev.filter((n) => n.id !== id))
-        setSelected(null)
-      }
-    } catch {
     }
   }
 
@@ -283,13 +273,34 @@ function NoticiasInner() {
 
               {selected.autorId === myId && (
                 <button
-                  onClick={() => handleArchive(selected.id)}
+                  onClick={() => setConfirmDelete(selected.id)}
                   className="w-full text-[11px] font-semibold py-2 rounded mt-3"
-                  style={{ background: 'var(--bg-pill)', color: 'var(--text)' }}
+                  style={{ background: 'var(--bg-pill)', color: 'var(--text)', cursor: 'pointer' }}
                 >
                   🗑 Eliminar noticia
                 </button>
               )}
+            </div>
+          </div>
+        )}
+
+        {confirmDelete && (
+          <div className="fixed inset-0 z-[60] flex items-center justify-center p-4" style={{ background: 'rgba(0,0,0,0.5)' }}>
+            <div className="card p-5 max-w-sm animate-fade-up" style={{ background: 'var(--bg-card)' }}>
+              <p className="text-sm font-semibold mb-4 text-center" style={{ color: 'var(--text)' }}>🗑 ¿Eliminar esta noticia?</p>
+              <div className="flex gap-2">
+                <button onClick={async () => {
+                  const id = confirmDelete; setConfirmDelete(null)
+                  try {
+                    const tk = new URLSearchParams(window.location.search).get('token') || ''
+                    const r = await fetch(`/api/noticias/${id}?token=${tk}`, { method: 'DELETE' })
+                    if (!r.ok) { const d = await r.json(); alert(d.error || 'Error'); return }
+                    setNoticias((prev) => prev.filter((n) => n.id !== id))
+                    setSelected(null)
+                  } catch { alert('Error de red'); }
+                }} className="flex-1 text-[11px] font-semibold py-2.5 rounded" style={{ background: 'rgba(239,68,68,0.12)', color: '#ef4444', cursor: 'pointer' }}>🗑 Eliminar</button>
+                <button onClick={() => setConfirmDelete(null)} className="flex-1 text-[11px] font-semibold py-2.5 rounded" style={{ background: 'var(--bg-pill)', color: 'var(--text-secondary)', cursor: 'pointer' }}>Cancelar</button>
+              </div>
             </div>
           </div>
         )}
