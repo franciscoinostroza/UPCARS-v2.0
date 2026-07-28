@@ -84,6 +84,7 @@ function LogisticaInner() {
   const [filterEstado, setFilterEstado] = useState('')
   const [selected, setSelected] = useState<LogItem | null>(null)
   const [editing, setEditing] = useState(false)
+  const [confirmDelete, setConfirmDelete] = useState<string | null>(null)
   const [editData, setEditData] = useState<any>({})
   const [showCreate, setShowCreate] = useState(false)
 
@@ -284,7 +285,7 @@ function LogisticaInner() {
 
         {/* Modal detalle / edición */}
         {selected && !editing && (
-          <DetailModal item={selected} onClose={() => setSelected(null)} onEdit={() => openEdit(selected)} />
+          <DetailModal item={selected} onClose={() => setSelected(null)} onEdit={() => openEdit(selected)} onDelete={(id) => setConfirmDelete(id)} />
         )}
         {selected && editing && (
           <EditModal item={selected} editData={editData} setEditData={setEditData}
@@ -297,12 +298,31 @@ function LogisticaInner() {
             onCreate={handleCreate} onClose={() => setShowCreate(false)} onRefresh={fetchData} />
         )}
 
+        {confirmDelete && (
+          <div className="fixed inset-0 z-[60] flex items-center justify-center p-4" style={{ background: 'rgba(0,0,0,0.5)' }}>
+            <div className="card p-5 max-w-sm animate-fade-up" style={{ background: 'var(--bg-card)' }}>
+              <p className="text-sm font-semibold mb-4 text-center" style={{ color: 'var(--text)' }}>🗑 ¿Eliminar este registro?</p>
+              <div className="flex gap-2">
+                <button onClick={async () => {
+                  const id = confirmDelete; setConfirmDelete(null)
+                  try {
+                    const tk = new URLSearchParams(window.location.search).get('token') || ''
+                    const r = await fetch(`/api/logistica/${id}?token=${tk}`, { method: 'DELETE' })
+                    if (!r.ok) { const d = await r.json(); alert(d.error || 'Error'); return }
+                    window.location.reload()
+                  } catch { alert('Error de red'); }
+                }} className="flex-1 text-[11px] font-semibold py-2.5 rounded" style={{ background: 'rgba(239,68,68,0.12)', color: '#ef4444', cursor: 'pointer' }}>🗑 Eliminar</button>
+                <button onClick={() => setConfirmDelete(null)} className="flex-1 text-[11px] font-semibold py-2.5 rounded" style={{ background: 'var(--bg-pill)', color: 'var(--text-secondary)', cursor: 'pointer' }}>Cancelar</button>
+              </div>
+            </div>
+          </div>
+        )}
       </div>
     </div>
   )
 }
 
-function DetailModal({ item, onClose, onEdit }: { item: LogItem; onClose: () => void; onEdit: () => void; }) {
+function DetailModal({ item, onClose, onEdit, onDelete }: { item: LogItem; onClose: () => void; onEdit: () => void; onDelete: (id: string) => void; }) {
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center p-4" style={{ background: 'rgba(0,0,0,0.6)' }} onClick={(e) => { if (e.target === e.currentTarget) onClose() }}>
       <div className="card w-full max-w-lg animate-fade-up p-5" style={{ background: 'var(--bg-card)', maxHeight: '90vh', overflowY: 'auto' }}>
@@ -310,14 +330,7 @@ function DetailModal({ item, onClose, onEdit }: { item: LogItem; onClose: () => 
           <h2 className="text-sm font-semibold" style={{ color: 'var(--text)' }}>{item.nombre}</h2>
           <div className="flex items-center gap-1">
             <button onClick={onEdit} className="text-[10px] px-2 py-1 rounded" style={{ color: 'var(--accent-blue)' }}>✏️</button>
-            <button onClick={async () => {
-              if (!confirm('¿Eliminar?')) return
-              try {
-                const tk = new URLSearchParams(window.location.search).get('token') || ''
-                await fetch(`/api/logistica/${item.id}?token=${tk}`, { method: 'DELETE' })
-                window.location.reload()
-              } catch { alert('Error'); }
-            }} className="text-[10px] px-2 py-1 rounded" style={{ color: '#ef4444', cursor: 'pointer' }}>🗑</button>
+            <button onClick={() => onDelete(item.id)} className="text-[10px] px-2 py-1 rounded" style={{ color: '#ef4444', cursor: 'pointer' }}>🗑</button>
             <button onClick={onClose} className="text-sm px-2 py-1 rounded" style={{ color: 'var(--text-muted)' }}>✕</button>
           </div>
         </div>
@@ -343,8 +356,7 @@ function DetailModal({ item, onClose, onEdit }: { item: LogItem; onClose: () => 
             </div>
           )}
         </div>
-        <a href={`https://www.notion.so/${item.id.replace(/-/g, '')}`} target="_blank" rel="noopener noreferrer" className="block w-full text-center text-[10px] font-medium py-2 rounded" style={{ background: 'var(--bg-pill)', color: 'var(--accent-blue)' }}>🔗 Abrir en Notion</a>
-      </div>
+        </div>
     </div>
   )
 }
@@ -415,7 +427,6 @@ function CreateModal({ employees, vehicles, onCreate, onClose, onRefresh }: { em
   const [fecha, setFecha] = useState('')
   const [obs, setObs] = useState('')
   const [saving, setSaving] = useState(false)
-  const [confirmDelete, setConfirmDelete] = useState<string | null>(null)
 
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault()
@@ -484,26 +495,6 @@ function CreateModal({ employees, vehicles, onCreate, onClose, onRefresh }: { em
           </div>
           <button type="submit" disabled={saving || !name.trim()} className="w-full text-[11px] font-semibold py-2 rounded transition-opacity disabled:opacity-40" style={{ background: 'var(--accent-blue)', color: '#fff' }}>{saving ? '...' : '✅ Crear'}</button>
         </form>
-        {confirmDelete && (
-          <div className="fixed inset-0 z-[60] flex items-center justify-center p-4" style={{ background: 'rgba(0,0,0,0.5)' }}>
-            <div className="card p-5 max-w-sm animate-fade-up" style={{ background: 'var(--bg-card)' }}>
-              <p className="text-sm font-semibold mb-4 text-center" style={{ color: 'var(--text)' }}>🗑 ¿Eliminar este registro?</p>
-              <div className="flex gap-2">
-                <button onClick={async () => {
-                  const id = confirmDelete; setConfirmDelete(null)
-                  try {
-                    const tk = new URLSearchParams(window.location.search).get('token') || ''
-                    const r = await fetch(`/api/logistica/${id}?token=${tk}`, { method: 'DELETE' })
-                    if (!r.ok) { const d = await r.json(); alert(d.error || 'Error'); return }
-                    window.location.reload()
-                  } catch { alert('Error de red'); }
-                }} className="flex-1 text-[11px] font-semibold py-2.5 rounded" style={{ background: 'rgba(239,68,68,0.12)', color: '#ef4444', cursor: 'pointer' }}>🗑 Eliminar</button>
-                <button onClick={() => setConfirmDelete(null)} className="flex-1 text-[11px] font-semibold py-2.5 rounded" style={{ background: 'var(--bg-pill)', color: 'var(--text-secondary)', cursor: 'pointer' }}>Cancelar</button>
-              </div>
-            </div>
-          </div>
-        )}
-
       </div>
     </div>
   )
