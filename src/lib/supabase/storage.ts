@@ -21,16 +21,20 @@ export async function uploadAuthFile(
   const ext = fileName.split('.').pop() || 'bin'
   const path = `${uid()}.${ext}`
 
-  const { data, error: bucketError } = await supabase().storage.getBucket(BUCKET)
-  if (!data && bucketError?.message?.includes('does not exist')) {
-    await supabase().storage.createBucket(BUCKET, { public: true })
-  }
-
   const { error } = await supabase().storage.from(BUCKET).upload(path, file, {
     contentType: mimeType,
     upsert: false,
   })
-  if (error) throw new Error(`Supabase upload failed: ${error.message}`)
+  if (error?.message?.toLowerCase().includes('bucket') || error?.message?.includes('not found')) {
+    await supabase().storage.createBucket(BUCKET, { public: true })
+    const { error: retryError } = await supabase().storage.from(BUCKET).upload(path, file, {
+      contentType: mimeType,
+      upsert: false,
+    })
+    if (retryError) throw new Error(`Supabase upload failed: ${retryError.message}`)
+  } else if (error) {
+    throw new Error(`Supabase upload failed: ${error.message}`)
+  }
 
   const { data: urlData } = supabase().storage.from(BUCKET).getPublicUrl(path)
   return { url: urlData.publicUrl, path, name: fileName }

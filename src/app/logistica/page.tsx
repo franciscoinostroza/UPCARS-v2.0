@@ -492,8 +492,12 @@ function CreateModal({ employees, vehicles, onCreate, onClose, onRefresh }: { em
         if (uploadJson.success) {
           authFileName = uploadJson.data.name
           authFileUrl = uploadJson.data.url
+        } else {
+          alert('Error al subir archivo: ' + (uploadJson.error || 'Error desconocido'))
         }
-      } catch {} finally { setUploading(false) }
+      } catch (e: any) {
+        alert('Error al subir archivo: ' + (e?.message || 'Error de conexión'))
+      } finally { setUploading(false) }
     }
     const ok = await onCreate({ nombre: name.trim(), vehiculoId: vehId || undefined, responsableId: respId || undefined, estado, fechaProgramada: fecha || undefined, ubicacion: ubicacion.trim() || undefined, situacionComercial: sitCom || undefined, prioridad: prioridad || undefined, observaciones: obs.trim() || undefined, authFileName, authFileUrl })
     setSaving(false)
