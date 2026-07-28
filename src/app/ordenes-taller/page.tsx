@@ -214,13 +214,7 @@ function TallerInner() {
                 {selected.diasTaller != null && <div className="flex gap-2"><span className="font-medium shrink-0" style={{ color: 'var(--text-muted)' }}>Días en taller:</span><span style={{ color: 'var(--text)' }}>{selected.diasTaller}</span></div>}
                 {selected.observaciones && <div className="mt-2 pt-2 border-t" style={{ borderColor: 'var(--border)' }}><p className="text-[10px] font-medium mb-0.5" style={{ color: 'var(--text-muted)' }}>Observaciones:</p><p style={{ color: 'var(--text-secondary)' }}>{selected.observaciones}</p></div>}
               </div>
-              <button onClick={async () => {
-                if (!confirm('¿Eliminar esta orden?')) return
-                try {
-                  await fetch(`/api/ordenes-taller/${selected.id}` + "?token=" + new URLSearchParams(window.location.search).get("token"), { method: 'DELETE' })
-                  setSelected(null); fetchData()
-                } catch (e) { alert('Error de red al eliminar'); }
-              }} className="w-full text-[11px] font-semibold py-2 rounded mt-4" style={{ background: 'rgba(239,68,68,0.12)', color: '#ef4444', cursor: 'pointer' }}>🗑 Eliminar</button>
+              <button onClick={() => setConfirmDelete(selected.id)} className="w-full text-[11px] font-semibold py-2 rounded mt-4" style={{ background: 'rgba(239,68,68,0.12)', color: '#ef4444', cursor: 'pointer' }}>🗑 Eliminar</button>
             </div>
           </div>
         )}
@@ -272,13 +266,7 @@ function TallerInner() {
                   await fetch(`/api/ordenes-taller/${selected.id}` + "?token=" + new URLSearchParams(window.location.search).get("token"), { method: 'PATCH', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ estado: selected.estado, observaciones: editObs, costeMateriales: selected.costeMateriales, costeManoObra: selected.costeManoObra }) })
                   setRecords(prev => prev.map(r => r.id === selected.id ? { ...r, observaciones: editObs } : r))
                 }} className="w-full text-[11px] font-semibold py-2 rounded" style={{ background: 'var(--accent-blue)', color: '#fff' }} disabled={saving}>{saving ? 'Guardando...' : '💾 Guardar'}</button>
-                <button onClick={async () => {
-                  if (!confirm('¿Eliminar esta orden?')) return
-                  try {
-                    await fetch(`/api/ordenes-taller/${selected.id}` + "?token=" + new URLSearchParams(window.location.search).get("token"), { method: 'DELETE' })
-                    setSelected(null); setEditing(false); fetchData()
-                  } catch (e) { alert('Error de red al eliminar'); }
-                }} className="w-full text-[11px] font-semibold py-2 rounded mt-1" style={{ background: 'rgba(239,68,68,0.12)', color: '#ef4444', cursor: 'pointer' }}>🗑 Eliminar</button>
+                <button onClick={() => setConfirmDelete(selected.id)} className="w-full text-[11px] font-semibold py-2 rounded mt-1" style={{ background: 'rgba(239,68,68,0.12)', color: '#ef4444', cursor: 'pointer' }}>🗑 Eliminar</button>
               </div>
             </div>
           </div>

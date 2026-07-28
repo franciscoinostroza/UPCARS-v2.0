@@ -261,14 +261,7 @@ function VehiculosInner() {
                   ))}
                 </div>
               )}
-              <button onClick={async () => {
-                if (!confirm('¿Mover a la papelera?')) return
-                try {
-                  const r = await fetch(`/api/vehiculos/${selected.id}?token=` + new URLSearchParams(window.location.search).get('token'), { method: 'DELETE' })
-                  if (!r.ok) { const d = await r.json(); alert(d.error || 'Error'); return }
-                  setSelected(null); fetchData()
-                } catch { alert('Error de red'); }
-              }} className="w-full text-[11px] font-semibold py-2 rounded mt-4" style={{ background: 'rgba(239,68,68,0.12)', color: '#ef4444', cursor: 'pointer' }}>🗑 Mover a papelera</button>
+              <button onClick={() => setConfirmDelete(selected.id)} className="w-full text-[11px] font-semibold py-2 rounded mt-4" style={{ background: 'rgba(239,68,68,0.12)', color: '#ef4444', cursor: 'pointer' }}>🗑 Mover a papelera</button>
             </div>
           </div>
         )}
@@ -300,37 +293,30 @@ function VehiculosInner() {
                   setRecords(prev => prev.map(r => r.id === selected.id ? { ...r, notas: editNotas } : r))
                   setSaving(false); setEditing(false)
                 }} className="flex-1 text-[11px] font-semibold py-2.5 rounded" style={{ background: 'var(--accent-blue)', color: '#fff' }} disabled={saving}>{saving ? 'Guardando...' : '💾 Guardar'}</button>
-                <button onClick={async () => {
-                  if (!confirm('¿Mover a la papelera?')) return
-                  try {
-                    const r = await fetch(`/api/vehiculos/${selected.id}?token=` + new URLSearchParams(window.location.search).get('token'), { method: 'DELETE' })
-                    if (!r.ok) { const d = await r.json(); alert(d.error || 'Error'); return }
-                    setSelected(null); setEditing(false); fetchData()
-                  } catch { alert('Error de red'); }
-                }} className="flex-1 text-[11px] font-semibold py-2.5 rounded" style={{ background: 'rgba(239,68,68,0.12)', color: '#ef4444', cursor: 'pointer' }}>🗑 Eliminar</button>
+                <button onClick={() => setConfirmDelete(selected.id)} className="flex-1 text-[11px] font-semibold py-2.5 rounded" style={{ background: 'rgba(239,68,68,0.12)', color: '#ef4444', cursor: 'pointer' }}>🗑 Eliminar</button>
               </div>
             </div>
           </div>
         )}
         {confirmDelete && (
-          <div className="fixed inset-0 z-[60] flex items-center justify-center p-4" style={{ background: 'rgba(0,0,0,0.5)' }}>
-            <div className="card p-5 max-w-sm animate-fade-up" style={{ background: 'var(--bg-card)' }}>
-              <p className="text-sm font-semibold mb-4 text-center" style={{ color: 'var(--text)' }}>🗑 ¿Eliminar este registro?</p>
-              <div className="flex gap-2">
-                <button onClick={async () => {
-                  const id = confirmDelete; setConfirmDelete(null)
-                  try {
-                    const tk = new URLSearchParams(window.location.search).get('token') || ''
-                    const r = await fetch(`/api/vehiculos/${id}?token=${tk}`, { method: 'DELETE' })
-                    if (!r.ok) { const d = await r.json(); alert(d.error || 'Error'); return }
-                    setSelected(null); setEditing(false); fetchData()
-                  } catch { alert('Error de red'); }
-                }} className="flex-1 text-[11px] font-semibold py-2.5 rounded" style={{ background: 'rgba(239,68,68,0.12)', color: '#ef4444', cursor: 'pointer' }}>🗑 Eliminar</button>
-                <button onClick={() => setConfirmDelete(null)} className="flex-1 text-[11px] font-semibold py-2.5 rounded" style={{ background: 'var(--bg-pill)', color: 'var(--text-secondary)', cursor: 'pointer' }}>Cancelar</button>
-              </div>
-            </div>
-          </div>
-        )}
+  <div className="fixed inset-0 z-[60] flex items-center justify-center p-4" style={{ background: 'rgba(0,0,0,0.5)' }}>
+    <div className="card p-5 max-w-sm animate-fade-up" style={{ background: 'var(--bg-card)' }}>
+      <p className="text-sm font-semibold mb-4 text-center" style={{ color: 'var(--text)' }}>🗑 ¿Mover a la papelera?</p>
+      <div className="flex gap-2">
+        <button onClick={async () => {
+          const id = confirmDelete; setConfirmDelete(null)
+          try {
+            const tk = new URLSearchParams(window.location.search).get('token') || ''
+            const r = await fetch(`/api/vehiculos/${id}?token=${tk}`, { method: 'DELETE' })
+            if (!r.ok) { const d = await r.json(); alert(d.error || 'Error'); return }
+            window.location.reload()
+          } catch { alert('Error de red'); }
+        }} className="flex-1 text-[11px] font-semibold py-2.5 rounded" style={{ background: 'rgba(239,68,68,0.12)', color: '#ef4444', cursor: 'pointer' }}>🗑 Mover a papelera</button>
+        <button onClick={() => setConfirmDelete(null)} className="flex-1 text-[11px] font-semibold py-2.5 rounded" style={{ background: 'var(--bg-pill)', color: 'var(--text-secondary)', cursor: 'pointer' }}>Cancelar</button>
+      </div>
+    </div>
+  </div>
+)}
 
       </div>
     </div>
