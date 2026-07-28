@@ -83,13 +83,21 @@ export async function createLogisticaRecord(data: {
   if (data.situacionComercial) props['Situación comercial'] = { select: { name: data.situacionComercial } }
   if (data.prioridad) props['Prioridad'] = { select: { name: data.prioridad } }
   if (data.observaciones) props['Observaciones'] = { rich_text: [{ text: { content: data.observaciones } }] }
+
+  const created: any = await notionPost('/pages', { parent: { database_id: dbId }, properties: props })
+  const pageId = created.id
+
   if (data.authFileUrl && data.authFileName) {
-    props['Autorización de retirada '] = {
-      files: [{ name: data.authFileName, type: 'external', external: { url: data.authFileUrl } }],
-    }
+    await notionPatch(`/pages/${pageId}`, {
+      properties: {
+        'Autorización de retirada ': {
+          files: [{ name: data.authFileName, type: 'external', external: { url: data.authFileUrl } }],
+        },
+      },
+    })
   }
 
-  await notionPost('/pages', { parent: { database_id: dbId }, properties: props })
+  return pageId
 }
 
 export async function updateLogisticaRecord(id: string, data: Record<string, any>) {

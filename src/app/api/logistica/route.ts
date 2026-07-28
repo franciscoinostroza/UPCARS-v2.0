@@ -44,7 +44,7 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ success: false, error: 'nombre is required' }, { status: 400 })
     }
 
-    await createLogisticaRecord({
+    const id = await createLogisticaRecord({
       nombre: nombre.trim(),
       vehiculoId: vehiculoId || undefined,
       responsableId: responsableId || undefined,
@@ -58,7 +58,7 @@ export async function POST(request: NextRequest) {
       authFileUrl: authFileUrl || undefined,
     })
 
-    return NextResponse.json({ success: true }, { status: 201 })
+    return NextResponse.json({ success: true, data: { id } }, { status: 201 })
   } catch (error: any) {
     console.error('Logística POST error:', error)
     return NextResponse.json(
