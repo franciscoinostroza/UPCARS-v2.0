@@ -147,7 +147,31 @@ function LogisticaInner() {
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify(form),
       })
-      if (res.ok) { fetchData(); return true }
+      if (res.ok) {
+        const data = await res.json()
+        if (data.data?.id) {
+          const newItem: LogItem = {
+            id: data.data.id,
+            nombre: form.nombre,
+            vehiculoId: form.vehiculoId || null,
+            vehiculoNombre: null,
+            responsableId: form.responsableId || null,
+            responsableNombre: null,
+            estado: form.estado || 'Pendiente autorización',
+            fechaProgramada: form.fechaProgramada || null,
+            fechaRealizada: null,
+            ubicacion: form.ubicacion || '',
+            situacionComercial: form.situacionComercial || '',
+            prioridad: form.prioridad || '',
+            observaciones: form.observaciones || '',
+            authFileName: form.authFileName || null,
+            authFileUrl: form.authFileUrl || null,
+          }
+          setRecords(prev => [newItem, ...prev])
+        }
+        fetchData()
+        return true
+      }
     } catch {}
     return false
   }
