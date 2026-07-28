@@ -81,6 +81,7 @@ function LogisticaInner() {
   const [vehicles, setVehicles] = useState<{ id: string; name: string }[]>([])
   const [loading, setLoading] = useState(true)
   const [vista, setVista] = useState<'tabla' | 'kanban' | 'calendario'>('tabla')
+  const [showCreate, setShowCreate] = useState(false)
   const [filterEstado, setFilterEstado] = useState('')
   const [selected, setSelected] = useState<LogItem | null>(null)
   const [editing, setEditing] = useState(false)
@@ -88,6 +89,21 @@ function LogisticaInner() {
   const [editData, setEditData] = useState<any>({})
   const [editAuthFile, setEditAuthFile] = useState<File | null>(null)
   const [editUploading, setEditUploading] = useState(false)
+
+  const fetchData = useCallback(async () => {
+    try {
+      const [res, empRes] = await Promise.all([
+        fetch('/api/logistica'),
+        fetch('/api/employees'),
+      ])
+      const json = await res.json()
+      const empJson = await empRes.json()
+      if (json.success) setRecords(json.data)
+      if (empJson.success) setEmployees(empJson.data)
+    } catch {} finally { setLoading(false) }
+  }, [])
+
+  useEffect(() => { fetchData() }, [fetchData])
 
   async function handleSaveEdit() {
     if (!selected) return
@@ -149,6 +165,24 @@ function LogisticaInner() {
       authFileUrl: item.authFileUrl,
     })
     setEditing(true)
+  }
+
+  const columns = ESTADOS.filter(Boolean).map(est => ({ estado: est, items: records.filter(r => r.estado === est) }))
+
+  const sensors = useSensors(
+    useSensor(MouseSensor, { activationConstraint: { distance: 8 } }),
+    useSensor(TouchSensor, { activationConstraint: { delay: 250, tolerance: 5 } }),
+  )
+
+  function handleDragEnd(event: any) {
+    const { active, over } = event
+    if (!over || active.id === over.id) return
+    const record = records.find(r => r.id === active.id)
+    if (!record) return
+    const newEstado = over.id as string
+    if (newEstado === record.estado) return
+    setRecords(prev => prev.map(r => r.id === record.id ? { ...r, estado: newEstado } : r))
+    fetch(`/api/logistica/${record.id}`, { method: 'PATCH', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ estado: newEstado }) }).catch(() => {})
   }
 
   if (loading) {
