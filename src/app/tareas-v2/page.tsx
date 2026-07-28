@@ -224,30 +224,11 @@ function TaskDetailModal({ task, employees, onClose, onMove, onDelete, onUpdate 
               <button onClick={handleSave} className="flex-1 text-[11px] font-semibold py-2 rounded" style={{ background: 'var(--accent-blue)', color: '#fff' }}>💾 Guardar</button>
             </div>
           </div>
-        {confirmDelete && (
-          <div className="fixed inset-0 z-[60] flex items-center justify-center p-4" style={{ background: 'rgba(0,0,0,0.5)' }}>
-            <div className="card p-5 max-w-sm animate-fade-up" style={{ background: 'var(--bg-card)' }}>
-              <p className="text-sm font-semibold mb-4 text-center" style={{ color: 'var(--text)' }}>🗑 ¿Limpiar esta tarea?</p>
-              <div className="flex gap-2">
-                <button onClick={async () => {
-                  const id = confirmDelete; setConfirmDelete(null)
-                  try {
-                    const tk = new URLSearchParams(window.location.search).get('token') || ''
-                    const r = await fetch(`/api/tasks/${id}?token=${tk}`, { method: 'DELETE' })
-                    if (!r.ok) { const d = await r.json(); alert(d.error || 'Error'); return }
-                    setTasks((prev) => prev.filter((t) => t.id !== id))
-                    setSelected(null)
-                  } catch { alert('Error de red'); }
-                }} className="flex-1 text-[11px] font-semibold py-2.5 rounded" style={{ background: 'rgba(239,68,68,0.12)', color: '#ef4444', cursor: 'pointer' }}>🗑 Limpiar</button>
-                <button onClick={() => setConfirmDelete(null)} className="flex-1 text-[11px] font-semibold py-2.5 rounded" style={{ background: 'var(--bg-pill)', color: 'var(--text-secondary)', cursor: 'pointer' }}>Cancelar</button>
-              </div>
-            </div>
-          </div>
-        )}
+
       </div>
     </div>
-  )
-}
+    )
+  }
 
   return (
     <div className="fixed inset-0 z-40 flex items-center justify-center p-4" style={{ background: 'rgba(0,0,0,0.6)' }} onClick={(e) => { if (e.target === e.currentTarget) onClose() }}>
@@ -769,6 +750,26 @@ function TareasV2Inner() {
               setSelected(prev => prev && prev.id === id ? { ...prev, ...data } as TaskItem : prev)
             }}
           />
+        )}
+        {confirmDelete && (
+          <div className="fixed inset-0 z-[60] flex items-center justify-center p-4" style={{ background: 'rgba(0,0,0,0.5)' }}>
+            <div className="card p-5 max-w-sm animate-fade-up" style={{ background: 'var(--bg-card)' }}>
+              <p className="text-sm font-semibold mb-4 text-center" style={{ color: 'var(--text)' }}>🗑 ¿Limpiar esta tarea?</p>
+              <div className="flex gap-2">
+                <button onClick={async () => {
+                  const id = confirmDelete; setConfirmDelete(null)
+                  try {
+                    const tk = new URLSearchParams(window.location.search).get('token') || ''
+                    const r = await fetch(`/api/tasks/${id}?token=${tk}`, { method: 'DELETE' })
+                    if (!r.ok) { const d = await r.json(); alert(d.error || 'Error'); return }
+                    setTasks((prev) => prev.filter((t) => t.id !== id))
+                    setSelected(null)
+                  } catch { alert('Error de red'); }
+                }} className="flex-1 text-[11px] font-semibold py-2.5 rounded" style={{ background: 'rgba(239,68,68,0.12)', color: '#ef4444', cursor: 'pointer' }}>🗑 Limpiar</button>
+                <button onClick={() => setConfirmDelete(null)} className="flex-1 text-[11px] font-semibold py-2.5 rounded" style={{ background: 'var(--bg-pill)', color: 'var(--text-secondary)', cursor: 'pointer' }}>Cancelar</button>
+              </div>
+            </div>
+          </div>
         )}
       </div>
     </div>
