@@ -268,8 +268,15 @@ function NuevoVehiculoForm({ onSuccess, onError }: { onSuccess: () => void; onEr
   const [precioCompra, setPrecioCompra] = useState('')
   const [precioVenta, setPrecioVenta] = useState('')
   const [saving, setSaving] = useState(false)
+  const [lineaOptions, setLineaOptions] = useState<string[]>([])
 
   const COMBUSTIBLES = ['Gasolina', 'Diesel', 'Hibrido (ECO)', 'PHEV', 'Electrico']
+
+  useEffect(() => {
+    fetch('/api/vehiculos/schema').then(r => r.json()).then(res => {
+      if (res.success && res.data['Línea de Negocio']) setLineaOptions(res.data['Línea de Negocio'])
+    }).catch(() => {})
+  }, [])
 
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault()
@@ -322,7 +329,9 @@ function NuevoVehiculoForm({ onSuccess, onError }: { onSuccess: () => void; onEr
       </div>
       <div className="grid grid-cols-2 gap-2">
         <Input label="Kilometraje entrada" value={kilometraje} onChange={setKilometraje} inputMode="numeric" />
-        <Input label="Línea de negocio" value={lineaNegocio} onChange={setLineaNegocio} />
+        <Select label="Línea de negocio" value={lineaNegocio} onChange={setLineaNegocio}
+          options={[{ value: '', label: 'Seleccionar...' }, ...lineaOptions.map(c => ({ value: c, label: c }))]}
+        />
       </div>
       <Input label="Tipo de vehículo" value={tipo} onChange={setTipo} />
       <div className="grid grid-cols-2 gap-2">
