@@ -281,9 +281,28 @@ function PrepInner() {
                         <textarea value={editObs} onChange={e => setEditObs(e.target.value)} rows={2} className="w-full text-xs px-2 py-1.5 rounded outline-none resize-none" style={{ background: 'var(--bg)', color: 'var(--text)', border: '1px solid var(--border)' }} />
                       </div>
                       <button onClick={async () => {
-                        await fetch(`/api/preparacion/${selected.id}` + "?token=" + new URLSearchParams(window.location.search).get("token"), { method: 'PATCH', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ estado: selected.estado, tipoLimpieza: selected.tipoLimpieza, fechaInicio: selected.fechaInicio, fechaFin: selected.fechaFin, fechaEntrega: selected.fechaEntrega, observaciones: editObs }) })
-                        setRecords(prev => prev.map(r => r.id === selected.id ? { ...r, observaciones: editObs } : r))
-                      }} className="w-full text-[11px] font-semibold py-2 rounded" style={{ background: 'var(--accent-blue)', color: '#fff' }} disabled={saving}>{saving ? 'Guardando...' : '💾 Guardar'}</button>
+                        setSaving(true)
+                        try {
+                          const tk = new URLSearchParams(window.location.search).get('token') || ''
+                          const r = await fetch(`/api/preparacion/${selected.id}?token=${tk}`, {
+                            method: 'PATCH',
+                            headers: { 'Content-Type': 'application/json' },
+                            body: JSON.stringify({ estado: selected.estado, tipoLimpieza: selected.tipoLimpieza, fechaInicio: selected.fechaInicio, fechaFin: selected.fechaFin, fechaEntrega: selected.fechaEntrega, observaciones: editObs }),
+                          })
+                          if (r.ok) {
+                            setRecords(prev => prev.map(rec => rec.id === selected.id ? { ...rec, observaciones: editObs, estado: selected.estado, tipoLimpieza: selected.tipoLimpieza, fechaInicio: selected.fechaInicio, fechaFin: selected.fechaFin, fechaEntrega: selected.fechaEntrega } as PrepItem : rec))
+                            setEditing(false)
+                            setSelected(null)
+                          } else {
+                            const d = await r.json()
+                            alert(d.error || 'Error al guardar')
+                          }
+                        } catch {
+                          alert('Error de red al guardar')
+                        } finally {
+                          setSaving(false)
+                        }
+                      }} className="w-full text-[11px] font-semibold py-2 rounded transition-opacity" style={{ background: 'var(--accent-blue)', color: '#fff' }} disabled={saving}>{saving ? 'Guardando...' : '💾 Guardar'}</button>
                       <button onClick={() => { setConfirmDelete(selected.id); return }} className="w-full text-[11px] font-semibold py-2 rounded mt-1" style={{ background: 'rgba(239,68,68,0.12)', color: '#ef4444', cursor: 'pointer' }}>🗑 Eliminar</button>
                     </div>
                   </div>
