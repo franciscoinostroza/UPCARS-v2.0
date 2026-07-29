@@ -29,8 +29,8 @@ interface TallerItem {
   diasTaller: number | null
 }
 
-const ESTADOS = ['', 'En proceso', 'Terminado', 'Bloqueado']
-const ESTADO_ICONS: Record<string, string> = { '': '—', 'En proceso': '🔧', 'Terminado': '✅', 'Bloqueado': '🚫' }
+const ESTADOS = ['', 'Pendiente', 'En proceso', 'Terminado', 'Bloqueado']
+const ESTADO_ICONS: Record<string, string> = { '': '—', 'Pendiente': '⏳', 'En proceso': '🔧', 'Terminado': '✅', 'Bloqueado': '🚫' }
 
 
 
@@ -148,7 +148,7 @@ function TallerInner() {
           <div className="animate-fade-up" style={{ animationDelay: '100ms' }}>
             <CalendarView
               items={records.filter(r => r.fechaEntrada).map(r => ({ id: r.id, titulo: `${vehicleDisplay(vehicles, r.vehicleId)}`, fecha: r.fechaEntrada!, estado: r.estado, area: r.tipo }))}
-              typeColors={{ 'En proceso': '#3b82f6', 'Terminado': '#22c55e', 'Bloqueado': '#ef4444' }}
+              typeColors={{ 'Pendiente': '#eab308', 'En proceso': '#3b82f6', 'Terminado': '#22c55e', 'Bloqueado': '#ef4444' }}
             />
           </div>
         ) : (
