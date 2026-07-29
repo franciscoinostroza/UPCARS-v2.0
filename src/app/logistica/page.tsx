@@ -446,11 +446,10 @@ function EditModal({ item, editData, setEditData, employees, vehicles, onSave, o
           </div>
           <div>
             <p className="text-[10px] font-medium mb-0.5" style={{ color: 'var(--text-muted)' }}>📎 Autorización de retirada</p>
-            {editData.authFileName && !editAuthFile && (
-              <p className="text-[10px] mb-1" style={{ color: 'var(--text-secondary)' }}>Actual: {editData.authFileName}</p>
-            )}
-            <input type="file" accept=".pdf,.jpg,.jpeg,.png,.gif,.webp" onChange={e => setEditAuthFile(e.target.files?.[0] || null)} style={{ fontSize: 11, color: 'var(--text)' }} />
-            {editAuthFile && <p className="text-[10px] mt-1" style={{ color: 'var(--text-secondary)' }}>Nuevo: {editAuthFile.name}</p>}
+            <label className="w-full text-[11px] font-semibold py-2 rounded text-center block transition-opacity hover:opacity-70" style={{ background: 'var(--bg-pill)', color: 'var(--text-secondary)', cursor: 'pointer' }}>
+              {editAuthFile ? '✓ ' + editAuthFile.name : editData.authFileName && !editAuthFile ? '📎 ' + editData.authFileName : 'Seleccionar archivo...'}
+              <input type="file" accept=".pdf,.jpg,.jpeg,.png,.gif,.webp" onChange={e => setEditAuthFile(e.target.files?.[0] || null)} style={{ display: 'none' }} />
+            </label>
           </div>
           <div className="flex gap-2 pt-1">
             <button onClick={onCancel} className="flex-1 text-[11px] font-semibold py-2 rounded" style={{ background: 'var(--bg-pill)', color: 'var(--text)' }}>Cancelar</button>
@@ -562,8 +561,10 @@ function CreateModal({ employees, vehicles, onCreate, onClose, onRefresh }: { em
           </div>
           <div>
             <p className="text-[10px] font-medium mb-0.5" style={{ color: 'var(--text-muted)' }}>📎 Autorización de retirada</p>
-            <input type="file" accept=".pdf,.jpg,.jpeg,.png,.gif,.webp" onChange={e => setAuthFile(e.target.files?.[0] || null)} style={{ fontSize: 11, color: 'var(--text)' }} />
-            {authFile && <p className="text-[10px] mt-1" style={{ color: 'var(--text-secondary)' }}>{authFile.name}</p>}
+            <label className="w-full text-[11px] font-semibold py-2 rounded text-center block transition-opacity hover:opacity-70" style={{ background: 'var(--bg-pill)', color: 'var(--text-secondary)', cursor: 'pointer' }}>
+              {authFile ? '✓ ' + authFile.name : 'Seleccionar archivo...'}
+              <input type="file" accept=".pdf,.jpg,.jpeg,.png,.gif,.webp" onChange={e => setAuthFile(e.target.files?.[0] || null)} style={{ display: 'none' }} />
+            </label>
           </div>
           <button type="submit" disabled={saving || uploading || !name.trim()} className="w-full text-[11px] font-semibold py-2 rounded transition-opacity disabled:opacity-40" style={{ background: 'var(--accent-blue)', color: '#fff' }}>{uploading ? 'Subiendo...' : saving ? '...' : '✅ Crear'}</button>
         </form>
