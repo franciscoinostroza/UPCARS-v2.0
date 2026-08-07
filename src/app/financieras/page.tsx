@@ -212,7 +212,7 @@ function FinancierasInner() {
                       const prop = i < selected.tarifasLeasing.filter(f => f.name !== 'Imagen').length ? 'Tarifas Leasing' : 'Tarifas vigentes VN - VO'
                       const idx = i < selected.tarifasLeasing.filter(f => f.name !== 'Imagen').length ? i : i - selected.tarifasLeasing.filter(f => f.name !== 'Imagen').length
                       const url = `/api/files/download?pageId=${selected.id}&property=${encodeURIComponent(prop)}&index=${idx}`
-                      const previewUrl = url + '&preview=true'
+                      const previewUrl = window.location.origin + url + '&preview=true'
                       const isImage = f.name.match(/\.(jpg|jpeg|png|gif|webp)/i)
                       const isPdf = f.name.match(/\.pdf/i)
                       const isTxt = f.name.match(/\.(txt|csv)/i)
@@ -272,7 +272,7 @@ function FinancierasInner() {
                       const prop = i < leasingCount ? 'Tarifas Leasing' : 'Tarifas vigentes VN - VO'
                       const idx = i < leasingCount ? i : i - leasingCount
                       const url = `/api/files/download?pageId=${selected.id}&property=${encodeURIComponent(prop)}&index=${idx}`
-                      const previewUrl = url + '&preview=true'
+                      const previewUrl = window.location.origin + url + '&preview=true'
                       const isImage = f.name.match(/\.(jpg|jpeg|png|gif|webp)/i)
                       const isPdf = f.name.match(/\.pdf/i)
                       const isTxt = f.name.match(/\.(txt|csv)/i)
