@@ -215,10 +215,14 @@ function FinancierasInner() {
                       const previewUrl = url + '&preview=true'
                       const isImage = f.name.match(/\.(jpg|jpeg|png|gif|webp)/i)
                       const isPdf = f.name.match(/\.pdf/i)
+                      const isTxt = f.name.match(/\.(txt|csv)/i)
+                      const isOffice = f.name.match(/\.(xlsx|xls|docx|doc|pptx|ppt)/i)
                       return (
                         <div key={f.name} className="card p-2" style={{ background: 'var(--bg-pill)' }}>
                           {isImage && <img src={previewUrl} alt={f.name} className="w-full rounded" style={{ maxHeight: 150, objectFit: 'contain' }} />}
                           {isPdf && <iframe src={previewUrl} className="w-full rounded" style={{ height: 150 }} />}
+                          {isTxt && <iframe src={previewUrl} className="w-full rounded" style={{ height: 150 }} />}
+                          {isOffice && <iframe src={`https://docs.google.com/viewer?url=${encodeURIComponent(previewUrl)}&embedded=true`} className="w-full rounded" style={{ height: 150 }} />}
                           <a href={url} target="_blank" rel="noopener noreferrer" className="inline-block mt-1 text-[10px] font-medium" style={{ color: 'var(--accent-blue)' }}>📥 {f.name}</a>
                         </div>
                       )
@@ -271,10 +275,14 @@ function FinancierasInner() {
                       const previewUrl = url + '&preview=true'
                       const isImage = f.name.match(/\.(jpg|jpeg|png|gif|webp)/i)
                       const isPdf = f.name.match(/\.pdf/i)
+                      const isTxt = f.name.match(/\.(txt|csv)/i)
+                      const isOffice = f.name.match(/\.(xlsx|xls|docx|doc|pptx|ppt)/i)
                       return (
                         <div key={f.name} className="card p-2" style={{ background: 'var(--bg-pill)' }}>
                           {isImage && <img src={previewUrl} alt={f.name} className="w-full rounded" style={{ maxHeight: 150, objectFit: 'contain' }} />}
                           {isPdf && <iframe src={previewUrl} className="w-full rounded" style={{ height: 150 }} />}
+                          {isTxt && <iframe src={previewUrl} className="w-full rounded" style={{ height: 150 }} />}
+                          {isOffice && <iframe src={`https://docs.google.com/viewer?url=${encodeURIComponent(previewUrl)}&embedded=true`} className="w-full rounded" style={{ height: 150 }} />}
                           <a href={url} target="_blank" rel="noopener noreferrer" className="inline-block mt-1 text-[10px] font-medium" style={{ color: 'var(--accent-blue)' }}>📥 {f.name}</a>
                         </div>
                       )
