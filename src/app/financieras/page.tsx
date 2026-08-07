@@ -222,7 +222,7 @@ function FinancierasInner() {
                           {isImage && <img src={previewUrl} alt={f.name} className="w-full rounded" style={{ maxHeight: 150, objectFit: 'contain' }} />}
                           {isPdf && <iframe src={previewUrl} className="w-full rounded" style={{ height: 150 }} />}
                           {isTxt && <iframe src={previewUrl} className="w-full rounded" style={{ height: 150 }} />}
-                          {isOffice && <iframe src={`https://docs.google.com/viewer?url=${encodeURIComponent(f.url)}&embedded=true`} className="w-full rounded" style={{ height: 150 }} />}
+                          {isOffice && <a href={previewUrl} target="_blank" rel="noopener noreferrer" className="block text-[11px] py-1 font-medium" style={{ color: 'var(--accent-blue)' }}>🔍 Vista previa de {f.name}</a>}
                           <a href={url} target="_blank" rel="noopener noreferrer" className="inline-block mt-1 text-[10px] font-medium" style={{ color: 'var(--accent-blue)' }}>📥 {f.name}</a>
                         </div>
                       )
@@ -282,7 +282,7 @@ function FinancierasInner() {
                           {isImage && <img src={previewUrl} alt={f.name} className="w-full rounded" style={{ maxHeight: 150, objectFit: 'contain' }} />}
                           {isPdf && <iframe src={previewUrl} className="w-full rounded" style={{ height: 150 }} />}
                           {isTxt && <iframe src={previewUrl} className="w-full rounded" style={{ height: 150 }} />}
-                          {isOffice && <iframe src={`https://docs.google.com/viewer?url=${encodeURIComponent(f.url)}&embedded=true`} className="w-full rounded" style={{ height: 150 }} />}
+                          {isOffice && <a href={previewUrl} target="_blank" rel="noopener noreferrer" className="block text-[11px] py-1 font-medium" style={{ color: 'var(--accent-blue)' }}>🔍 Vista previa de {f.name}</a>}
                           <a href={url} target="_blank" rel="noopener noreferrer" className="inline-block mt-1 text-[10px] font-medium" style={{ color: 'var(--accent-blue)' }}>📥 {f.name}</a>
                         </div>
                       )
